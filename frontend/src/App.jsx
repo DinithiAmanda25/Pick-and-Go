@@ -3,12 +3,8 @@ import Home from './Pages/Client/Home'
 
 function App() {
   return (
-    
-    <div>
-
-<Home/>
-
-
+    <div className="min-h-screen bg-gray-50">
+      <Home />
     </div>
   )
 }
