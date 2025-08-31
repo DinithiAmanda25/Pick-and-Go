@@ -13,6 +13,7 @@ const corsOptions = {
 
 app.use(express.json());
 
+// example 
 
 // Root Route
 app.get("/", (req, res) => {
