@@ -1,8 +1,7 @@
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
-
+const { connectDB } = require("./config/database");
 
 const app = express();
 
@@ -11,9 +10,9 @@ const corsOptions = {
   credentials: true,
 };
 
+app.use(cors(corsOptions));
 app.use(express.json());
 
-// example 
 
 // Root Route
 app.get("/", (req, res) => {
@@ -23,16 +22,12 @@ app.get("/", (req, res) => {
 // MongoDB Connection & Server Start
 const PORT = process.env.PORT || 9000;
 
-mongoose
-  .connect(process.env.MONGO_URI, {
-
-  })
-  .then(() => {
-    console.log("✅ MongoDB connected");
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error("❌ MongoDB connection failed:", err.message);
+// Connect to MongoDB and start server
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
   });
+}).catch((error) => {
+  console.error('❌ Failed to start server:', error.message);
+  process.exit(1);
+});
