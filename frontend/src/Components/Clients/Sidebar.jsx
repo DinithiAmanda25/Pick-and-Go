@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import logo from '../../Assets/2.png'
 
 function ClientSidebar() {
   const location = useLocation()
@@ -73,11 +74,16 @@ function ClientSidebar() {
 
   return (
     <div className="bg-blue-900 text-white w-64 min-h-screen p-4">
-      <div className="mb-8">
-        <Link to="/" className="text-xl font-bold text-center block text-white">
-          Pick & Go
+      <div className="mb-8 flex flex-col items-center">
+        <Link to="/" className="flex items-center space-x-2 justify-center">
+          <img
+            src={logo}
+            alt="Pick & Go Logo"
+            className="h-12 w-auto"
+          />
+          <span className="text-2xl font-bold text-white">Pick & Go</span>
         </Link>
-        <p className="text-blue-200 text-sm text-center mt-1">Client Portal</p>
+        <p className="text-blue-200 text-base mt-2">Client Portal</p>
       </div>
 
       <nav className="space-y-2">

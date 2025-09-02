@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import logo from '../../Assets/2.png'
 
 function VehicleOwnerSidebar() {
   const location = useLocation()
@@ -83,11 +84,16 @@ function VehicleOwnerSidebar() {
 
   return (
     <div className="bg-green-900 text-white w-64 min-h-screen p-4 fixed left-0 top-0 overflow-y-auto">
-      <div className="mb-8">
-        <Link to="/" className="text-xl font-bold text-center block text-white">
-          Pick & Go
+      <div className="mb-8 flex flex-col items-center">
+        <Link to="/" className="flex items-center space-x-2 justify-center">
+          <img
+            src={logo}
+            alt="Pick & Go Logo"
+            className="h-12 w-auto"
+          />
+          <span className="text-2xl font-bold text-white">Pick & Go</span>
         </Link>
-        <p className="text-green-200 text-sm text-center mt-1">Vehicle Owner</p>
+        <p className="text-green-200 text-base mt-2">Vehicle Owner</p>
       </div>
 
       <nav className="space-y-2">

@@ -1,5 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
+import logo from '../../Assets/2.png'
 
 function AdminHeader() {
   return (
@@ -11,12 +12,20 @@ function AdminHeader() {
     >
       <div className="flex justify-between items-center">
         <motion.div
+          className="flex items-center space-x-3"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-sm text-gray-600">Manage your vehicle rental system</p>
+          <img
+            src={logo}
+            alt="Pick & Go Logo"
+            className="h-10 w-auto"
+          />
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+            <p className="text-sm text-gray-600">Manage your vehicle rental system</p>
+          </div>
         </motion.div>
 
         <div className="flex items-center space-x-4">
