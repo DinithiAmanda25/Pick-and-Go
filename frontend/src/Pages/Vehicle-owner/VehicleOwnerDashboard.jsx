@@ -4,44 +4,282 @@ import VehicleOwnerSidebar from '../../Components/Vehicle-owner/Sidebar'
 import VehicleOwnerHeader from '../../Components/Vehicle-owner/Header'
 import VehicleOwnerOverview from '../../Components/Vehicle-owner/Overview'
 import VehicleOwnerVehicles from '../../Components/Vehicle-owner/Vehicles'
+import VehicleOwnerReports from '../../Components/Vehicle-owner/Reports'
+import VehicleOwnerAgreements from '../../Components/Vehicle-owner/Agreements'
 import VehicleOwnerBookings from '../../Components/Vehicle-owner/Bookings'
-import VehicleOwnerEarnings from '../../Components/Vehicle-owner/Earnings'
-import VehicleOwnerMaintenance from '../../Components/Vehicle-owner/Maintenance'
-import VehicleOwnerAnalytics from '../../Components/Vehicle-owner/Analytics'
-import VehicleOwnerProfile from '../../Components/Vehicle-owner/Profile'
-import VehicleOwnerSettings from '../../Components/Vehicle-owner/Settings'
+import VehicleOwnerPayments from '../../Components/Vehicle-owner/Payments'
+import VehicleOwnerFeedback from '../../Components/Vehicle-owner/Feedback'
+import VehicleOwnerProfile from '../../Components/Vehicle-owner/VehicleOwnerProfile'
 
 function VehicleOwnerDashboard() {
   const location = useLocation()
   const params = new URLSearchParams(location.search)
-  const initialTab = params.get('tab') || 'overview'
+  const initialTab = params.get('tab') || 'profile'
   const [activeTab, setActiveTab] = useState(initialTab)
 
   useEffect(() => {
     const p = new URLSearchParams(location.search)
-    const t = p.get('tab') || 'overview'
+    const t = p.get('tab') || 'profile'
     if (t !== activeTab) {
       setActiveTab(t)
     }
   }, [location.search, activeTab])
 
-  // Mock data for vehicle owner
-  const mockVehicles = [
-    { id: 1, make: 'Toyota', model: 'Camry', year: 2022, plate: 'ABC-123', status: 'available', earnings: '$450' },
-    { id: 2, make: 'Honda', model: 'Civic', year: 2021, plate: 'XYZ-789', status: 'rented', earnings: '$380' },
-    { id: 3, make: 'Ford', model: 'Focus', year: 2020, plate: 'DEF-456', status: 'maintenance', earnings: '$320' }
-  ]
-
-  const mockBookings = [
-    { id: 1, vehicle: 'Toyota Camry', customer: 'John Smith', startDate: '2025-08-30', endDate: '2025-09-02', amount: '$450', status: 'active' },
-    { id: 2, vehicle: 'Honda Civic', customer: 'Jane Doe', startDate: '2025-08-28', endDate: '2025-08-31', amount: '$380', status: 'completed' }
-  ]
-
-  const mockEarnings = [
-    { month: 'August', amount: '$2,450', bookings: 12, growth: '+15%' },
-    { month: 'July', amount: '$2,130', bookings: 10, growth: '+8%' },
-    { month: 'June', amount: '$1,980', bookings: 9, growth: '+12%' }
-  ]
+  // Comprehensive mock data for vehicle owner
+  const mockData = {
+    profile: {
+      name: 'Michael Rodriguez',
+      email: 'michael.rodriguez@example.com',
+      phone: '+1 (555) 123-4567',
+      joinDate: '2023-03-15',
+      totalVehicles: 3,
+      totalEarnings: 15420,
+      averageRating: 4.6
+    },
+    vehicles: [
+      {
+        id: 1,
+        make: 'Toyota',
+        model: 'Camry',
+        year: 2022,
+        plate: 'ABC-123',
+        status: 'available',
+        type: 'Sedan',
+        location: 'Colombo Central',
+        fuelEfficiency: '28 mpg',
+        lastService: '2024-01-15',
+        nextService: '2024-04-15',
+        mileage: 25000,
+        documents: ['Registration', 'Insurance', 'Inspection']
+      },
+      {
+        id: 2,
+        make: 'Honda',
+        model: 'Civic',
+        year: 2021,
+        plate: 'XYZ-789',
+        status: 'rented',
+        type: 'Sedan',
+        location: 'Kandy',
+        fuelEfficiency: '32 mpg',
+        lastService: '2024-01-10',
+        nextService: '2024-04-10',
+        mileage: 18500,
+        documents: ['Registration', 'Insurance', 'Inspection']
+      },
+      {
+        id: 3,
+        make: 'Ford',
+        model: 'Focus',
+        year: 2020,
+        plate: 'DEF-456',
+        status: 'maintenance',
+        type: 'Hatchback',
+        location: 'Galle',
+        fuelEfficiency: '30 mpg',
+        lastService: '2024-01-20',
+        nextService: '2024-04-20',
+        mileage: 32000,
+        documents: ['Registration', 'Insurance']
+      }
+    ],
+    bookings: [
+      {
+        id: 1,
+        vehicleId: 1,
+        vehicle: 'Toyota Camry',
+        customer: 'John Smith',
+        customerPhone: '+1 (555) 987-6543',
+        startDate: '2024-01-25',
+        endDate: '2024-01-28',
+        amount: 450,
+        status: 'upcoming',
+        mileage: 150,
+        pickupLocation: 'Colombo Airport',
+        dropoffLocation: 'Kandy City'
+      },
+      {
+        id: 2,
+        vehicleId: 2,
+        vehicle: 'Honda Civic',
+        customer: 'Jane Doe',
+        customerPhone: '+1 (555) 876-5432',
+        startDate: '2024-01-20',
+        endDate: '2024-01-23',
+        amount: 380,
+        status: 'active',
+        mileage: 120,
+        pickupLocation: 'Kandy Railway Station',
+        dropoffLocation: 'Nuwara Eliya'
+      },
+      {
+        id: 3,
+        vehicleId: 1,
+        vehicle: 'Toyota Camry',
+        customer: 'Bob Wilson',
+        customerPhone: '+1 (555) 765-4321',
+        startDate: '2024-01-15',
+        endDate: '2024-01-18',
+        amount: 420,
+        status: 'completed',
+        mileage: 200,
+        pickupLocation: 'Colombo Fort',
+        dropoffLocation: 'Negombo Beach'
+      }
+    ],
+    payments: [
+      {
+        id: 1,
+        vehicleId: 1,
+        vehicle: 'Toyota Camry',
+        vehiclePlate: 'ABC-123',
+        customer: 'John Smith',
+        amount: 450,
+        date: '2024-01-25',
+        dueDate: '2024-01-28',
+        status: 'Pending',
+        bookingId: 1,
+        paymentMethod: 'Credit Card'
+      },
+      {
+        id: 2,
+        vehicleId: 2,
+        vehicle: 'Honda Civic',
+        vehiclePlate: 'XYZ-789',
+        customer: 'Jane Doe',
+        amount: 380,
+        date: '2024-01-20',
+        dueDate: '2024-01-23',
+        status: 'Paid',
+        bookingId: 2,
+        paymentMethod: 'PayPal'
+      },
+      {
+        id: 3,
+        vehicleId: 1,
+        vehicle: 'Toyota Camry',
+        vehiclePlate: 'ABC-123',
+        customer: 'Bob Wilson',
+        amount: 420,
+        date: '2024-01-15',
+        dueDate: '2024-01-18',
+        status: 'Paid',
+        bookingId: 3,
+        paymentMethod: 'Bank Transfer'
+      },
+      {
+        id: 4,
+        vehicleId: 3,
+        vehicle: 'Ford Focus',
+        vehiclePlate: 'DEF-456',
+        customer: 'Alice Brown',
+        amount: 320,
+        date: '2024-01-10',
+        dueDate: '2024-01-13',
+        status: 'Overdue',
+        bookingId: 4,
+        paymentMethod: 'Credit Card'
+      }
+    ],
+    agreements: [
+      {
+        id: 1,
+        vehicle: 'Toyota Camry',
+        vehiclePlate: 'ABC-123',
+        customer: 'John Smith',
+        customerPhone: '+1 (555) 987-6543',
+        startDate: '2024-01-25',
+        expiryDate: '2024-01-28',
+        status: 'Upcoming',
+        dailyRate: 150,
+        mileageLimit: 200,
+        insurance: 'Full Coverage'
+      },
+      {
+        id: 2,
+        vehicle: 'Honda Civic',
+        vehiclePlate: 'XYZ-789',
+        customer: 'Jane Doe',
+        customerPhone: '+1 (555) 876-5432',
+        startDate: '2024-01-20',
+        expiryDate: '2024-01-23',
+        status: 'Active',
+        dailyRate: 120,
+        mileageLimit: 150,
+        insurance: 'Standard Coverage'
+      },
+      {
+        id: 3,
+        vehicle: 'Toyota Camry',
+        vehiclePlate: 'ABC-123',
+        customer: 'Bob Wilson',
+        customerPhone: '+1 (555) 765-4321',
+        startDate: '2024-01-15',
+        expiryDate: '2024-01-18',
+        status: 'Expired',
+        dailyRate: 140,
+        mileageLimit: 250,
+        insurance: 'Full Coverage'
+      }
+    ],
+    feedback: [
+      {
+        id: 1,
+        type: 'client',
+        subject: 'Customer Damaged Vehicle',
+        message: 'Customer returned my Honda Civic with a scratch on the rear bumper. They did not report it during checkout.',
+        priority: 'high',
+        category: 'damage',
+        date: '2024-01-22',
+        status: 'Submitted',
+        response: null,
+        isEditable: true,
+        proofDocuments: [
+          { id: 1, name: 'damage_photo_1.jpg', type: 'image/jpeg' },
+          { id: 2, name: 'damage_photo_2.jpg', type: 'image/jpeg' }
+        ]
+      },
+      {
+        id: 2,
+        type: 'system',
+        subject: 'Payment Delay Issue',
+        message: 'I have not received payment for booking #2 which was completed 5 days ago. The system shows it as paid but I have not received the funds.',
+        priority: 'medium',
+        category: 'payment',
+        date: '2024-01-20',
+        status: 'Responded',
+        response: 'We have investigated the payment issue and found a delay in processing. Your payment has been expedited and you should receive it within 24 hours.',
+        responseDate: '2024-01-21',
+        isEditable: false
+      }
+    ],
+    vehicleRatings: [
+      {
+        id: 1,
+        vehicle: 'Toyota Camry',
+        customer: 'Bob Wilson',
+        rating: 5,
+        comment: 'Excellent vehicle! Very clean and comfortable for the long drive.',
+        date: '2024-01-18'
+      },
+      {
+        id: 2,
+        vehicle: 'Honda Civic',
+        customer: 'Jane Doe',
+        rating: 4,
+        comment: 'Good car, fuel efficient. Minor issue with air conditioning.',
+        date: '2024-01-23'
+      },
+      {
+        id: 3,
+        vehicle: 'Toyota Camry',
+        customer: 'Mary Johnson',
+        rating: 5,
+        comment: 'Perfect for our family trip. Highly recommend this vehicle.',
+        date: '2024-01-12'
+      }
+    ]
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -49,7 +287,7 @@ function VehicleOwnerDashboard() {
       <VehicleOwnerSidebar />
 
       {/* Main Content */}
-      <div className="flex-1">
+      <div className="flex-1 ml-64">
         {/* Header */}
         <VehicleOwnerHeader />
 
@@ -61,43 +299,64 @@ function VehicleOwnerDashboard() {
               <div className="animate-slide-in">
                 {activeTab === 'overview' && (
                   <VehicleOwnerOverview
-                    vehicles={mockVehicles}
-                    bookings={mockBookings}
-                    earnings={mockEarnings}
+                    vehicles={mockData.vehicles}
+                    bookings={mockData.bookings}
+                    profile={mockData.profile}
                     setActiveTab={setActiveTab}
                   />
                 )}
 
                 {activeTab === 'vehicles' && (
-                  <VehicleOwnerVehicles vehicles={mockVehicles} />
+                  <VehicleOwnerVehicles vehicles={mockData.vehicles} />
                 )}
 
                 {activeTab === 'bookings' && (
-                  <VehicleOwnerBookings bookings={mockBookings} />
+                  <VehicleOwnerBookings bookings={mockData.bookings} />
                 )}
 
                 {activeTab === 'earnings' && (
-                  <VehicleOwnerEarnings earnings={mockEarnings} />
+                  <VehicleOwnerEarnings payments={mockData.payments} vehicles={mockData.vehicles} />
+                )}
+
+                {activeTab === 'reports' && (
+                  <VehicleOwnerReports vehicles={mockData.vehicles} bookings={mockData.bookings} />
+                )}
+
+                {activeTab === 'agreements' && (
+                  <VehicleOwnerAgreements agreements={mockData.agreements} />
+                )}
+
+                {activeTab === 'payments' && (
+                  <VehicleOwnerPayments payments={mockData.payments} vehicles={mockData.vehicles} />
+                )}
+
+                {activeTab === 'feedback' && (
+                  <VehicleOwnerFeedback feedback={mockData.feedback} vehicleRatings={mockData.vehicleRatings} />
                 )}
 
                 {activeTab === 'maintenance' && (
-                  <VehicleOwnerMaintenance vehicles={mockVehicles} />
+                  <VehicleOwnerMaintenance vehicles={mockData.vehicles} />
                 )}
 
                 {activeTab === 'analytics' && (
                   <VehicleOwnerAnalytics
-                    vehicles={mockVehicles}
-                    earnings={mockEarnings}
-                    bookings={mockBookings}
+                    vehicles={mockData.vehicles}
+                    payments={mockData.payments}
+                    bookings={mockData.bookings}
                   />
                 )}
 
                 {activeTab === 'profile' && (
-                  <VehicleOwnerProfile />
+                  <VehicleOwnerProfile profile={mockData.profile} />
                 )}
 
                 {activeTab === 'settings' && (
                   <VehicleOwnerSettings />
+                )}
+
+                {/* Default fallback to Profile */}
+                {!['profile', 'overview', 'vehicles', 'bookings', 'earnings', 'reports', 'agreements', 'payments', 'feedback', 'maintenance', 'analytics', 'settings'].includes(activeTab) && (
+                  <VehicleOwnerProfile profile={mockData.profile} />
                 )}
               </div>
             </div>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import ClientMainHeader from '../../Components/Clients/ClientMainHeader'
 
 function Checkout() {
     const location = useLocation()
@@ -77,103 +78,63 @@ function Checkout() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
-            {/* Modern Header - Consistent with Home page */}
-            <header className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800 overflow-hidden">
-                {/* Background Pattern */}
+        <div className="min-h-screen bg-white">
+            {/* Use Consistent Header */}
+            <ClientMainHeader />
+
+            {/* Hero Section with Same Design as Home */}
+            <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800 py-20 overflow-hidden">
+                {/* Animated Background Pattern */}
                 <div className="absolute inset-0 opacity-10">
-                    <div className="absolute inset-0" style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0l-2 4h2v4h4V6h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0L4 4h2v4h4V6H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-                    }}></div>
+                    <svg className="w-full h-full" viewBox="0 0 400 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <pattern id="checkoutGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+                            </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#checkoutGrid)" />
+                    </svg>
                 </div>
 
-                <div className="relative z-10">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-center justify-between h-20">
-                            {/* Logo */}
-                            <Link to="/" className="flex items-center space-x-3 group">
-                                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center transform group-hover:rotate-12 transition-all duration-300 shadow-lg shadow-blue-500/25">
-                                    <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M8 16.5a1.5 1.5 0 01-3 0V14h.5a.5.5 0 01.5.5v1.5zM15 16.5a1.5 1.5 0 01-3 0V14h.5a.5.5 0 01.5.5v1.5z" />
-                                        <path fillRule="evenodd" d="M2 12a5 5 0 015-5h6a5 5 0 110 10H7a5 5 0 01-5-5zm5-3a3 3 0 100 6h6a3 3 0 100-6H7z" clipRule="evenodd" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h1 className="text-2xl font-bold text-white group-hover:text-blue-300 transition-colors">
-                                        Pick & Go
-                                    </h1>
-                                    <p className="text-xs text-blue-200 opacity-90">Premium Rentals</p>
-                                </div>
-                            </Link>
-
-                            {/* Navigation */}
-                            <nav className="hidden md:flex items-center space-x-8">
-                                <Link to="/" className="text-white/90 hover:text-white transition-colors relative group">
-                                    Home
-                                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-500 group-hover:w-full transition-all duration-300"></span>
-                                </Link>
-                                <Link to="/vehicle-rental" className="text-white/90 hover:text-white transition-colors relative group">
-                                    Vehicles
-                                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-500 group-hover:w-full transition-all duration-300"></span>
-                                </Link>
-                                <Link to="/about" className="text-white/90 hover:text-white transition-colors relative group">
-                                    About
-                                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-500 group-hover:w-full transition-all duration-300"></span>
-                                </Link>
-                                <Link to="/contact" className="text-white/90 hover:text-white transition-colors relative group">
-                                    Contact
-                                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-500 group-hover:w-full transition-all duration-300"></span>
-                                </Link>
-                            </nav>
-
-                            {/* CTA Buttons */}
-                            <div className="flex items-center space-x-4">
-                                <Link to="/login" className="text-white/90 hover:text-white transition-colors">
-                                    Login
-                                </Link>
-                                <Link to="/registration" className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105">
-                                    Sign Up
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            {/* Main Content */}
-            <div className="relative">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                    {/* Page Title */}
-                    <div className="text-center mb-12">
-                        <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent mb-4">
-                            Complete Your Booking
+                <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
+                    <div className="text-center">
+                        <h1 className="text-5xl lg:text-6xl font-bold mb-6 text-white">
+                            Complete Your
+                            <span className="bg-gradient-to-r from-blue-300 to-blue-100 bg-clip-text text-transparent"> Booking</span>
                         </h1>
-                        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                            Just a few more details and you'll be ready to go on your adventure
+                        <p className="text-xl text-blue-100/80 max-w-3xl mx-auto leading-relaxed">
+                            Just a few more details and you'll be ready to embark on your premium travel experience
                         </p>
                     </div>
+                </div>
+            </section>
 
+            {/* Main Content */}
+            <div className="relative bg-gradient-to-br from-gray-50 to-blue-50/30 py-20">
+                <div className="max-w-7xl mx-auto px-6 lg:px-8">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                         {/* Customer Information & Payment */}
                         <div className="lg:col-span-2 space-y-8">
-                            {/* Modern Customer Information Form */}
-                            <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-10 border border-white/50">
-                                <div className="flex items-center space-x-3 mb-8">
-                                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                                        <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            {/* Enhanced Customer Information Form */}
+                            <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
+                                <div className="flex items-center space-x-4 mb-8">
+                                    <div className="w-14 h-14 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-2xl flex items-center justify-center shadow-2xl">
+                                        <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                                         </svg>
                                     </div>
                                     <div>
-                                        <h2 className="text-2xl font-bold text-gray-900">Customer Information</h2>
-                                        <p className="text-gray-600">Please provide your contact details</p>
+                                        <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
+                                            Customer Information
+                                        </h2>
+                                        <p className="text-gray-600 text-lg">Please provide your contact details</p>
                                     </div>
                                 </div>
 
                                 <form onSubmit={handleSubmit} className="space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                        <div className="space-y-2">
+                                            <label className="block text-sm font-semibold text-gray-700/90">
                                                 First Name
                                             </label>
                                             <input
@@ -182,12 +143,12 @@ function Checkout() {
                                                 value={customerInfo.firstName}
                                                 onChange={handleCustomerInfoChange}
                                                 required
-                                                className="w-full px-4 py-3 bg-white/60 backdrop-blur-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                                                className="w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-gray-900 placeholder-gray-500 transition-all duration-300 shadow-lg"
                                                 placeholder="Enter your first name"
                                             />
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                        <div className="space-y-2">
+                                            <label className="block text-sm font-semibold text-gray-700/90">
                                                 Last Name
                                             </label>
                                             <input
@@ -196,15 +157,15 @@ function Checkout() {
                                                 value={customerInfo.lastName}
                                                 onChange={handleCustomerInfoChange}
                                                 required
-                                                className="w-full px-4 py-3 bg-white/60 backdrop-blur-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                                                className="w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-gray-900 placeholder-gray-500 transition-all duration-300 shadow-lg"
                                                 placeholder="Enter your last name"
                                             />
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                        <div className="space-y-2">
+                                            <label className="block text-sm font-semibold text-gray-700/90">
                                                 Email Address
                                             </label>
                                             <input
@@ -213,12 +174,12 @@ function Checkout() {
                                                 value={customerInfo.email}
                                                 onChange={handleCustomerInfoChange}
                                                 required
-                                                className="w-full px-4 py-3 bg-white/60 backdrop-blur-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                                                className="w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-gray-900 placeholder-gray-500 transition-all duration-300 shadow-lg"
                                                 placeholder="your.email@example.com"
                                             />
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                        <div className="space-y-2">
+                                            <label className="block text-sm font-semibold text-gray-700/90">
                                                 Phone Number
                                             </label>
                                             <input
@@ -227,14 +188,14 @@ function Checkout() {
                                                 value={customerInfo.phone}
                                                 onChange={handleCustomerInfoChange}
                                                 required
-                                                className="w-full px-4 py-3 bg-white/60 backdrop-blur-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
-                                                placeholder="+1 (555) 123-4567"
+                                                className="w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-gray-900 placeholder-gray-500 transition-all duration-300 shadow-lg"
+                                                placeholder="+94 77 123 4567"
                                             />
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                    <div className="space-y-2">
+                                        <label className="block text-sm font-semibold text-gray-700/90">
                                             Street Address
                                         </label>
                                         <input
@@ -243,14 +204,14 @@ function Checkout() {
                                             value={customerInfo.address}
                                             onChange={handleCustomerInfoChange}
                                             required
-                                            className="w-full px-4 py-3 bg-white/60 backdrop-blur-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
-                                            placeholder="123 Main Street"
+                                            className="w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-gray-900 placeholder-gray-500 transition-all duration-300 shadow-lg"
+                                            placeholder="123 Main Street, Colombo"
                                         />
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                        <div className="space-y-2">
+                                            <label className="block text-sm font-semibold text-gray-700/90">
                                                 City
                                             </label>
                                             <input
@@ -259,12 +220,12 @@ function Checkout() {
                                                 value={customerInfo.city}
                                                 onChange={handleCustomerInfoChange}
                                                 required
-                                                className="w-full px-4 py-3 bg-white/60 backdrop-blur-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
-                                                placeholder="New York"
+                                                className="w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-gray-900 placeholder-gray-500 transition-all duration-300 shadow-lg"
+                                                placeholder="Colombo"
                                             />
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                        <div className="space-y-2">
+                                            <label className="block text-sm font-semibold text-gray-700/90">
                                                 ZIP Code
                                             </label>
                                             <input
@@ -273,38 +234,40 @@ function Checkout() {
                                                 value={customerInfo.zipCode}
                                                 onChange={handleCustomerInfoChange}
                                                 required
-                                                className="w-full px-4 py-3 bg-white/60 backdrop-blur-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
-                                                placeholder="10001"
+                                                className="w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-gray-900 placeholder-gray-500 transition-all duration-300 shadow-lg"
+                                                placeholder="00100"
                                             />
                                         </div>
                                     </div>
 
-                                    {/* Modern Payment Information */}
-                                    <div className="border-t border-gray-200 pt-8 mt-8">
-                                        <div className="flex items-center space-x-3 mb-8">
-                                            <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-600 rounded-lg flex items-center justify-center">
-                                                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z" clipRule="evenodd" />
-                                                    <path d="M6 8h8v2H6V8z" />
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <h3 className="text-2xl font-bold text-gray-900">Payment Information</h3>
-                                                <p className="text-gray-600">Secure payment processing</p>
-                                            </div>
-                                            <div className="flex-1 flex justify-end">
-                                                <div className="flex items-center space-x-2">
-                                                    <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                                    {/* Enhanced Payment Information */}
+                                    <div className="border-t border-gray-200/50 pt-8 mt-8">
+                                        <div className="flex items-center justify-between mb-8">
+                                            <div className="flex items-center space-x-4">
+                                                <div className="w-14 h-14 bg-gradient-to-br from-green-500 via-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl">
+                                                    <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z" clipRule="evenodd" />
+                                                        <path d="M6 8h8v2H6V8z" />
                                                     </svg>
-                                                    <span className="text-sm text-green-600 font-medium">SSL Secured</span>
                                                 </div>
+                                                <div>
+                                                    <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-green-600 bg-clip-text text-transparent">
+                                                        Payment Information
+                                                    </h3>
+                                                    <p className="text-gray-600 text-lg">Secure payment processing</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center space-x-3 bg-green-50 px-4 py-2 rounded-full border border-green-200">
+                                                <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                                                </svg>
+                                                <span className="text-sm text-green-700 font-semibold">SSL Secured</span>
                                             </div>
                                         </div>
 
                                         <div className="space-y-6">
-                                            <div>
-                                                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                            <div className="space-y-2">
+                                                <label className="block text-sm font-semibold text-gray-700/90">
                                                     Cardholder Name
                                                 </label>
                                                 <input
@@ -313,13 +276,13 @@ function Checkout() {
                                                     value={paymentInfo.nameOnCard}
                                                     onChange={handlePaymentInfoChange}
                                                     required
-                                                    className="w-full px-4 py-3 bg-white/60 backdrop-blur-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                                                    className="w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-gray-900 placeholder-gray-500 transition-all duration-300 shadow-lg"
                                                     placeholder="John Doe"
                                                 />
                                             </div>
 
-                                            <div>
-                                                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                            <div className="space-y-2">
+                                                <label className="block text-sm font-semibold text-gray-700/90">
                                                     Card Number
                                                 </label>
                                                 <input
@@ -328,14 +291,14 @@ function Checkout() {
                                                     value={paymentInfo.cardNumber}
                                                     onChange={handlePaymentInfoChange}
                                                     required
-                                                    className="w-full px-4 py-3 bg-white/60 backdrop-blur-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                                                    className="w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-gray-900 placeholder-gray-500 transition-all duration-300 shadow-lg"
                                                     placeholder="1234 5678 9012 3456"
                                                 />
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-6">
-                                                <div>
-                                                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                                <div className="space-y-2">
+                                                    <label className="block text-sm font-semibold text-gray-700/90">
                                                         Expiry Date
                                                     </label>
                                                     <input
@@ -344,12 +307,12 @@ function Checkout() {
                                                         value={paymentInfo.expiryDate}
                                                         onChange={handlePaymentInfoChange}
                                                         required
-                                                        className="w-full px-4 py-3 bg-white/60 backdrop-blur-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                                                        className="w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-gray-900 placeholder-gray-500 transition-all duration-300 shadow-lg"
                                                         placeholder="MM/YY"
                                                     />
                                                 </div>
-                                                <div>
-                                                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                                <div className="space-y-2">
+                                                    <label className="block text-sm font-semibold text-gray-700/90">
                                                         CVV
                                                     </label>
                                                     <input
@@ -358,7 +321,7 @@ function Checkout() {
                                                         value={paymentInfo.cvv}
                                                         onChange={handlePaymentInfoChange}
                                                         required
-                                                        className="w-full px-4 py-3 bg-white/60 backdrop-blur-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                                                        className="w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-gray-900 placeholder-gray-500 transition-all duration-300 shadow-lg"
                                                         placeholder="123"
                                                     />
                                                 </div>
@@ -382,14 +345,14 @@ function Checkout() {
                             </div>
                         </div>
 
-                        {/* Modern Order Summary */}
+                        {/* Enhanced Order Summary */}
                         <div className="mt-12 lg:mt-0">
-                            <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-10 sticky top-8 border border-white/50">
+                            <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 sticky top-8 border border-white/20">
                                 <div className="text-center mb-8">
-                                    <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent mb-2">
+                                    <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent mb-2">
                                         Booking Summary
                                     </h2>
-                                    <p className="text-gray-600">Review your selection</p>
+                                    <p className="text-gray-600 text-lg">Review your selection</p>
                                 </div>
 
                                 {/* Vehicle Details */}

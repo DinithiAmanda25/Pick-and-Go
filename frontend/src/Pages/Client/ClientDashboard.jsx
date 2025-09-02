@@ -5,10 +5,15 @@ import ClientSidebar from '../../Components/Clients/Sidebar'
 import ClientHeader from '../../Components/Clients/Header'
 import Overview from '../../Components/Clients/Overview'
 import Bookings from '../../Components/Clients/Bookings'
+import BookingsEnhanced from '../../Components/Clients/BookingsEnhanced'
 import Profile from '../../Components/Clients/Profile'
+import ProfileSimplified from '../../Components/Clients/ProfileSimplified'
 import PaymentHistory from '../../Components/Clients/PaymentHistory'
+import PaymentEnhanced from '../../Components/Clients/PaymentEnhanced'
 import Favorites from '../../Components/Clients/Favorites'
+import FavoritesEnhanced from '../../Components/Clients/FavoritesEnhanced'
 import Support from '../../Components/Clients/Support'
+import RatingsFeedback from '../../Components/Clients/RatingsFeedback'
 
 function ClientDashboard() {
   const location = useLocation()
@@ -52,12 +57,12 @@ function ClientDashboard() {
   }
 
 
-  // Mock booking data
+  // Enhanced mock booking data with more comprehensive details
   const mockBookings = [
     {
       id: 1,
       vehicle: {
-        name: 'Toyota Camry',
+        name: 'Toyota Camry 2023',
         image: '/api/placeholder/300/200',
         type: 'sedan'
       },
@@ -69,6 +74,8 @@ function ClientDashboard() {
       bookingDate: '2024-01-15',
       pickupDate: '2024-01-20',
       dropoffDate: '2024-01-25',
+      pickupTime: '10:00',
+      dropoffTime: '18:00',
       status: 'confirmed',
       totalAmount: 375,
       invoiceId: 'INV-001'
@@ -76,7 +83,7 @@ function ClientDashboard() {
     {
       id: 2,
       vehicle: {
-        name: 'Honda CR-V',
+        name: 'Honda CR-V 2022',
         image: '/api/placeholder/300/200',
         type: 'suv'
       },
@@ -85,9 +92,32 @@ function ClientDashboard() {
       bookingDate: '2024-01-10',
       pickupDate: '2024-01-12',
       dropoffDate: '2024-01-15',
+      pickupTime: '09:00',
+      dropoffTime: '17:00',
       status: 'completed',
       totalAmount: 225,
       invoiceId: 'INV-002'
+    },
+    {
+      id: 3,
+      vehicle: {
+        name: 'BMW X3 2023',
+        image: '/api/placeholder/300/200',
+        type: 'luxury'
+      },
+      driver: {
+        name: 'Mike Johnson',
+        image: '/api/placeholder/100/100'
+      },
+      withDriver: true,
+      bookingDate: '2024-02-01',
+      pickupDate: '2024-02-05',
+      dropoffDate: '2024-02-08',
+      pickupTime: '11:00',
+      dropoffTime: '16:00',
+      status: 'pending',
+      totalAmount: 450,
+      invoiceId: 'INV-003'
     }
   ]
 
@@ -114,6 +144,22 @@ function ClientDashboard() {
     alert(`Downloading invoice ${invoiceId}`)
   }
 
+  // Enhanced booking management functions
+  const handleCancelBooking = (bookingId, reason) => {
+    console.log(`Cancelling booking ${bookingId} with reason: ${reason}`)
+    alert('Booking cancelled successfully!')
+  }
+
+  const handleModifyBooking = (bookingId, modifications) => {
+    console.log(`Modifying booking ${bookingId}:`, modifications)
+    alert('Booking modified successfully!')
+  }
+
+  const handleViewBookingDetails = (booking) => {
+    console.log('Viewing booking details:', booking)
+    alert(`Viewing details for booking #${booking.id}`)
+  }
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'confirmed':
@@ -132,10 +178,12 @@ function ClientDashboard() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <ClientSidebar />
+      <div className="fixed inset-y-0 left-0 z-50">
+        <ClientSidebar />
+      </div>
 
       {/* Main Content */}
-      <div className="flex-1">
+      <div className="flex-1 ml-64">
         {/* Header */}
         <ClientHeader />
 
@@ -150,19 +198,29 @@ function ClientDashboard() {
                 )}
 
                 {activeTab === 'bookings' && (
-                  <Bookings mockBookings={mockBookings} downloadInvoice={downloadInvoice} />
+                  <BookingsEnhanced
+                    mockBookings={mockBookings}
+                    onCancelBooking={handleCancelBooking}
+                    onModifyBooking={handleModifyBooking}
+                    onViewDetails={handleViewBookingDetails}
+                    downloadInvoice={downloadInvoice}
+                  />
                 )}
 
                 {activeTab === 'payments' && (
-                  <PaymentHistory payments={mockPayments} />
+                  <PaymentEnhanced />
+                )}
+
+                {activeTab === 'ratings' && (
+                  <RatingsFeedback />
                 )}
 
                 {activeTab === 'favorites' && (
-                  <Favorites favorites={mockFavorites} />
+                  <FavoritesEnhanced />
                 )}
 
                 {activeTab === 'profile' && (
-                  <Profile profileData={profileData} handleInputChange={handleInputChange} handleProfileUpdate={(e) => { e.preventDefault(); handleProfileUpdate(profileData); }} onDeleteProfile={handleProfileDelete} />
+                  <ProfileSimplified />
                 )}
 
                 {activeTab === 'support' && (

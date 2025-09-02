@@ -101,18 +101,18 @@ function Registration() {
             />
             {/* Uniform card layout: fixed min height, vertical spacing, and consistent icon wrapper */}
             <div
-              className={`p-6 rounded-xl border-2 transition-all duration-200 flex flex-col justify-between min-h-[150px] ${formData.userType === type.id
-                  ? 'border-blue-500 bg-blue-50 shadow-lg'
-                  : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+              className={`p-6 rounded-xl border-2 transition-all duration-200 flex flex-col h-[180px] ${formData.userType === type.id
+                ? 'border-blue-500 bg-blue-50 shadow-lg'
+                : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
                 }`}
             >
-              <div>
-                <div className={`w-12 h-12 flex items-center justify-center rounded-full mb-3 ${formData.userType === type.id ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
+              <div className="flex flex-col flex-grow">
+                <div className={`w-12 h-12 flex items-center justify-center rounded-full mb-4 ${formData.userType === type.id ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
                   }`}>
                   {type.icon}
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">{type.title}</h3>
-                <p className="text-sm text-gray-600">{type.description}</p>
+                <p className="text-sm text-gray-600 flex-grow">{type.description}</p>
               </div>
             </div>
           </label>
