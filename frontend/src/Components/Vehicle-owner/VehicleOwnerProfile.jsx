@@ -25,19 +25,17 @@ function VehicleOwnerProfile({ profile }) {
         issuingState: 'Western Province',
 
         // Vehicle Owner Specific Information
-        businessName: 'Rodriguez Vehicle Rentals',
-        businessType: 'Individual Owner',
-        businessLicense: 'BL987654321',
-        businessRegistrationDate: '2023-01-15',
+        ownerType: 'Individual Owner',
+        ownerLicense: 'VL987654321',
+        registrationDate: '2023-01-15',
 
         // Experience Information (adapted for Vehicle Owner)
         vehicleOwnershipExperience: '3-5 years',
-        previousBusinesses: 'Small family car rental business',
+        previousExperience: 'Small family car rental experience',
         specializations: ['Economy Cars', 'Family Vehicles', 'Long-term Rentals'],
 
         // Financial Information
-        bankAccount: '****-****-****-1234',
-        bankName: 'Commercial Bank of Ceylon',
+        paymentMethod: 'Direct Transfer',
         taxId: 'TAX123456789',
         vatNumber: 'VAT987654321',
 
@@ -51,8 +49,7 @@ function VehicleOwnerProfile({ profile }) {
         documentsUploaded: {
             profilePhoto: true,
             licensePhoto: true,
-            businessLicense: true,
-            bankStatements: true,
+            ownerLicense: true,
             insuranceDocuments: true,
             taxDocuments: false,
             backgroundCheck: true
@@ -296,9 +293,9 @@ function VehicleOwnerProfile({ profile }) {
                 </div>
             </div>
 
-            {/* Business Experience Section */}
+            {/* Vehicle Ownership Experience Section */}
             <div className="mt-8 pt-8 border-t border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-800 mb-6">Business Experience</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-6">Vehicle Ownership Experience</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Vehicle Ownership Experience</label>
@@ -317,15 +314,15 @@ function VehicleOwnerProfile({ profile }) {
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Previous Businesses</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Previous Experience</label>
                         <textarea
                             rows="3"
-                            name="previousBusinesses"
-                            value={formData.previousBusinesses}
+                            name="previousExperience"
+                            value={formData.previousExperience}
                             onChange={handleInputChange}
                             disabled={!isEditing}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50"
-                            placeholder="Describe any previous vehicle rental or related businesses"
+                            placeholder="Describe any previous vehicle rental or related experience"
                         />
                     </div>
                 </div>
@@ -380,7 +377,7 @@ function VehicleOwnerProfile({ profile }) {
                     {[
                         { key: 'profilePhoto', name: 'Profile Photo', description: 'Clear headshot photo for verification' },
                         { key: 'licensePhoto', name: 'Driver\'s License Photo', description: 'Front and back of your driver\'s license' },
-                        { key: 'businessLicense', name: 'Business License', description: 'Valid business registration document' },
+                        { key: 'ownerLicense', name: 'Owner License', description: 'Valid vehicle owner registration document' },
                         { key: 'insuranceDocuments', name: 'Insurance Documents', description: 'Proof of vehicle insurance coverage' }
                     ].map((doc) => (
                         <div key={doc.key} className="border border-gray-200 rounded-lg p-4">
@@ -413,7 +410,6 @@ function VehicleOwnerProfile({ profile }) {
                     <h3 className="text-lg font-semibold text-gray-800">Optional Documents</h3>
 
                     {[
-                        { key: 'bankStatements', name: 'Bank Statements', description: 'Recent bank statements for financial verification' },
                         { key: 'taxDocuments', name: 'Tax Documents', description: 'Tax returns or VAT registration documents' },
                         { key: 'backgroundCheck', name: 'Background Check', description: 'Criminal background check certificate' }
                     ].map((doc) => (
@@ -462,8 +458,8 @@ function VehicleOwnerProfile({ profile }) {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
-                        <h4 className="font-medium text-gray-800">Business Verified</h4>
-                        <p className="text-sm text-gray-600">Business license confirmed</p>
+                        <h4 className="font-medium text-gray-800">Owner Verified</h4>
+                        <p className="text-sm text-gray-600">Owner license confirmed</p>
                     </div>
                     <div className="text-center p-4 bg-amber-50 rounded-lg">
                         <div className="w-12 h-12 bg-amber-600 rounded-full flex items-center justify-center mx-auto mb-2">
@@ -471,8 +467,8 @@ function VehicleOwnerProfile({ profile }) {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <h4 className="font-medium text-gray-800">Financial Pending</h4>
-                        <p className="text-sm text-gray-600">Bank verification in progress</p>
+                        <h4 className="font-medium text-gray-800">Documents Pending</h4>
+                        <p className="text-sm text-gray-600">Document verification in progress</p>
                     </div>
                 </div>
             </div>
@@ -481,28 +477,6 @@ function VehicleOwnerProfile({ profile }) {
             <div className="border border-gray-200 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Financial Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Bank Account Number</label>
-                        <input
-                            type="text"
-                            name="bankAccount"
-                            value={formData.bankAccount}
-                            onChange={handleInputChange}
-                            disabled={!isEditing}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Bank Name</label>
-                        <input
-                            type="text"
-                            name="bankName"
-                            value={formData.bankName}
-                            onChange={handleInputChange}
-                            disabled={!isEditing}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50"
-                        />
-                    </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Tax ID Number</label>
                         <input

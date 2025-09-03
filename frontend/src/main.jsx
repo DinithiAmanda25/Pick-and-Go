@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import Login from './Pages/Client/Login.jsx'
 import Registration from './Pages/Client/Registration.jsx'
+import ForgotPassword from './Pages/Client/ForgotPassword.jsx'
 import VehicleRental from './Pages/Client/VehicleRental.jsx'
 import VehicleDetails from './Pages/Client/VehicleDetails.jsx'
 import Checkout from './Pages/Client/Checkout.jsx'
@@ -13,6 +14,7 @@ import VehicleOwnerDashboard from './Pages/Vehicle-owner/VehicleOwnerDashboard.j
 import DriverDashboard from './Pages/Driver/DriverDashboard.jsx'
 import DriverOnboarding from './Pages/Driver/DriverOnboarding.jsx'
 import BusinessOwnerDashboard from './Pages/Business-owner/BusinessOwnerDashboard.jsx'
+import { AuthProvider } from './contexts/AuthContext.jsx'
 import './index.css'
 import {
   createBrowserRouter,
@@ -29,6 +31,7 @@ const router = createBrowserRouter([
       { index: true, element: <App /> },
       { path: '/login', element: <Login /> },
       { path: '/register', element: <Registration /> },
+      { path: '/forgot-password', element: <ForgotPassword /> },
       { path: '/vehicle-rental', element: <VehicleRental /> },
       { path: '/vehicle-details/:id', element: <VehicleDetails /> },
       { path: '/checkout', element: <Checkout /> },
@@ -44,11 +47,10 @@ const router = createBrowserRouter([
   },
 ]);
 
-
-
-
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
-  </React.StrictMode>
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  </React.StrictMode>,
 )

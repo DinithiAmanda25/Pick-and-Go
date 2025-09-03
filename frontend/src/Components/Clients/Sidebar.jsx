@@ -1,9 +1,19 @@
 import React from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../contexts/AuthContext'
 import logo from '../../Assets/2.png'
 
 function ClientSidebar() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { logout } = useAuth()
+
+  const handleLogout = () => {
+    if (window.confirm('Are you sure you want to logout?')) {
+      logout()
+      navigate('/login')
+    }
+  }
 
   const menuItems = [
     {
@@ -73,7 +83,7 @@ function ClientSidebar() {
   ]
 
   return (
-    <div className="bg-blue-900 text-white w-64 min-h-screen p-4">
+    <div className="bg-blue-900 text-white w-64 min-h-screen p-4 flex flex-col">
       <div className="mb-8 flex flex-col items-center">
         <Link to="/" className="flex items-center space-x-2 justify-center">
           <img
@@ -86,7 +96,7 @@ function ClientSidebar() {
         <p className="text-blue-200 text-base mt-2">Client Portal</p>
       </div>
 
-      <nav className="space-y-2">
+      <nav className="space-y-2 flex-1 overflow-y-auto">
         {menuItems.map((item) => {
           const currentPath = location.pathname + location.search
           const urlParams = new URLSearchParams(location.search)
@@ -126,16 +136,16 @@ function ClientSidebar() {
         })}
       </nav>
 
-      <div className="mt-8 pt-8 border-t border-blue-700">
-        <Link
-          to="/login"
-          className="flex items-center space-x-3 px-4 py-3 rounded-lg text-blue-200 hover:bg-red-600 hover:text-white transition-colors duration-200"
+      <div className="mt-4 pt-4 border-t border-blue-700 flex-shrink-0">
+        <button
+          onClick={handleLogout}
+          className="flex items-center space-x-3 px-4 py-3 rounded-lg text-blue-200 hover:bg-red-600 hover:text-white transition-colors duration-200 w-full text-left"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
           <span>Logout</span>
-        </Link>
+        </button>
       </div>
     </div>
   )
