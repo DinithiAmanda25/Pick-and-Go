@@ -15,7 +15,7 @@ app.use(express.json());
 
 // Import Routes
 const authRoutes = require('./routes/AuthRoute');
-const uploadRoutes = require('./routes/UploadRoute');
+// const uploadRoutes = require('./routes/UploadRoute'); // Temporarily disabled due to Cloudinary config
 
 // Root Route
 app.get("/", (req, res) => {
@@ -24,7 +24,7 @@ app.get("/", (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/upload', uploadRoutes);
+// app.use('/api/upload', uploadRoutes); // Temporarily disabled due to Cloudinary config
 
 // MongoDB Connection & Server Start
 const PORT = process.env.PORT || 9000;
@@ -32,20 +32,7 @@ const PORT = process.env.PORT || 9000;
 // Connect to MongoDB and start server
 connectDB().then(async () => {
   app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`📋 API Endpoints:`);
-    console.log(`   POST /api/auth/login`);
-    console.log(`   POST /api/auth/register/client`);
-    console.log(`   POST /api/auth/register/vehicle-owner`);
-    console.log(`   POST /api/auth/register/driver`);
-    console.log(`   GET /api/auth/profile/:role/:userId`);
-    console.log(`   PUT /api/auth/admin/approve-driver/:driverId`);
-    console.log(`   🖼️ Upload Endpoints:`);
-    console.log(`   POST /api/upload/single - Upload single file`);
-    console.log(`   POST /api/upload/multiple - Upload multiple files`);
-    console.log(`   POST /api/upload/profile - Upload profile image`);
-    console.log(`   POST /api/upload/document - Upload document`);
-    console.log(`   DELETE /api/upload/:publicId - Delete file`);
+    console.log(`🚀 Server is running on http://localhost:${PORT}`);
   });
 }).catch((error) => {
   console.error('❌ Failed to start server:', error.message);

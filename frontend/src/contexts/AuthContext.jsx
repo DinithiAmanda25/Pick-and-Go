@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import AuthService from '../Services/auth-service';
+import authService from '../Services/auth-service';
 
 const AuthContext = createContext();
 
@@ -18,27 +18,27 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check if user is already logged in
-    const currentUser = AuthService.getCurrentUser();
-    const authStatus = AuthService.isAuthenticated();
-    
+    const currentUser = authService.getCurrentUser();
+    const authStatus = authService.isAuthenticated();
+
     if (currentUser && authStatus) {
       setUser(currentUser);
       setIsAuthenticated(true);
     }
-    
+
     setLoading(false);
   }, []);
 
   const login = async (credentials) => {
     try {
-      const response = await AuthService.login(credentials);
-      
+      const response = await authService.login(credentials);
+
       if (response.success) {
         setUser(response.user);
         setIsAuthenticated(true);
         return response;
       }
-      
+
       throw new Error(response.message || 'Login failed');
     } catch (error) {
       throw error;
@@ -46,14 +46,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    AuthService.logout();
+    authService.logout();
     setUser(null);
     setIsAuthenticated(false);
   };
 
   const registerClient = async (userData) => {
     try {
-      return await AuthService.registerClient(userData);
+      return await authService.registerClient(userData);
     } catch (error) {
       throw error;
     }
@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }) => {
 
   const registerVehicleOwner = async (userData) => {
     try {
-      return await AuthService.registerVehicleOwner(userData);
+      return await authService.registerVehicleOwner(userData);
     } catch (error) {
       throw error;
     }
@@ -69,9 +69,18 @@ export const AuthProvider = ({ children }) => {
 
   const registerDriver = async (userData) => {
     try {
-      return await AuthService.registerDriver(userData);
+      return await authService.registerDriver(userData);
     } catch (error) {
       throw error;
+    }
+  };
+
+  const refreshUser = () => {
+    // Refresh user data from localStorage
+    const currentUser = authService.getCurrentUser();
+    if (currentUser) {
+      setUser(currentUser);
+      console.log('AuthContext - User data refreshed from localStorage');
     }
   };
 
@@ -81,12 +90,20 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     logout,
+    refreshUser,
     registerClient,
     registerVehicleOwner,
     registerDriver,
-    getDashboardRoute: AuthService.getDashboardRoute,
-    hasRole: AuthService.hasRole,
-    isAdminOrBusinessOwner: AuthService.isAdminOrBusinessOwner
+
+    // Session management functions
+    getCurrentUserId: () => authService.getCurrentUserId(),
+    getSessionData: () => authService.getSessionData(),
+    getSessionId: () => authService.getSessionId(),
+
+    // Navigation and role functions
+    getDashboardRoute: authService.getDashboardRoute,
+    hasRole: authService.hasRole,
+    isAdminOrBusinessOwner: authService.isAdminOrBusinessOwner
   };
 
   return (

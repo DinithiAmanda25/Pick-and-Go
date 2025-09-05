@@ -11,7 +11,7 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  
+
   const { login } = useAuth()
   const navigate = useNavigate()
 
@@ -31,7 +31,7 @@ function Login() {
 
     try {
       const response = await login(formData)
-      
+
       if (response.success) {
         // Navigate to appropriate dashboard
         navigate(response.dashboardRoute)
@@ -166,16 +166,6 @@ function Login() {
               </div>
             </div>
           )}
-
-          {/* Demo Credentials Info */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <h4 className="text-sm font-medium text-blue-800 mb-2">Demo Credentials:</h4>
-            <div className="text-xs text-blue-700 space-y-1">
-              <p><strong>Admin:</strong> admin / admin123</p>
-              <p><strong>Business Owner:</strong> business_owner / business123</p>
-              <p><strong>Note:</strong> Clients, Drivers, and Vehicle Owners use email to login</p>
-            </div>
-          </div>
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">

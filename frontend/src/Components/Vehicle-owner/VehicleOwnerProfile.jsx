@@ -3,56 +3,62 @@ import React, { useState } from 'react'
 function VehicleOwnerProfile({ profile }) {
     const [activeTab, setActiveTab] = useState('personal')
     const [isEditing, setIsEditing] = useState(false)
+    
+    // Debug: Log the profile data to see what we're receiving
+    console.log('VehicleOwnerProfile - Received profile data:', profile);
+    
+    // Show loading state if no profile data
+    if (!profile) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <div className="text-lg text-gray-500">Loading profile data...</div>
+            </div>
+        );
+    }
+    
     const [formData, setFormData] = useState({
-        // Personal Information (aligned with Driver onboarding)
-        firstName: profile?.name?.split(' ')[0] || 'Michael',
-        lastName: profile?.name?.split(' ')[1] || 'Rodriguez',
-        email: profile?.email || 'michael.rodriguez@example.com',
-        phone: profile?.phone || '+1 (555) 123-4567',
-        address: '123 Main Street, Downtown',
-        city: 'Colombo',
-        zipCode: '10001',
-        country: 'Sri Lanka',
-        dateOfBirth: '1985-06-15',
-        emergencyContact: 'Maria Rodriguez',
-        emergencyPhone: '+1 (555) 987-6543',
-
-        // License Information (from Driver onboarding)
-        licenseNumber: 'DL123456789',
-        licenseType: 'Class C (Regular)',
-        licenseIssueDate: '2020-06-15',
-        licenseExpiry: '2026-06-15',
-        issuingState: 'Western Province',
+        // Personal Information - using real data from MongoDB document
+        firstName: profile?.firstName || '',
+        lastName: profile?.lastName || '',
+        email: profile?.email || '',
+        phone: profile?.phone || '',
+        
+        // Address information from nested address object
+        address: profile?.address?.street || '',
+        city: profile?.address?.city || '',
+        state: profile?.address?.state || '',
+        zipCode: profile?.address?.zipCode || '',
+        country: 'Sri Lanka', // Default for Sri Lankan app
+        
+        // Additional fields
+        dateOfBirth: profile?.dateOfBirth || '',
+        emergencyContact: profile?.emergencyContact || '',
+        emergencyPhone: profile?.emergencyPhone || '',
 
         // Vehicle Owner Specific Information
         ownerType: 'Individual Owner',
-        ownerLicense: 'VL987654321',
-        registrationDate: '2023-01-15',
+        ownerLicense: profile?.ownerLicense || '',
+        registrationDate: profile?.createdAt ? new Date(profile.createdAt).toISOString().split('T')[0] : '',
 
         // Experience Information (adapted for Vehicle Owner)
-        vehicleOwnershipExperience: '3-5 years',
-        previousExperience: 'Small family car rental experience',
-        specializations: ['Economy Cars', 'Family Vehicles', 'Long-term Rentals'],
-
-        // Financial Information
-        paymentMethod: 'Direct Transfer',
-        taxId: 'TAX123456789',
-        vatNumber: 'VAT987654321',
+        vehicleOwnershipExperience: profile?.vehicleOwnershipExperience || '',
+        previousExperience: profile?.previousExperience || '',
+        specializations: profile?.specializations || ['Economy Cars', 'Family Vehicles'],
 
         // Insurance Information
-        insuranceProvider: 'Sri Lanka Insurance',
-        insurancePolicyNumber: 'POL123456789',
-        insuranceExpiry: '2024-12-31',
-        personalInsuranceNumber: 'PI456789123',
+        insuranceProvider: profile?.insuranceProvider || '',
+        insurancePolicyNumber: profile?.insurancePolicyNumber || '',
+        insuranceExpiry: profile?.insuranceExpiry || '',
+        personalInsuranceNumber: profile?.personalInsuranceNumber || '',
 
-        // Document Information
+        // Document Information - based on documents array from MongoDB
         documentsUploaded: {
-            profilePhoto: true,
-            licensePhoto: true,
-            ownerLicense: true,
-            insuranceDocuments: true,
-            taxDocuments: false,
-            backgroundCheck: true
+            profilePhoto: !!profile?.profilePhoto,
+            licensePhoto: !!profile?.licensePhoto,
+            ownerLicense: !!profile?.ownerLicense,
+            insuranceDocuments: !!profile?.insuranceDocuments,
+            taxDocuments: !!profile?.taxDocuments,
+            backgroundCheck: !!profile?.backgroundCheck
         }
     })
 
@@ -227,72 +233,6 @@ function VehicleOwnerProfile({ profile }) {
                 </div>
             </div>
 
-            {/* License Information Section */}
-            <div className="mt-8 pt-8 border-t border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-800 mb-6">License Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">License Number</label>
-                        <input
-                            type="text"
-                            name="licenseNumber"
-                            value={formData.licenseNumber}
-                            onChange={handleInputChange}
-                            disabled={!isEditing}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">License Type</label>
-                        <select
-                            name="licenseType"
-                            value={formData.licenseType}
-                            onChange={handleInputChange}
-                            disabled={!isEditing}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50"
-                        >
-                            <option value="Class A">Class A (Commercial)</option>
-                            <option value="Class B">Class B (Commercial)</option>
-                            <option value="Class C (Regular)">Class C (Regular)</option>
-                            <option value="Motorcycle">Motorcycle</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">License Issue Date</label>
-                        <input
-                            type="date"
-                            name="licenseIssueDate"
-                            value={formData.licenseIssueDate}
-                            onChange={handleInputChange}
-                            disabled={!isEditing}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">License Expiry</label>
-                        <input
-                            type="date"
-                            name="licenseExpiry"
-                            value={formData.licenseExpiry}
-                            onChange={handleInputChange}
-                            disabled={!isEditing}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Issuing State/Province</label>
-                        <input
-                            type="text"
-                            name="issuingState"
-                            value={formData.issuingState}
-                            onChange={handleInputChange}
-                            disabled={!isEditing}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50"
-                        />
-                    </div>
-                </div>
-            </div>
-
             {/* Vehicle Ownership Experience Section */}
             <div className="mt-8 pt-8 border-t border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-800 mb-6">Vehicle Ownership Experience</h3>
@@ -376,7 +316,6 @@ function VehicleOwnerProfile({ profile }) {
 
                     {[
                         { key: 'profilePhoto', name: 'Profile Photo', description: 'Clear headshot photo for verification' },
-                        { key: 'licensePhoto', name: 'Driver\'s License Photo', description: 'Front and back of your driver\'s license' },
                         { key: 'ownerLicense', name: 'Owner License', description: 'Valid vehicle owner registration document' },
                         { key: 'insuranceDocuments', name: 'Insurance Documents', description: 'Proof of vehicle insurance coverage' }
                     ].map((doc) => (
@@ -384,8 +323,8 @@ function VehicleOwnerProfile({ profile }) {
                             <div className="flex items-center justify-between mb-2">
                                 <h4 className="font-medium text-gray-800">{doc.name}</h4>
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${formData.documentsUploaded[doc.key]
-                                        ? 'bg-green-100 text-green-800'
-                                        : 'bg-red-100 text-red-800'
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-red-100 text-red-800'
                                     }`}>
                                     {formData.documentsUploaded[doc.key] ? 'Uploaded' : 'Required'}
                                 </span>
@@ -397,39 +336,6 @@ function VehicleOwnerProfile({ profile }) {
                                 </button>
                                 {formData.documentsUploaded[doc.key] && (
                                     <button className="px-4 py-2 text-green-600 text-sm border border-green-600 rounded-lg hover:bg-green-50 transition-colors">
-                                        View
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Optional Documents */}
-                <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-800">Optional Documents</h3>
-
-                    {[
-                        { key: 'taxDocuments', name: 'Tax Documents', description: 'Tax returns or VAT registration documents' },
-                        { key: 'backgroundCheck', name: 'Background Check', description: 'Criminal background check certificate' }
-                    ].map((doc) => (
-                        <div key={doc.key} className="border border-gray-200 rounded-lg p-4">
-                            <div className="flex items-center justify-between mb-2">
-                                <h4 className="font-medium text-gray-800">{doc.name}</h4>
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${formData.documentsUploaded[doc.key]
-                                        ? 'bg-green-100 text-green-800'
-                                        : 'bg-gray-100 text-gray-600'
-                                    }`}>
-                                    {formData.documentsUploaded[doc.key] ? 'Uploaded' : 'Optional'}
-                                </span>
-                            </div>
-                            <p className="text-sm text-gray-600 mb-3">{doc.description}</p>
-                            <div className="flex items-center space-x-3">
-                                <button className="px-4 py-2 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors">
-                                    {formData.documentsUploaded[doc.key] ? 'Replace' : 'Upload'}
-                                </button>
-                                {formData.documentsUploaded[doc.key] && (
-                                    <button className="px-4 py-2 text-gray-600 text-sm border border-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
                                         View
                                     </button>
                                 )}
@@ -469,35 +375,6 @@ function VehicleOwnerProfile({ profile }) {
                         </div>
                         <h4 className="font-medium text-gray-800">Documents Pending</h4>
                         <p className="text-sm text-gray-600">Document verification in progress</p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Financial Information */}
-            <div className="border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Financial Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Tax ID Number</label>
-                        <input
-                            type="text"
-                            name="taxId"
-                            value={formData.taxId}
-                            onChange={handleInputChange}
-                            disabled={!isEditing}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">VAT Number</label>
-                        <input
-                            type="text"
-                            name="vatNumber"
-                            value={formData.vatNumber}
-                            onChange={handleInputChange}
-                            disabled={!isEditing}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50"
-                        />
                     </div>
                 </div>
             </div>
@@ -558,60 +435,6 @@ function VehicleOwnerProfile({ profile }) {
                         </button>
                     </div>
                 </div>
-
-                <div className="border border-gray-200 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Security Preferences</h3>
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h4 className="font-medium text-gray-800">Two-Factor Authentication</h4>
-                                <p className="text-sm text-gray-600">Add an extra layer of security to your account</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    name="twoFactorEnabled"
-                                    checked={securityData.twoFactorEnabled}
-                                    onChange={(e) => handleInputChange(e, 'security')}
-                                    className="sr-only peer"
-                                />
-                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                            </label>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h4 className="font-medium text-gray-800">Email Notifications</h4>
-                                <p className="text-sm text-gray-600">Receive booking and payment notifications via email</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    name="emailNotifications"
-                                    checked={securityData.emailNotifications}
-                                    onChange={(e) => handleInputChange(e, 'security')}
-                                    className="sr-only peer"
-                                />
-                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                            </label>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h4 className="font-medium text-gray-800">SMS Notifications</h4>
-                                <p className="text-sm text-gray-600">Get instant SMS alerts for urgent matters</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    name="smsNotifications"
-                                    checked={securityData.smsNotifications}
-                                    onChange={(e) => handleInputChange(e, 'security')}
-                                    className="sr-only peer"
-                                />
-                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     )
@@ -653,17 +476,17 @@ function VehicleOwnerProfile({ profile }) {
                     <button
                         onClick={() => setActiveTab('personal')}
                         className={`pb-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'personal'
-                                ? 'border-green-500 text-green-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            ? 'border-green-500 text-green-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                             }`}
                     >
-                        Personal & License Information
+                        Personal Information
                     </button>
                     <button
                         onClick={() => setActiveTab('documents')}
                         className={`pb-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'documents'
-                                ? 'border-green-500 text-green-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            ? 'border-green-500 text-green-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                             }`}
                     >
                         Documents & Verification
@@ -671,8 +494,8 @@ function VehicleOwnerProfile({ profile }) {
                     <button
                         onClick={() => setActiveTab('security')}
                         className={`pb-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'security'
-                                ? 'border-green-500 text-green-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            ? 'border-green-500 text-green-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                             }`}
                     >
                         Security & Privacy

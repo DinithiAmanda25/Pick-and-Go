@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
+import { useAuth } from '../../contexts/AuthContext'
 import VehicleOwnerSidebar from '../../Components/Vehicle-owner/Sidebar'
 import VehicleOwnerHeader from '../../Components/Vehicle-owner/Header'
 import VehicleOwnerOverview from '../../Components/Vehicle-owner/Overview'
@@ -17,6 +18,11 @@ function VehicleOwnerDashboard() {
   const initialTab = params.get('tab') || 'profile'
   const [activeTab, setActiveTab] = useState(initialTab)
 
+  // Get authenticated user data
+  const { user, getCurrentUserId, getSessionData } = useAuth()
+  const userId = getCurrentUserId()
+  const sessionData = getSessionData()
+
   useEffect(() => {
     const p = new URLSearchParams(location.search)
     const t = p.get('tab') || 'profile'
@@ -25,17 +31,51 @@ function VehicleOwnerDashboard() {
     }
   }, [location.search, activeTab])
 
-  // Comprehensive mock data for vehicle owner
+  // Get real user profile data
+  const getUserProfile = () => {
+    if (!user) return null;
+    
+    return {
+      // Core user information from MongoDB document
+      name: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.name || 'Vehicle Owner',
+      email: user.email || 'No email provided',
+      phone: user.phone || 'No phone provided',
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      
+      // Address information from nested address object
+      address: {
+        street: user.address?.street || '',
+        city: user.address?.city || '',
+        state: user.address?.state || '',
+        zipCode: user.address?.zipCode || ''
+      },
+      
+      // Dates and timestamps
+      joinDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A',
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      
+      // Vehicle owner specific data
+      role: user.role,
+      isActive: user.isActive,
+      documents: user.documents || [],
+      
+      // Business metrics (would come from vehicle/booking services in real implementation)
+      totalVehicles: 0,
+      totalEarnings: 0,
+      averageRating: 0,
+      
+      // Database identifiers
+      userId: user._id || user.id,
+      _id: user._id
+    };
+  };
+
+  const profile = getUserProfile();
+
+  // Mock data for other sections (vehicles, bookings, etc.) - to be replaced with real data later
   const mockData = {
-    profile: {
-      name: 'Michael Rodriguez',
-      email: 'michael.rodriguez@example.com',
-      phone: '+1 (555) 123-4567',
-      joinDate: '2023-03-15',
-      totalVehicles: 3,
-      totalEarnings: 15420,
-      averageRating: 4.6
-    },
     vehicles: [
       {
         id: 1,
@@ -301,7 +341,7 @@ function VehicleOwnerDashboard() {
                   <VehicleOwnerOverview
                     vehicles={mockData.vehicles}
                     bookings={mockData.bookings}
-                    profile={mockData.profile}
+                    profile={profile}
                     setActiveTab={setActiveTab}
                   />
                 )}
@@ -312,10 +352,6 @@ function VehicleOwnerDashboard() {
 
                 {activeTab === 'bookings' && (
                   <VehicleOwnerBookings bookings={mockData.bookings} />
-                )}
-
-                {activeTab === 'earnings' && (
-                  <VehicleOwnerEarnings payments={mockData.payments} vehicles={mockData.vehicles} />
                 )}
 
                 {activeTab === 'reports' && (
@@ -334,29 +370,13 @@ function VehicleOwnerDashboard() {
                   <VehicleOwnerFeedback feedback={mockData.feedback} vehicleRatings={mockData.vehicleRatings} />
                 )}
 
-                {activeTab === 'maintenance' && (
-                  <VehicleOwnerMaintenance vehicles={mockData.vehicles} />
-                )}
-
-                {activeTab === 'analytics' && (
-                  <VehicleOwnerAnalytics
-                    vehicles={mockData.vehicles}
-                    payments={mockData.payments}
-                    bookings={mockData.bookings}
-                  />
-                )}
-
                 {activeTab === 'profile' && (
-                  <VehicleOwnerProfile profile={mockData.profile} />
-                )}
-
-                {activeTab === 'settings' && (
-                  <VehicleOwnerSettings />
+                  <VehicleOwnerProfile profile={profile} />
                 )}
 
                 {/* Default fallback to Profile */}
-                {!['profile', 'overview', 'vehicles', 'bookings', 'earnings', 'reports', 'agreements', 'payments', 'feedback', 'maintenance', 'analytics', 'settings'].includes(activeTab) && (
-                  <VehicleOwnerProfile profile={mockData.profile} />
+                {!['profile', 'overview', 'vehicles', 'bookings', 'reports', 'agreements', 'payments', 'feedback'].includes(activeTab) && (
+                  <VehicleOwnerProfile profile={profile} />
                 )}
               </div>
             </div>

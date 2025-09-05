@@ -1,142 +1,271 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import authService from '../../Services/auth-service'
 import logo from '../../Assets/2.png'
 
 function DriverOnboarding() {
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({
+    // Personal Information
     fullName: '',
     email: '',
     phone: '',
+    dateOfBirth: '',
+
+    // Driver Specific Information
     licenseNumber: '',
+    licenseExpiryDate: '',
     vehicleType: '',
-    address: '',
+    yearsOfExperience: '',
+
+    // Address Information
+    address: {
+      street: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      country: 'Sri Lanka'
+    },
+
+    // Emergency Contact
     emergencyContact: {
       name: '',
       phone: '',
       relationship: ''
     },
+
+    // Documents
     documents: {
       license: null,
       insurance: null,
-      registration: null
+      registration: null,
+      identityCard: null,
+      medicalCertificate: null
     },
-    terms: false
+
+    // Terms and Conditions
+    terms: false,
+    dataProcessing: false
   })
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [uploadedFiles, setUploadedFiles] = useState({})
-  
+  const [errors, setErrors] = useState({})
+  const [uploadProgress, setUploadProgress] = useState({})
+
   const { registerDriver } = useAuth()
   const navigate = useNavigate()
 
+  const vehicleTypes = [
+    'Car',
+    'SUV',
+    'Van',
+    'Pickup Truck',
+    'Motorcycle',
+    'Three Wheeler',
+    'Mini Bus',
+    'Other'
+  ]
+
+  const relationshipOptions = [
+    'Spouse',
+    'Parent',
+    'Sibling',
+    'Child',
+    'Friend',
+    'Relative',
+    'Other'
+  ]
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
-    
+
     if (name.includes('.')) {
-      // Handle nested objects
       const [parent, child] = name.split('.')
-      setFormData({
-        ...formData,
+      setFormData(prev => ({
+        ...prev,
         [parent]: {
-          ...formData[parent],
-          [child]: value
+          ...prev[parent],
+          [child]: type === 'checkbox' ? checked : value
         }
-      })
+      }))
     } else {
-      setFormData({
-        ...formData,
+      setFormData(prev => ({
+        ...prev,
         [name]: type === 'checkbox' ? checked : value
-      })
+      }))
     }
-    
+
     // Clear error when user starts typing
-    if (error) setError('')
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }))
+    }
   }
 
-  const handleFileUpload = (e, documentType) => {
-    const file = e.target.files[0]
-    if (file) {
-      setFormData({
-        ...formData,
-        documents: {
-          ...formData.documents,
-          [documentType]: file.name // For now, just store filename
-        }
-      })
-      setUploadedFiles({
-        ...uploadedFiles,
+  const handleFileUpload = (documentType, file) => {
+    if (!file) return
+
+    console.log('Uploading file:', documentType, file.name)
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf']
+    if (!allowedTypes.includes(file.type)) {
+      setErrors(prev => ({
+        ...prev,
+        [documentType]: 'Please upload only PDF, JPG, JPEG, or PNG files'
+      }))
+      return
+    }
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors(prev => ({
+        ...prev,
+        [documentType]: 'File size must be less than 5MB'
+      }))
+      return
+    }
+
+    // Update form data
+    setFormData(prev => ({
+      ...prev,
+      documents: {
+        ...prev.documents,
         [documentType]: file
+      }
+    }))
+
+    // Clear any previous errors
+    setErrors(prev => ({ ...prev, [documentType]: '' }))
+
+    // Simulate upload progress
+    setUploadProgress(prev => ({ ...prev, [documentType]: 0 }))
+    const interval = setInterval(() => {
+      setUploadProgress(prev => {
+        const newProgress = (prev[documentType] || 0) + 10
+        if (newProgress >= 100) {
+          clearInterval(interval)
+          return { ...prev, [documentType]: 100 }
+        }
+        return { ...prev, [documentType]: newProgress }
       })
-    }
+    }, 100)
   }
 
-  const validateStep = () => {
-    switch (currentStep) {
-      case 1:
-        if (!formData.fullName || !formData.email || !formData.phone || !formData.licenseNumber) {
-          setError('Please fill in all required fields')
-          return false
-        }
+  const validateStep = (step) => {
+    const newErrors = {}
+
+    switch (step) {
+      case 1: // Personal Information
+        if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required'
+        if (!formData.email.trim()) newErrors.email = 'Email is required'
+        if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid'
+        if (!formData.phone.trim()) newErrors.phone = 'Phone number is required'
+        if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required'
         break
-      case 2:
-        if (!formData.vehicleType || !formData.address) {
-          setError('Please fill in all required fields')
-          return false
-        }
+
+      case 2: // Driver Information
+        if (!formData.licenseNumber.trim()) newErrors.licenseNumber = 'License number is required'
+        if (!formData.licenseExpiryDate) newErrors.licenseExpiryDate = 'License expiry date is required'
+        if (!formData.vehicleType) newErrors.vehicleType = 'Vehicle type is required'
+        if (!formData.yearsOfExperience) newErrors.yearsOfExperience = 'Years of experience is required'
         break
-      case 3:
-        if (!formData.emergencyContact.name || !formData.emergencyContact.phone || !formData.emergencyContact.relationship) {
-          setError('Please provide emergency contact information')
-          return false
-        }
+
+      case 3: // Address and Emergency Contact
+        if (!formData.address.street.trim()) newErrors['address.street'] = 'Street address is required'
+        if (!formData.address.city.trim()) newErrors['address.city'] = 'City is required'
+        if (!formData.emergencyContact.name.trim()) newErrors['emergencyContact.name'] = 'Emergency contact name is required'
+        if (!formData.emergencyContact.phone.trim()) newErrors['emergencyContact.phone'] = 'Emergency contact phone is required'
         break
-      case 4:
-        if (!formData.documents.license || !formData.documents.insurance || !formData.documents.registration) {
-          setError('Please upload all required documents')
-          return false
-        }
-        if (!formData.terms) {
-          setError('Please accept the terms and conditions')
-          return false
-        }
+
+      case 4: // Documents
+        console.log('Validating documents:', formData.documents)
+        if (!formData.documents.license) newErrors.license = 'Driving license copy is required'
+        if (!formData.documents.identityCard) newErrors.identityCard = 'Identity card copy is required'
+        break
+
+      case 5: // Terms and Conditions
+        if (!formData.terms) newErrors.terms = 'You must accept the terms and conditions'
+        if (!formData.dataProcessing) newErrors.dataProcessing = 'You must consent to data processing'
         break
     }
-    setError('')
-    return true
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
 
   const handleNext = () => {
-    if (validateStep() && currentStep < 4) {
-      setCurrentStep(currentStep + 1)
+    if (validateStep(currentStep)) {
+      setCurrentStep(prev => Math.min(prev + 1, 5))
     }
   }
 
   const handlePrev = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
-      setError('')
-    }
+    setCurrentStep(prev => Math.max(prev - 1, 1))
+    setErrors({})
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
-    if (!validateStep()) return
-    
+
+    if (!validateStep(5)) return
+
     setIsLoading(true)
-    setError('')
+    setErrors({})
 
     try {
-      const response = await registerDriver(formData)
-      
-      if (response.success) {
-        alert('Driver application submitted successfully! You will receive login credentials via email once approved.')
-        navigate('/')
+      // Create FormData for file upload
+      const formDataToSend = new FormData()
+
+      // Add text fields
+      formDataToSend.append('fullName', formData.fullName)
+      formDataToSend.append('email', formData.email)
+      formDataToSend.append('phone', formData.phone)
+      formDataToSend.append('dateOfBirth', formData.dateOfBirth)
+      formDataToSend.append('licenseNumber', formData.licenseNumber)
+      formDataToSend.append('licenseExpiryDate', formData.licenseExpiryDate)
+      formDataToSend.append('vehicleType', formData.vehicleType)
+      formDataToSend.append('yearsOfExperience', formData.yearsOfExperience)
+
+      // Add address as JSON string
+      formDataToSend.append('address', JSON.stringify(formData.address))
+
+      // Add emergency contact as JSON string
+      formDataToSend.append('emergencyContact', JSON.stringify(formData.emergencyContact))
+
+      // Add files using the correct field names that match the backend
+      Object.keys(formData.documents).forEach(key => {
+        if (formData.documents[key]) {
+          console.log(`📎 Adding file for ${key}:`, formData.documents[key].name, `(${formData.documents[key].size} bytes)`)
+          formDataToSend.append(key, formData.documents[key])
+        } else {
+          console.log(`📎 No file for ${key}`)
+        }
+      })
+
+      // Debug: Log what's being sent (including file info)
+      console.log('📤 Form data being sent:')
+      console.log('📁 Documents in formData:', formData.documents)
+      for (let [key, value] of formDataToSend.entries()) {
+        if (value instanceof File) {
+          console.log(`${key}: File - ${value.name} (${value.size} bytes, ${value.type})`)
+        } else {
+          console.log(`${key}:`, value)
+        }
       }
+
+      // Use the AuthService instead of direct fetch
+      const data = await authService.registerDriver(formDataToSend)
+
+      if (data.success) {
+        alert('Your driver application has been submitted successfully! You will receive login credentials via email once your application is approved.')
+        navigate('/')
+      } else {
+        setErrors({ general: data.message || 'Failed to submit application. Please try again.' })
+      }
+
     } catch (error) {
-      setError(error.message || 'Application submission failed. Please try again.')
+      console.error('Driver application error:', error)
+      setErrors({ general: 'Failed to submit application. Please try again.' })
     } finally {
       setIsLoading(false)
     }
@@ -145,7 +274,7 @@ function DriverOnboarding() {
   const getStepTitle = () => {
     const titles = {
       1: 'Personal Information',
-      2: 'Vehicle & Location',
+      2: 'Driver & Vehicle Details',
       3: 'Emergency Contact',
       4: 'Documents & Agreement'
     }
@@ -255,39 +384,35 @@ function DriverOnboarding() {
 
           {/* Progress indicator */}
           <div className="flex items-center justify-center space-x-2 mb-8">
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-              currentStep >= 1 ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-400'
-            }`}>
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${currentStep >= 1 ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-400'
+              }`}>
               1
             </div>
             <div className={`w-6 h-1 ${currentStep >= 2 ? 'bg-purple-600' : 'bg-gray-200'}`}></div>
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-              currentStep >= 2 ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-400'
-            }`}>
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${currentStep >= 2 ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-400'
+              }`}>
               2
             </div>
             <div className={`w-6 h-1 ${currentStep >= 3 ? 'bg-purple-600' : 'bg-gray-200'}`}></div>
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-              currentStep >= 3 ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-400'
-            }`}>
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${currentStep >= 3 ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-400'
+              }`}>
               3
             </div>
             <div className={`w-6 h-1 ${currentStep >= 4 ? 'bg-purple-600' : 'bg-gray-200'}`}></div>
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-              currentStep >= 4 ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-400'
-            }`}>
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${currentStep >= 4 ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-400'
+              }`}>
               4
             </div>
           </div>
 
           {/* Error Message */}
-          {error && (
+          {errors.general && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
               <div className="flex items-center">
                 <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="text-sm text-red-700">{error}</p>
+                <p className="text-sm text-red-700">{errors.general}</p>
               </div>
             </div>
           )}
@@ -307,9 +432,11 @@ function DriverOnboarding() {
                     required
                     value={formData.fullName}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors.fullName ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
                     placeholder="John Doe"
                   />
+                  {errors.fullName && <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>}
                 </div>
 
                 <div>
@@ -323,9 +450,11 @@ function DriverOnboarding() {
                     required
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
                     placeholder="john.doe@example.com"
                   />
+                  {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                 </div>
 
                 <div>
@@ -339,9 +468,28 @@ function DriverOnboarding() {
                     required
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="+1 (555) 123-4567"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
+                    placeholder="+94 71 234 5678"
                   />
+                  {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
+                </div>
+
+                <div>
+                  <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-1">
+                    Date of Birth *
+                  </label>
+                  <input
+                    id="dateOfBirth"
+                    name="dateOfBirth"
+                    type="date"
+                    required
+                    value={formData.dateOfBirth}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors.dateOfBirth ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
+                  />
+                  {errors.dateOfBirth && <p className="mt-1 text-sm text-red-600">{errors.dateOfBirth}</p>}
                 </div>
 
                 <div>
@@ -355,19 +503,43 @@ function DriverOnboarding() {
                     required
                     value={formData.licenseNumber}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="DL123456789"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors.licenseNumber ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
+                    placeholder="B1234567"
                   />
+                  {errors.licenseNumber && <p className="mt-1 text-sm text-red-600">{errors.licenseNumber}</p>}
                 </div>
               </div>
             )}
 
-            {/* Step 2: Vehicle & Location */}
+            {/* Step 2: Driver & Vehicle Details */}
             {currentStep === 2 && (
               <div className="space-y-4">
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+                  <h4 className="text-sm font-medium text-purple-800 mb-1">Driver & Vehicle Information</h4>
+                  <p className="text-xs text-purple-700">Please provide your driving credentials and preferred vehicle details</p>
+                </div>
+
+                <div>
+                  <label htmlFor="licenseExpiryDate" className="block text-sm font-medium text-gray-700 mb-1">
+                    License Expiry Date *
+                  </label>
+                  <input
+                    id="licenseExpiryDate"
+                    name="licenseExpiryDate"
+                    type="date"
+                    required
+                    value={formData.licenseExpiryDate}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors.licenseExpiryDate ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
+                  />
+                  {errors.licenseExpiryDate && <p className="mt-1 text-sm text-red-600">{errors.licenseExpiryDate}</p>}
+                </div>
+
                 <div>
                   <label htmlFor="vehicleType" className="block text-sm font-medium text-gray-700 mb-1">
-                    Vehicle Type *
+                    Preferred Vehicle Type *
                   </label>
                   <select
                     id="vehicleType"
@@ -375,31 +547,88 @@ function DriverOnboarding() {
                     required
                     value={formData.vehicleType}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors.vehicleType ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
                   >
                     <option value="">Select vehicle type</option>
-                    <option value="Car">Car</option>
-                    <option value="SUV">SUV</option>
-                    <option value="Van">Van</option>
-                    <option value="Truck">Truck</option>
-                    <option value="Motorcycle">Motorcycle</option>
+                    {vehicleTypes.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
                   </select>
+                  {errors.vehicleType && <p className="mt-1 text-sm text-red-600">{errors.vehicleType}</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                    Full Address *
+                  <label htmlFor="yearsOfExperience" className="block text-sm font-medium text-gray-700 mb-1">
+                    Years of Driving Experience *
                   </label>
-                  <textarea
-                    id="address"
-                    name="address"
+                  <input
+                    id="yearsOfExperience"
+                    name="yearsOfExperience"
+                    type="number"
+                    min="1"
+                    max="50"
                     required
-                    rows={3}
-                    value={formData.address}
+                    value={formData.yearsOfExperience}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="123 Main St, City, State, ZIP Code"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors.yearsOfExperience ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
+                    placeholder="Enter years of experience"
                   />
+                  {errors.yearsOfExperience && <p className="mt-1 text-sm text-red-600">{errors.yearsOfExperience}</p>}
+                </div>
+
+                <div>
+                  <label htmlFor="address.street" className="block text-sm font-medium text-gray-700 mb-1">
+                    Street Address *
+                  </label>
+                  <input
+                    id="address.street"
+                    name="address.street"
+                    type="text"
+                    required
+                    value={formData.address.street}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors['address.street'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
+                    placeholder="123 Main Street"
+                  />
+                  {errors['address.street'] && <p className="mt-1 text-sm text-red-600">{errors['address.street']}</p>}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="address.city" className="block text-sm font-medium text-gray-700 mb-1">
+                      City *
+                    </label>
+                    <input
+                      id="address.city"
+                      name="address.city"
+                      type="text"
+                      required
+                      value={formData.address.city}
+                      onChange={handleInputChange}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors['address.city'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                        }`}
+                      placeholder="Colombo"
+                    />
+                    {errors['address.city'] && <p className="mt-1 text-sm text-red-600">{errors['address.city']}</p>}
+                  </div>
+
+                  <div>
+                    <label htmlFor="address.zipCode" className="block text-sm font-medium text-gray-700 mb-1">
+                      Postal Code
+                    </label>
+                    <input
+                      id="address.zipCode"
+                      name="address.zipCode"
+                      type="text"
+                      value={formData.address.zipCode}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      placeholder="10100"
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -409,7 +638,7 @@ function DriverOnboarding() {
               <div className="space-y-4">
                 <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
                   <h4 className="text-sm font-medium text-purple-800 mb-1">Emergency Contact Information</h4>
-                  <p className="text-xs text-purple-700">This person will be contacted in case of emergencies</p>
+                  <p className="text-xs text-purple-700">This person will be contacted in case of emergencies during your driving duties</p>
                 </div>
 
                 <div>
@@ -423,9 +652,11 @@ function DriverOnboarding() {
                     required
                     value={formData.emergencyContact.name}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors['emergencyContact.name'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
                     placeholder="Jane Doe"
                   />
+                  {errors['emergencyContact.name'] && <p className="mt-1 text-sm text-red-600">{errors['emergencyContact.name']}</p>}
                 </div>
 
                 <div>
@@ -439,9 +670,11 @@ function DriverOnboarding() {
                     required
                     value={formData.emergencyContact.phone}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="+1 (555) 987-6543"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors['emergencyContact.phone'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
+                    placeholder="+94 71 987 6543"
                   />
+                  {errors['emergencyContact.phone'] && <p className="mt-1 text-sm text-red-600">{errors['emergencyContact.phone']}</p>}
                 </div>
 
                 <div>
@@ -454,16 +687,15 @@ function DriverOnboarding() {
                     required
                     value={formData.emergencyContact.relationship}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors['emergencyContact.relationship'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
                   >
                     <option value="">Select relationship</option>
-                    <option value="Spouse">Spouse</option>
-                    <option value="Parent">Parent</option>
-                    <option value="Sibling">Sibling</option>
-                    <option value="Child">Child</option>
-                    <option value="Friend">Friend</option>
-                    <option value="Other">Other</option>
+                    {relationshipOptions.map(option => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
                   </select>
+                  {errors['emergencyContact.relationship'] && <p className="mt-1 text-sm text-red-600">{errors['emergencyContact.relationship']}</p>}
                 </div>
               </div>
             )}
@@ -473,107 +705,279 @@ function DriverOnboarding() {
               <div className="space-y-4">
                 <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
                   <h4 className="text-sm font-medium text-purple-800 mb-1">Required Documents</h4>
-                  <p className="text-xs text-purple-700">Please upload clear, legible copies of all documents</p>
+                  <p className="text-xs text-purple-700">Please upload clear, readable copies of all documents. Accepted formats: PDF, JPG, JPEG, PNG (Max 5MB each)</p>
                 </div>
 
+                {/* Driver's License */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Driver's License *
                   </label>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="file"
-                      accept="image/*,.pdf"
-                      onChange={(e) => handleFileUpload(e, 'license')}
-                      className="hidden"
-                      id="license-upload"
-                    />
-                    <label
-                      htmlFor="license-upload"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm text-gray-600"
-                    >
-                      {formData.documents.license ? formData.documents.license : 'Choose file...'}
-                    </label>
-                    {formData.documents.license && (
-                      <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                    {formData.documents.license ? (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span className="text-sm text-green-600 font-medium">{formData.documents.license.name}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, documents: { ...prev.documents, license: null } }))
+                            setUploadProgress(prev => ({ ...prev, license: 0 }))
+                          }}
+                          className="text-sm text-red-600 hover:text-red-800"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <input
+                          type="file"
+                          accept="image/*,.pdf"
+                          onChange={(e) => handleFileUpload('license', e.target.files[0])}
+                          className="hidden"
+                          id="license-upload"
+                        />
+                        <label
+                          htmlFor="license-upload"
+                          className="cursor-pointer flex flex-col items-center space-y-2"
+                        >
+                          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          </svg>
+                          <span className="text-sm text-gray-600">Click to upload driver's license</span>
+                        </label>
+                      </div>
+                    )}
+                    {uploadProgress.license !== undefined && uploadProgress.license < 100 && (
+                      <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${uploadProgress.license}%` }}
+                        ></div>
+                      </div>
                     )}
                   </div>
+                  {errors.license && <p className="mt-1 text-sm text-red-600">{errors.license}</p>}
                 </div>
 
+                {/* Identity Card */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Insurance Certificate *
+                    National Identity Card *
                   </label>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="file"
-                      accept="image/*,.pdf"
-                      onChange={(e) => handleFileUpload(e, 'insurance')}
-                      className="hidden"
-                      id="insurance-upload"
-                    />
-                    <label
-                      htmlFor="insurance-upload"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm text-gray-600"
-                    >
-                      {formData.documents.insurance ? formData.documents.insurance : 'Choose file...'}
-                    </label>
-                    {formData.documents.insurance && (
-                      <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                    {formData.documents.identityCard ? (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span className="text-sm text-green-600 font-medium">{formData.documents.identityCard.name}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, documents: { ...prev.documents, identityCard: null } }))
+                            setUploadProgress(prev => ({ ...prev, identityCard: 0 }))
+                          }}
+                          className="text-sm text-red-600 hover:text-red-800"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <input
+                          type="file"
+                          accept="image/*,.pdf"
+                          onChange={(e) => handleFileUpload('identityCard', e.target.files[0])}
+                          className="hidden"
+                          id="identity-upload"
+                        />
+                        <label
+                          htmlFor="identity-upload"
+                          className="cursor-pointer flex flex-col items-center space-y-2"
+                        >
+                          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          </svg>
+                          <span className="text-sm text-gray-600">Click to upload identity card</span>
+                        </label>
+                      </div>
                     )}
+                    {uploadProgress.identityCard !== undefined && uploadProgress.identityCard < 100 && (
+                      <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${uploadProgress.identityCard}%` }}
+                        ></div>
+                      </div>
+                    )}
+                  </div>
+                  {errors.identityCard && <p className="mt-1 text-sm text-red-600">{errors.identityCard}</p>}
+                </div>
+
+                {/* Optional Documents */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Insurance Certificate */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Insurance Certificate (Optional)
+                    </label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-3">
+                      {formData.documents.insurance ? (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-xs text-green-600 font-medium">{formData.documents.insurance.name}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData(prev => ({ ...prev, documents: { ...prev.documents, insurance: null } }))
+                              setUploadProgress(prev => ({ ...prev, insurance: 0 }))
+                            }}
+                            className="text-xs text-red-600 hover:text-red-800"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
+                          <input
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={(e) => handleFileUpload('insurance', e.target.files[0])}
+                            className="hidden"
+                            id="insurance-upload"
+                          />
+                          <label
+                            htmlFor="insurance-upload"
+                            className="cursor-pointer flex flex-col items-center space-y-1"
+                          >
+                            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <span className="text-xs text-gray-600">Upload insurance</span>
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Medical Certificate */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Medical Certificate (Optional)
+                    </label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-3">
+                      {formData.documents.medicalCertificate ? (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-xs text-green-600 font-medium">{formData.documents.medicalCertificate.name}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData(prev => ({ ...prev, documents: { ...prev.documents, medicalCertificate: null } }))
+                              setUploadProgress(prev => ({ ...prev, medicalCertificate: 0 }))
+                            }}
+                            className="text-xs text-red-600 hover:text-red-800"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
+                          <input
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={(e) => handleFileUpload('medicalCertificate', e.target.files[0])}
+                            className="hidden"
+                            id="medical-upload"
+                          />
+                          <label
+                            htmlFor="medical-upload"
+                            className="cursor-pointer flex flex-col items-center space-y-1"
+                          >
+                            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <span className="text-xs text-gray-600">Upload medical cert</span>
+                          </label>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Vehicle Registration *
-                  </label>
-                  <div className="flex items-center space-x-2">
+                {/* Terms and Conditions */}
+                <div className="space-y-4 pt-4 border-t border-gray-200">
+                  <div className="flex items-start">
                     <input
-                      type="file"
-                      accept="image/*,.pdf"
-                      onChange={(e) => handleFileUpload(e, 'registration')}
-                      className="hidden"
-                      id="registration-upload"
+                      id="terms"
+                      name="terms"
+                      type="checkbox"
+                      checked={formData.terms}
+                      onChange={handleInputChange}
+                      className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded mt-1"
                     />
-                    <label
-                      htmlFor="registration-upload"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm text-gray-600"
-                    >
-                      {formData.documents.registration ? formData.documents.registration : 'Choose file...'}
+                    <label htmlFor="terms" className="ml-2 text-sm text-gray-700">
+                      I agree to the{' '}
+                      <span className="text-purple-600 hover:text-purple-500 font-medium cursor-pointer">
+                        Driver Terms of Service
+                      </span>{' '}
+                      and{' '}
+                      <span className="text-purple-600 hover:text-purple-500 font-medium cursor-pointer">
+                        Privacy Policy
+                      </span>{' '}
+                      *
                     </label>
-                    {formData.documents.registration && (
-                      <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
                   </div>
+                  {errors.terms && <p className="text-sm text-red-600">{errors.terms}</p>}
+
+                  <div className="flex items-start">
+                    <input
+                      id="dataProcessing"
+                      name="dataProcessing"
+                      type="checkbox"
+                      checked={formData.dataProcessing}
+                      onChange={handleInputChange}
+                      className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded mt-1"
+                    />
+                    <label htmlFor="dataProcessing" className="ml-2 text-sm text-gray-700">
+                      I consent to the processing of my personal data for application review and background checks *
+                    </label>
+                  </div>
+                  {errors.dataProcessing && <p className="text-sm text-red-600">{errors.dataProcessing}</p>}
                 </div>
 
-                <div className="flex items-start pt-4">
-                  <input
-                    id="terms"
-                    name="terms"
-                    type="checkbox"
-                    required
-                    checked={formData.terms}
-                    onChange={handleInputChange}
-                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded mt-1"
-                  />
-                  <label htmlFor="terms" className="ml-2 text-sm text-gray-700">
-                    I agree to the{' '}
-                    <Link to="/driver-terms" className="text-purple-600 hover:text-purple-500">
-                      Driver Terms of Service
-                    </Link>{' '}
-                    and{' '}
-                    <Link to="/privacy" className="text-purple-600 hover:text-purple-500">
-                      Privacy Policy
-                    </Link>
-                  </label>
+                {/* Info Box */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start space-x-3">
+                    <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div className="text-sm text-blue-700">
+                      <p className="font-medium">What happens next?</p>
+                      <ul className="list-disc list-inside mt-2 space-y-1">
+                        <li>Your documents will be reviewed within 3-5 business days</li>
+                        <li>Background checks will be conducted</li>
+                        <li>You'll receive login credentials via email once approved</li>
+                        <li>Complete driver orientation before starting</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -589,7 +993,7 @@ function DriverOnboarding() {
                   Previous
                 </button>
               )}
-              
+
               {currentStep < 4 ? (
                 <button
                   type="button"
