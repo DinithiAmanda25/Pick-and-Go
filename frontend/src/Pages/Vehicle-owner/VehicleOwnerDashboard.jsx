@@ -34,7 +34,7 @@ function VehicleOwnerDashboard() {
   // Get real user profile data
   const getUserProfile = () => {
     if (!user) return null;
-    
+
     return {
       // Core user information from MongoDB document
       name: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.name || 'Vehicle Owner',
@@ -42,7 +42,7 @@ function VehicleOwnerDashboard() {
       phone: user.phone || 'No phone provided',
       firstName: user.firstName || '',
       lastName: user.lastName || '',
-      
+
       // Address information from nested address object
       address: {
         street: user.address?.street || '',
@@ -50,22 +50,22 @@ function VehicleOwnerDashboard() {
         state: user.address?.state || '',
         zipCode: user.address?.zipCode || ''
       },
-      
+
       // Dates and timestamps
       joinDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A',
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-      
+
       // Vehicle owner specific data
       role: user.role,
       isActive: user.isActive,
       documents: user.documents || [],
-      
+
       // Business metrics (would come from vehicle/booking services in real implementation)
       totalVehicles: 0,
       totalEarnings: 0,
       averageRating: 0,
-      
+
       // Database identifiers
       userId: user._id || user.id,
       _id: user._id

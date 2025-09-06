@@ -3,10 +3,10 @@ import React, { useState } from 'react'
 function VehicleOwnerProfile({ profile }) {
     const [activeTab, setActiveTab] = useState('personal')
     const [isEditing, setIsEditing] = useState(false)
-    
+
     // Debug: Log the profile data to see what we're receiving
     console.log('VehicleOwnerProfile - Received profile data:', profile);
-    
+
     // Show loading state if no profile data
     if (!profile) {
         return (
@@ -15,21 +15,21 @@ function VehicleOwnerProfile({ profile }) {
             </div>
         );
     }
-    
+
     const [formData, setFormData] = useState({
         // Personal Information - using real data from MongoDB document
         firstName: profile?.firstName || '',
         lastName: profile?.lastName || '',
         email: profile?.email || '',
         phone: profile?.phone || '',
-        
+
         // Address information from nested address object
         address: profile?.address?.street || '',
         city: profile?.address?.city || '',
         state: profile?.address?.state || '',
         zipCode: profile?.address?.zipCode || '',
         country: 'Sri Lanka', // Default for Sri Lankan app
-        
+
         // Additional fields
         dateOfBirth: profile?.dateOfBirth || '',
         emergencyContact: profile?.emergencyContact || '',
