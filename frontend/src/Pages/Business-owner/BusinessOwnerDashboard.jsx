@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useLocation } from 'react-router-dom'
+import { useAuth } from '../../contexts/AuthContext'
 import BusinessOwnerSidebar from '../../Components/Business-owner/Sidebar'
 import BusinessOwnerHeader from '../../Components/Business-owner/Header'
 
@@ -21,14 +22,55 @@ function BusinessOwnerDashboard() {
   const urlParams = new URLSearchParams(location.search)
   const activeTab = urlParams.get('tab') || 'overview'
 
-  // Enhanced mock data for comprehensive dashboard
+  // Get authenticated user data
+  const { user, getCurrentUserId, getSessionData } = useAuth()
+  const userId = getCurrentUserId()
+  const sessionData = getSessionData()
+
+  // Debug logging
+  console.log('BusinessOwnerDashboard - User:', user)
+  console.log('BusinessOwnerDashboard - UserID:', userId)
+  console.log('BusinessOwnerDashboard - SessionData:', sessionData)
+
+  // Check if user is authenticated and is a business owner
+  if (!user || user.role !== 'business_owner') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-800">Access Denied</h2>
+          <p className="text-gray-600">You must be logged in as a Business Owner to access this page.</p>
+          <p className="text-sm text-gray-500 mt-2">Current user role: {user?.role || 'Not logged in'}</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Use actual user data for profile, fallback to defaults for other data
   const mockData = {
     profile: {
-      name: 'Sarah Wilson',
-      email: 'sarah.wilson@example.com',
-      businessName: 'Wilson Transportation LLC',
-      businessType: 'Premium Vehicle Rental',
-      registrationDate: '2023-01-15',
+      id: userId,
+      username: user?.username || '',
+      email: user?.email || '',
+      businessName: user?.businessName || '',
+      contactNumber: user?.contactNumber || '',
+      ownerName: user?.ownerName || '',
+      businessType: user?.businessType || '',
+      businessAddress: user?.businessAddress || {
+        street: '',
+        city: '',
+        state: '',
+        zipCode: '',
+        country: 'Sri Lanka'
+      },
+      businessLicense: user?.businessLicense || '',
+      taxId: user?.taxId || '',
+      website: user?.website || '',
+      description: user?.description || '',
+      registrationDate: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : '',
+      loginTime: sessionData?.loginTime ? new Date(sessionData.loginTime).toLocaleString() : '',
+
+      // For overview display (these should come from actual business data later)
+      name: user?.businessName || 'Business Owner', // Display name for overview
       totalVehicles: 25,
       activeDrivers: 18,
       monthlyRevenue: 45000,
@@ -420,7 +462,24 @@ function BusinessOwnerDashboard() {
       case 'analytics':
         return <BusinessOwnerAnalytics data={mockData} />
       case 'profile':
-        return <BusinessOwnerProfile profile={mockData.profile} />
+        // Create clean profile object without business metrics for profile display
+        const cleanProfile = {
+          id: mockData.profile.id,
+          username: mockData.profile.username,
+          email: mockData.profile.email,
+          businessName: mockData.profile.businessName,
+          contactNumber: mockData.profile.contactNumber,
+          ownerName: mockData.profile.ownerName,
+          businessType: mockData.profile.businessType,
+          businessAddress: mockData.profile.businessAddress,
+          businessLicense: mockData.profile.businessLicense,
+          taxId: mockData.profile.taxId,
+          website: mockData.profile.website,
+          description: mockData.profile.description,
+          registrationDate: mockData.profile.registrationDate,
+          loginTime: mockData.profile.loginTime
+        }
+        return <BusinessOwnerProfile profile={cleanProfile} />
       default:
         return <BusinessOwnerOverview data={mockData} />
     }

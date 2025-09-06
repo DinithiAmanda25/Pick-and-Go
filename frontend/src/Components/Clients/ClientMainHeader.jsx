@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import logo from '../../Assets/1.png'
 
 function ClientMainHeader() {
     const location = useLocation()
@@ -28,13 +29,15 @@ function ClientMainHeader() {
             }`}>
             <div className="max-w-7xl mx-auto px-6 lg:px-8 py-4">
                 <div className="flex justify-between items-center">
-                    <Link to="/" className="flex items-center space-x-4 group">
+                    <Link to="/" className="flex items-center space-x-2 group">
                         <div className="relative">
-                            <div className={`w-12 h-12 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 ${isScrolled ? 'shadow-xl' : 'shadow-lg'
+                            <div className={`w-15 h-15 bg-white   flex items-center justify-center   transition-all duration-300 overflow-hidden '
                                 }`}>
-                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
+                                <img
+                                    src={logo}
+                                    alt="Pick & Go Logo"
+                                    className="w-15 h-15 object-contain"
+                                />
                             </div>
                         </div>
                         <div className="flex flex-col">
@@ -110,8 +113,8 @@ function ClientMainHeader() {
                         <Link
                             to="/driver-onboarding"
                             className={`hidden md:flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${isScrolled
-                                    ? 'text-green-700 hover:text-white hover:bg-green-600 border border-green-600'
-                                    : 'text-green-600 hover:text-white hover:bg-green-600 border border-green-600'
+                                ? 'text-green-700 hover:text-white hover:bg-green-600 border border-green-600'
+                                : 'text-green-600 hover:text-white hover:bg-green-600 border border-green-600'
                                 }`}
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

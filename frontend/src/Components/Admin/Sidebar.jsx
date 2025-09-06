@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import logo from '../../Assets/2.png'
 
 function AdminSidebar() {
   const location = useLocation()
@@ -72,15 +73,20 @@ function AdminSidebar() {
       transition={{ duration: 0.3 }}
     >
       <motion.div
-        className="mb-8"
+        className="mb-8 flex flex-col items-center"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <Link to="/" className="text-xl font-bold text-center block text-white">
-          Pick & Go
+        <Link to="/" className="flex items-center space-x-2 justify-center">
+          <img
+            src={logo}
+            alt="Pick & Go Logo"
+            className="h-12 w-auto"
+          />
+          <span className="text-2xl font-bold text-white">Pick & Go</span>
         </Link>
-        <p className="text-red-200 text-sm text-center mt-1">Admin Portal</p>
+        <p className="text-red-200 text-base mt-2">Admin Portal</p>
       </motion.div>
 
       <nav className="space-y-2">
@@ -100,8 +106,8 @@ function AdminSidebar() {
               <Link
                 to={item.path}
                 className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive
-                    ? 'bg-red-600 text-white shadow-lg'
-                    : 'text-red-200 hover:bg-red-800 hover:text-white'
+                  ? 'bg-red-600 text-white shadow-lg'
+                  : 'text-red-200 hover:bg-red-800 hover:text-white'
                   }`}
               >
                 <motion.div

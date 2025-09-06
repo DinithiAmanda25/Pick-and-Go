@@ -1,13 +1,21 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import logo from '../../Assets/2.png'
 
 function ClientHeader() {
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Dashboard</h1>
-          <p className="text-sm text-gray-600">Welcome back! Manage your rentals and bookings</p>
+        <div className="flex items-center space-x-3">
+          <img
+            src={logo}
+            alt="Pick & Go Logo"
+            className="h-10 w-auto"
+          />
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">My Dashboard</h1>
+            <p className="text-sm text-gray-600">Welcome back! Manage your rentals and bookings</p>
+          </div>
         </div>
 
         <div className="flex items-center space-x-4">

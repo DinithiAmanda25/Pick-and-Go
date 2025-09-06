@@ -1,12 +1,20 @@
 import React from 'react'
+import logo from '../../Assets/2.png'
 
 function VehicleOwnerHeader() {
     return (
         <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
             <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Vehicle Owner Dashboard</h1>
-                    <p className="text-sm text-gray-600">Manage your fleet and track earnings</p>
+                <div className="flex items-center space-x-3">
+                    <img
+                        src={logo}
+                        alt="Pick & Go Logo"
+                        className="h-10 w-auto"
+                    />
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">Vehicle Owner Dashboard</h1>
+                        <p className="text-sm text-gray-600">Manage your fleet and track earnings</p>
+                    </div>
                 </div>
 
                 <div className="flex items-center space-x-4">
