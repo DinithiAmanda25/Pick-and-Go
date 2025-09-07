@@ -27,7 +27,10 @@ export default function BookingsEnhanced({ mockBookings, onCancelBooking, onModi
         }
     }
 
-    const filteredBookings = mockBookings.filter(booking => {
+    // Safety check for mockBookings
+    const bookingsArray = mockBookings || []
+
+    const filteredBookings = bookingsArray.filter(booking => {
         if (filter === 'all') return true
         return booking.status === filter
     })
@@ -98,10 +101,10 @@ export default function BookingsEnhanced({ mockBookings, onCancelBooking, onModi
                 <p className="text-green-100">Manage your vehicle reservations and track booking history</p>
                 <div className="mt-4 flex flex-wrap gap-2">
                     <span className="bg-green-400 bg-opacity-50 px-3 py-1 rounded-full text-sm">
-                        Total Bookings: {mockBookings.length}
+                        Total Bookings: {bookingsArray.length}
                     </span>
                     <span className="bg-green-400 bg-opacity-50 px-3 py-1 rounded-full text-sm">
-                        Active: {mockBookings.filter(b => ['confirmed', 'ongoing'].includes(b.status)).length}
+                        Active: {bookingsArray.filter(b => ['confirmed', 'ongoing'].includes(b.status)).length}
                     </span>
                 </div>
             </div>

@@ -14,8 +14,10 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 // Import Routes
-const authRoutes = require('./routes/AuthRoute');
-// const uploadRoutes = require('./routes/UploadRoute'); // Temporarily disabled due to Cloudinary config
+const mainAuthRoutes = require('./routes/MainAuthRoute');
+const uploadRoutes = require('./routes/UploadRoute');
+const vehicleRoutes = require('./routes/VehicleRoute');
+const businessAgreementRoutes = require('./routes/BusinessAgreementRoute');
 
 // Root Route
 app.get("/", (req, res) => {
@@ -23,8 +25,11 @@ app.get("/", (req, res) => {
 });
 
 // API Routes
-app.use('/api/auth', authRoutes);
-// app.use('/api/upload', uploadRoutes); // Temporarily disabled due to Cloudinary config
+app.use('/api/auth', mainAuthRoutes);
+app.use('/auth', mainAuthRoutes); // Legacy route support
+app.use('/api/upload', uploadRoutes);
+app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/business-agreement', businessAgreementRoutes);
 
 // MongoDB Connection & Server Start
 const PORT = process.env.PORT || 9000;

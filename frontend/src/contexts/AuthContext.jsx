@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import authService from '../Services/auth-service';
+import authService from '../Services/Auth-service';
+import customerService from '../Services/customer-service';
+import vehicleOwnerService from '../Services/VehicleOwner-service';
+import driverService from '../Services/Driver-service';
 
 const AuthContext = createContext();
 
@@ -53,7 +56,7 @@ export const AuthProvider = ({ children }) => {
 
   const registerClient = async (userData) => {
     try {
-      return await authService.registerClient(userData);
+      return await customerService.registerCustomer(userData);
     } catch (error) {
       throw error;
     }
@@ -61,7 +64,7 @@ export const AuthProvider = ({ children }) => {
 
   const registerVehicleOwner = async (userData) => {
     try {
-      return await authService.registerVehicleOwner(userData);
+      return await vehicleOwnerService.registerVehicleOwner(userData);
     } catch (error) {
       throw error;
     }
@@ -69,7 +72,7 @@ export const AuthProvider = ({ children }) => {
 
   const registerDriver = async (userData) => {
     try {
-      return await authService.registerDriver(userData);
+      return await driverService.registerDriver(userData);
     } catch (error) {
       throw error;
     }
@@ -103,7 +106,10 @@ export const AuthProvider = ({ children }) => {
     // Navigation and role functions
     getDashboardRoute: authService.getDashboardRoute,
     hasRole: authService.hasRole,
-    isAdminOrBusinessOwner: authService.isAdminOrBusinessOwner
+    isAdminOrBusinessOwner: authService.isAdminOrBusinessOwner,
+
+    // Utility functions
+    clearCorruptedData: () => authService.clearCorruptedData()
   };
 
   return (

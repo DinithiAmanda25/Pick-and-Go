@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import ClientMainHeader from '../../Components/Clients/ClientMainHeader'
+import RentalAgreement from '../../Components/Client/RentalAgreement'
 
 function Checkout() {
     const location = useLocation()
@@ -25,6 +26,7 @@ function Checkout() {
     })
 
     const [rentalDays, setRentalDays] = useState(1)
+    const [isAgreementAccepted, setIsAgreementAccepted] = useState(false)
 
     const handleCustomerInfoChange = (e) => {
         setCustomerInfo({
@@ -46,6 +48,12 @@ function Checkout() {
 
     const handleSubmit = (e) => {
         e.preventDefault()
+
+        // Check if agreement is accepted
+        if (!isAgreementAccepted) {
+            alert('Please accept the rental agreement before proceeding.')
+            return
+        }
 
         // Create booking data
         const bookingData = {
@@ -329,16 +337,27 @@ function Checkout() {
                                         </div>
                                     </div>
 
+                                    {/* Rental Agreement Section */}
+                                    <div className="border-t border-gray-200/50 pt-8 mt-8">
+                                        <RentalAgreement
+                                            onAccept={setIsAgreementAccepted}
+                                        />
+                                    </div>
+
                                     {/* Modern Submit Button */}
                                     <div className="pt-8">
                                         <button
                                             type="submit"
-                                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-3"
+                                            disabled={!isAgreementAccepted}
+                                            className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 transform flex items-center justify-center space-x-3 ${isAgreementAccepted
+                                                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-2xl hover:shadow-blue-500/25 hover:scale-105'
+                                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                }`}
                                         >
                                             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                                             </svg>
-                                            <span>Complete Secure Booking</span>
+                                            <span>{isAgreementAccepted ? 'Complete Secure Booking' : 'Accept Agreement to Continue'}</span>
                                         </button>
                                     </div>
                                 </form>

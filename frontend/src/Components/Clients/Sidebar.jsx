@@ -83,7 +83,7 @@ function ClientSidebar() {
   ]
 
   return (
-    <div className="bg-blue-900 text-white w-64 min-h-screen p-4 flex flex-col">
+    <div className="bg-blue-900 text-white w-64 h-screen p-4 flex flex-col overflow-y-auto">
       <div className="mb-8 flex flex-col items-center">
         <Link to="/" className="flex items-center space-x-2 justify-center">
           <img

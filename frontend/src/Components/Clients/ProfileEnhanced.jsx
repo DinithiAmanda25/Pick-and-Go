@@ -43,9 +43,7 @@ export default function ProfileEnhanced() {
 
         // Account Settings
         accountCreated: '2023-06-15',
-        lastLogin: '2024-01-25',
-        emailVerified: true,
-        phoneVerified: true
+        lastLogin: '2024-01-25'
     })
 
     const [securitySettings, setSecuritySettings] = useState({
@@ -112,27 +110,6 @@ export default function ProfileEnhanced() {
         link.click()
         URL.revokeObjectURL(url)
     }
-
-    const getVerificationBadge = (isVerified) => (
-        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${isVerified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}>
-            {isVerified ? (
-                <>
-                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    Verified
-                </>
-            ) : (
-                <>
-                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                    Not Verified
-                </>
-            )}
-        </span>
-    )
 
     return (
         <div className="space-y-6">
@@ -206,8 +183,8 @@ export default function ProfileEnhanced() {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex-shrink-0 py-3 px-6 text-center font-medium ${activeTab === tab.id
-                                    ? 'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50'
-                                    : 'text-gray-600 hover:text-gray-800'
+                                ? 'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50'
+                                : 'text-gray-600 hover:text-gray-800'
                                 }`}
                         >
                             {tab.label}
@@ -224,8 +201,8 @@ export default function ProfileEnhanced() {
                                 <button
                                     onClick={() => setIsEditing(!isEditing)}
                                     className={`px-4 py-2 rounded-md ${isEditing
-                                            ? 'bg-gray-300 text-gray-700 hover:bg-gray-400'
-                                            : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                        ? 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                                        : 'bg-indigo-600 text-white hover:bg-indigo-700'
                                         }`}
                                 >
                                     {isEditing ? 'Cancel' : 'Edit Profile'}
@@ -257,7 +234,7 @@ export default function ProfileEnhanced() {
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Email Address {getVerificationBadge(profileData.emailVerified)}
+                                        Email Address
                                     </label>
                                     <input
                                         type="email"
@@ -270,7 +247,7 @@ export default function ProfileEnhanced() {
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Phone Number {getVerificationBadge(profileData.phoneVerified)}
+                                        Phone Number
                                     </label>
                                     <input
                                         type="tel"

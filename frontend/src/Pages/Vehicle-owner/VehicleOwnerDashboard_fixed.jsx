@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import VehicleOwnerSidebar from '../../Components/Vehicle-owner/Sidebar'
 import VehicleOwnerHeader from '../../Components/Vehicle-owner/Header'
 import VehicleOwnerOverview from '../../Components/Vehicle-owner/Overview'
-import VehicleOwnerVehicles from '../../Components/Vehicle-owner/Vehicles'
+import MyVehicles from '../../Components/Vehicle-owner/MyVehicles'
 import VehicleOwnerReports from '../../Components/Vehicle-owner/Reports'
 import VehicleOwnerAgreements from '../../Components/Vehicle-owner/Agreements'
 import VehicleOwnerBookings from '../../Components/Vehicle-owner/Bookings'
@@ -325,7 +325,7 @@ function VehicleOwnerDashboard() {
                                 )}
 
                                 {activeTab === 'vehicles' && (
-                                    <VehicleOwnerVehicles vehicles={mockData.vehicles} />
+                                    <MyVehicles />
                                 )}
 
                                 {activeTab === 'bookings' && (

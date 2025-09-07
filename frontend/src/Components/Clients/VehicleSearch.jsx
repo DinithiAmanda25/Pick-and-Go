@@ -18,6 +18,7 @@ export default function VehicleSearch({ onBookVehicle }) {
     const [searchResults, setSearchResults] = useState([])
     const [isSearching, setIsSearching] = useState(false)
     const [showFilters, setShowFilters] = useState(false)
+    const [selectedVehicle, setSelectedVehicle] = useState(null)
 
     // Mock vehicle data
     const mockVehicles = [
@@ -285,8 +286,8 @@ export default function VehicleSearch({ onBookVehicle }) {
                                         key={feature}
                                         onClick={() => handleFeatureToggle(feature)}
                                         className={`px-3 py-1 rounded-full text-sm ${searchCriteria.features.includes(feature)
-                                                ? 'bg-blue-600 text-white'
-                                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                             }`}
                                     >
                                         {feature}
@@ -349,12 +350,20 @@ export default function VehicleSearch({ onBookVehicle }) {
                                             <p className="text-xs text-green-600">{vehicle.availability}</p>
                                         </div>
 
-                                        <button
-                                            onClick={() => onBookVehicle && onBookVehicle(vehicle)}
-                                            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                        >
-                                            Book Now
-                                        </button>
+                                        <div className="flex space-x-2">
+                                            <button
+                                                onClick={() => setSelectedVehicle(vehicle)}
+                                                className="bg-gray-600 text-white px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
+                                            >
+                                                View Details
+                                            </button>
+                                            <button
+                                                onClick={() => onBookVehicle && onBookVehicle(vehicle)}
+                                                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                            >
+                                                Book Now
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </motion.div>
@@ -371,6 +380,262 @@ export default function VehicleSearch({ onBookVehicle }) {
                         </svg>
                     </div>
                     <p className="text-gray-600">Start your search to find available vehicles</p>
+                </div>
+            )}
+
+            {/* Vehicle Details Modal */}
+            {selectedVehicle && (
+                <div className="fixed inset-0 bg-gradient-to-br from-gray-900/60 via-slate-900/60 to-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[95vh] overflow-hidden shadow-2xl border border-gray-100">
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <h2 className="text-3xl font-bold">{selectedVehicle.name}</h2>
+                                    <div className="flex items-center mt-2">
+                                        <div className="flex items-center mr-4">
+                                            {[...Array(5)].map((_, i) => (
+                                                <svg
+                                                    key={i}
+                                                    className={`w-5 h-5 ${i < Math.floor(selectedVehicle.rating) ? 'text-yellow-400' : 'text-gray-300'}`}
+                                                    fill="currentColor"
+                                                    viewBox="0 0 20 20"
+                                                >
+                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                </svg>
+                                            ))}
+                                            <span className="text-blue-100 ml-2">{selectedVehicle.rating} ({selectedVehicle.reviews} reviews)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setSelectedVehicle(null)}
+                                    className="text-white hover:text-blue-200 transition-colors"
+                                >
+                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            {/* Price Badge */}
+                            <div className="mt-4">
+                                <span className="bg-white text-blue-700 px-6 py-3 rounded-full text-xl font-bold shadow-md">
+                                    ${selectedVehicle.pricePerDay}/day
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="overflow-y-auto max-h-[75vh]">
+                            {/* Vehicle Image */}
+                            <div className="p-6 border-b border-gray-200">
+                                <div className="relative">
+                                    <img
+                                        src={selectedVehicle.image}
+                                        alt={selectedVehicle.name}
+                                        className="w-full h-80 object-cover rounded-xl shadow-lg"
+                                    />
+                                    <div className="absolute top-4 left-4">
+                                        <span className="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                                            {selectedVehicle.availability}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Vehicle Specifications */}
+                            <div className="p-6 border-b border-gray-200">
+                                <h3 className="text-xl font-semibold text-gray-900 mb-6">Vehicle Specifications</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200">
+                                        <div className="flex items-center mb-3">
+                                            <svg className="w-6 h-6 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                                            </svg>
+                                            <h4 className="font-semibold text-blue-900">Basic Info</h4>
+                                        </div>
+                                        <div className="space-y-3 text-sm">
+                                            <div className="flex justify-between">
+                                                <span className="text-blue-700">Type:</span>
+                                                <span className="font-medium text-blue-900">{selectedVehicle.type}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-blue-700">Seating:</span>
+                                                <span className="font-medium text-blue-900">{selectedVehicle.seats} passengers</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-blue-700">Fuel Type:</span>
+                                                <span className="font-medium text-blue-900">{selectedVehicle.fuel}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-blue-700">Transmission:</span>
+                                                <span className="font-medium text-blue-900">{selectedVehicle.transmission}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200">
+                                        <div className="flex items-center mb-3">
+                                            <svg className="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                            <h4 className="font-semibold text-green-900">Location & Owner</h4>
+                                        </div>
+                                        <div className="space-y-3 text-sm">
+                                            <div className="flex justify-between">
+                                                <span className="text-green-700">Location:</span>
+                                                <span className="font-medium text-green-900">{selectedVehicle.location}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-green-700">Owner:</span>
+                                                <span className="font-medium text-green-900">{selectedVehicle.owner}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-green-700">Driver Available:</span>
+                                                <span className="font-medium text-green-900">
+                                                    {selectedVehicle.driverAvailable ? 'Yes' : 'No'}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-green-700">Status:</span>
+                                                <span className="font-medium text-green-900">{selectedVehicle.availability}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border border-purple-200">
+                                        <div className="flex items-center mb-3">
+                                            <svg className="w-6 h-6 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                            </svg>
+                                            <h4 className="font-semibold text-purple-900">Pricing</h4>
+                                        </div>
+                                        <div className="space-y-3 text-sm">
+                                            <div className="text-center">
+                                                <div className="text-3xl font-bold text-purple-900">${selectedVehicle.pricePerDay}</div>
+                                                <div className="text-purple-700 font-medium">Per Day</div>
+                                            </div>
+                                            <div className="border-t border-purple-200 pt-3">
+                                                <div className="flex justify-between">
+                                                    <span className="text-purple-700">Weekly Rate:</span>
+                                                    <span className="font-medium text-purple-900">${selectedVehicle.pricePerDay * 6.5}/week</span>
+                                                </div>
+                                                <div className="flex justify-between mt-1">
+                                                    <span className="text-purple-700">Monthly Rate:</span>
+                                                    <span className="font-medium text-purple-900">${selectedVehicle.pricePerDay * 25}/month</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Features & Equipment */}
+                            <div className="p-6 border-b border-gray-200">
+                                <h3 className="text-xl font-semibold text-gray-900 mb-4">Features & Equipment</h3>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    {selectedVehicle.features.map((feature, index) => (
+                                        <div key={index} className="flex items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                            <svg className="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <span className="text-sm font-medium text-gray-900">{feature}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Rental Terms */}
+                            <div className="p-6">
+                                <h3 className="text-xl font-semibold text-gray-900 mb-4">Rental Terms</h3>
+                                <div className="bg-gray-50 p-4 rounded-lg">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                            <h4 className="font-medium text-gray-900 mb-2">Included</h4>
+                                            <ul className="space-y-1 text-gray-700">
+                                                <li className="flex items-center">
+                                                    <svg className="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    Basic insurance coverage
+                                                </li>
+                                                <li className="flex items-center">
+                                                    <svg className="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    24/7 roadside assistance
+                                                </li>
+                                                <li className="flex items-center">
+                                                    <svg className="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    Free cancellation (24h notice)
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 className="font-medium text-gray-900 mb-2">Requirements</h4>
+                                            <ul className="space-y-1 text-gray-700">
+                                                <li className="flex items-center">
+                                                    <svg className="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
+                                                    </svg>
+                                                    Valid driver's license
+                                                </li>
+                                                <li className="flex items-center">
+                                                    <svg className="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
+                                                    </svg>
+                                                    Minimum age 21 years
+                                                </li>
+                                                <li className="flex items-center">
+                                                    <svg className="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
+                                                    </svg>
+                                                    Security deposit required
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer Actions */}
+                        <div className="bg-gray-50 p-6 border-t flex justify-between items-center">
+                            <div className="flex items-center space-x-4">
+                                <div className="text-center">
+                                    <div className="text-2xl font-bold text-blue-600">${selectedVehicle.pricePerDay}</div>
+                                    <div className="text-sm text-gray-600">per day</div>
+                                </div>
+                                {selectedVehicle.driverAvailable && (
+                                    <div className="text-center border-l border-gray-300 pl-4">
+                                        <div className="text-lg font-semibold text-green-600">+$25</div>
+                                        <div className="text-sm text-gray-600">with driver</div>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex space-x-3">
+                                <button
+                                    onClick={() => setSelectedVehicle(null)}
+                                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+                                >
+                                    Close
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        onBookVehicle && onBookVehicle(selectedVehicle);
+                                        setSelectedVehicle(null);
+                                    }}
+                                    className="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                                >
+                                    Book This Vehicle
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
