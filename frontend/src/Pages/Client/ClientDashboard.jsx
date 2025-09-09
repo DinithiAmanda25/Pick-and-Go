@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import AuthService from '../../Services/auth-service.js'
+import customerService from '../../Services/customer-service.js'
 import ClientSidebar from '../../Components/Clients/Sidebar'
 import ClientHeader from '../../Components/Clients/Header'
 import Overview from '../../Components/Clients/Overview'
@@ -63,7 +63,7 @@ function ClientDashboard() {
       }
 
       // Call the API to update client profile
-      const response = await AuthService.updateClientProfile(userId, updatedData);
+      const response = await customerService.updateProfile(userId, updatedData);
 
       if (response.success) {
         alert('Profile updated successfully!');

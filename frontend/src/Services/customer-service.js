@@ -47,17 +47,22 @@ class CustomerService {
 
       if (response.data.success) {
         // Update the stored user data with the fresh data from database
-        const updatedProfile = response.data.profile;
+        const updatedProfile = response.data.user || response.data.profile || response.data.client;
+        console.log('Customer service - received profile data:', updatedProfile);
 
-        // Update localStorage with the complete updated profile
-        localStorage.setItem('user', JSON.stringify(updatedProfile));
+        if (updatedProfile) {
+          // Update localStorage with the complete updated profile
+          localStorage.setItem('user', JSON.stringify(updatedProfile));
 
-        // Also update userId if it exists separately
-        if (updatedProfile._id) {
-          localStorage.setItem('userId', updatedProfile._id);
+          // Also update userId if it exists separately
+          if (updatedProfile._id) {
+            localStorage.setItem('userId', updatedProfile._id);
+          }
+
+          console.log('Customer service - localStorage updated with fresh profile data');
+        } else {
+          console.error('Customer service - No profile data in response:', response.data);
         }
-
-        console.log('Customer service - localStorage updated with fresh profile data');
       }
 
       return response.data;

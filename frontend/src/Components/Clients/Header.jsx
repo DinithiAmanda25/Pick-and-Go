@@ -39,7 +39,7 @@ function ClientHeader() {
           {/* Profile Dropdown */}
           <div className="flex items-center space-x-3">
             <img
-              src="/api/placeholder/40/40"
+              src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNkZGQiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIxMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iIGZpbGw9IiM5OTkiPlU8L3RleHQ+PC9zdmc+"
               alt="Client Profile"
               className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
             />

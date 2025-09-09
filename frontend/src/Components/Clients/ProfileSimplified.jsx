@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import authService from '../../Services/auth-service.js'
+import customerService from '../../Services/customer-service.js'
+
+// Helper function to format date for HTML date input (yyyy-MM-dd)
+const formatDateForInput = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
+  return date.toISOString().split('T')[0];
+};
 
 export default function ProfileEnhanced({ profile, onUpdateProfile, onDeleteProfile }) {
   // All hooks must be declared first, before any conditional logic
@@ -51,13 +59,20 @@ export default function ProfileEnhanced({ profile, onUpdateProfile, onDeleteProf
     if (profile) {
       console.log('Profile received in ProfileSimplified:', profile);
       console.log('Profile image URL:', profile?.profileImage?.url);
+      console.log('Profile image direct:', profile?.profileImage);
+      console.log('Profile keys:', Object.keys(profile));
+
+      // Check if profileImage has a url property, if not, it means no image is uploaded yet
+      if (profile?.profileImage && !profile.profileImage.url) {
+        console.log('Profile image object exists but no URL - image not uploaded yet');
+      }
 
       setProfileData({
         firstName: profile?.firstName || '',
         lastName: profile?.lastName || '',
         email: profile?.email || '',
         phone: profile?.phone || '',
-        dateOfBirth: profile?.dateOfBirth || '',
+        dateOfBirth: formatDateForInput(profile?.dateOfBirth) || '',
         address: profile?.address?.street || '',
         city: profile?.address?.city || '',
         state: profile?.address?.state || '',
@@ -65,7 +80,7 @@ export default function ProfileEnhanced({ profile, onUpdateProfile, onDeleteProf
         country: 'Sri Lanka',
         licenseNumber: profile?.licenseNumber || '',
         licenseState: profile?.licenseState || '',
-        licenseExpiry: profile?.licenseExpiry || '',
+        licenseExpiry: formatDateForInput(profile?.licenseExpiry) || '',
         accountCreated: profile?.joinDate || 'N/A',
         lastLogin: profile?.lastLogin || 'N/A'
       });
@@ -157,23 +172,95 @@ export default function ProfileEnhanced({ profile, onUpdateProfile, onDeleteProf
       const formData = new FormData();
       formData.append('profileImage', profileImage.file);
 
-      const response = await authService.uploadProfileImage(profile.userId, formData);
+      const response = await customerService.uploadProfileImage(profile.userId, formData);
+      console.log('Upload response:', response);
+      console.log('Upload response keys:', Object.keys(response));
+      console.log('Upload response.data:', response.data);
+      console.log('Upload response.profileImage:', response.profileImage);
 
       if (response.success) {
         alert('Profile image uploaded successfully!');
+        console.log('Upload response:', response);
+        console.log('New profile image URL:', response.profileImage?.url);
+        console.log('Full response data:', response);
 
-        // Update the preview with the new Cloudinary URL
+        // Update the preview with the new Cloudinary URL immediately
+        const newImageUrl = response.profileImage?.url || response.data?.profileImage?.url;
+
+        if (newImageUrl) {
+          console.log('Setting new image URL:', newImageUrl);
+
+          // Update the profile image preview state
+          setProfileImage(prev => ({
+            ...prev,
+            uploading: false,
+            file: null,
+            preview: newImageUrl
+          }));
+
+          // Update the main profile data state
+          setProfileData(prev => ({
+            ...prev,
+            profileImage: {
+              url: newImageUrl,
+              uploadedAt: new Date().toISOString()
+            }
+          }));
+
+          // Call onUpdateProfile to update parent component
+          if (onUpdateProfile) {
+            onUpdateProfile({
+              ...profile,
+              profileImage: {
+                url: newImageUrl,
+                uploadedAt: new Date().toISOString()
+              }
+            });
+          }
+
+          console.log('Profile image state updated successfully');
+        } else {
+          console.warn('No profile image URL found in response');
+          setProfileImage(prev => ({
+            ...prev,
+            uploading: false,
+            file: null
+          }));
+        }
+
+        // Also refresh the profile data from backend to ensure consistency
+        setTimeout(async () => {
+          try {
+            console.log('Refreshing profile data from backend...');
+            const refreshedProfile = await customerService.getProfile(profile.userId);
+            console.log('Refreshed profile data:', refreshedProfile);
+
+            if (refreshedProfile.success && (refreshedProfile.data || refreshedProfile.client)) {
+              const updatedProfile = refreshedProfile.data || refreshedProfile.client;
+              console.log('Updated profile image from backend:', updatedProfile.profileImage);
+
+              // Update profile data with fresh backend data
+              setProfileData(updatedProfile);
+
+              // Update preview if we have the URL
+              if (updatedProfile.profileImage?.url) {
+                setProfileImage(prev => ({
+                  ...prev,
+                  preview: updatedProfile.profileImage.url
+                }));
+                console.log('Profile preview updated from backend data');
+              }
+            }
+          } catch (error) {
+            console.error('Error refreshing profile data:', error);
+          }
+        }, 1000);
+      } else {
+        alert('Failed to upload image: ' + (response.message || 'Unknown error'));
         setProfileImage(prev => ({
           ...prev,
-          uploading: false,
-          file: null,
-          preview: response.profileImage.url
+          uploading: false
         }));
-
-        // Trigger a page refresh to reload user data
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
       }
     } catch (error) {
       console.error('Error uploading profile image:', error);
@@ -199,7 +286,7 @@ export default function ProfileEnhanced({ profile, onUpdateProfile, onDeleteProf
     }
 
     try {
-      const response = await authService.changePassword(profile.userId, passwordData);
+      const response = await customerService.changePassword(profile.userId, passwordData);
 
       if (response.success) {
         alert('Password changed successfully!');
@@ -222,7 +309,7 @@ export default function ProfileEnhanced({ profile, onUpdateProfile, onDeleteProf
     }
 
     try {
-      const response = await authService.deleteProfile(profile.userId);
+      const response = await customerService.deleteProfile(profile.userId);
 
       if (response.success) {
         alert('Profile deleted successfully. You will be redirected to the home page.');
@@ -269,7 +356,15 @@ export default function ProfileEnhanced({ profile, onUpdateProfile, onDeleteProf
         <div className="flex items-center space-x-6">
           <div className="relative">
             <img
-              src={profileImage.preview || profile?.profileImage?.url || "/api/placeholder/120/120"}
+              src={
+                profileImage.preview || // Preview while uploading
+                profile?.profileImage?.url || // Uploaded image URL
+                (profile?.profileImage && typeof profile.profileImage === 'string' ? profile.profileImage : null) || // If profileImage is a direct URL string
+                profile?.image?.url || // Alternative image structure
+                profile?.image || // Direct image URL
+                profile?.avatar || // Avatar URL
+                "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIiBmaWxsPSIjOTk5Ij5Qcm9maWxlPC90ZXh0Pjwvc3ZnPg==" // Default placeholder
+              }
               alt="Profile"
               className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
             />

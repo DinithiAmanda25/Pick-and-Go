@@ -519,21 +519,21 @@ function Home() {
               {
                 name: "Sarah Johnson",
                 role: "Business Executive",
-                image: "/api/placeholder/80/80",
+                image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNkZGQiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIxMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iIGZpbGw9IiM5OTkiPlNKPC90ZXh0Pjwvc3ZnPg==",
                 rating: 5,
                 text: "Exceptional service! The car was immaculate and the driver was professional and courteous. Will definitely use Pick & Go again."
               },
               {
                 name: "Michael Chen",
                 role: "Tourist",
-                image: "/api/placeholder/80/80",
+                image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNkZGQiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIxMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iIGZpbGw9IiM5OTkiPk1DPC90ZXh0Pjwvc3ZnPg==",
                 rating: 5,
                 text: "Made our vacation so much easier. The booking process was smooth and the vehicle exceeded our expectations. Highly recommended!"
               },
               {
                 name: "Emily Davis",
                 role: "Local Resident",
-                image: "/api/placeholder/80/80",
+                image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNkZGQiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIxMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iIGZpbGw9IiM5OTkiPkVEPC90ZXh0Pjwvc3ZnPg==",
                 rating: 5,
                 text: "Reliable, affordable, and convenient. Pick & Go has become my go-to choice for all my transportation needs in the city."
               }
