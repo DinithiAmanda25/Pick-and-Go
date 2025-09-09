@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import authService from '../../Services/Auth-service'
+import authService from '../../Services/Auth-service.js'
 import ClientSidebar from '../../Components/Clients/Sidebar'
 import ClientHeader from '../../Components/Clients/Header'
 import Overview from '../../Components/Clients/Overview'

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import authService from '../../Services/Auth-service'
+import authService from '../../Services/Auth-service.js'
 
 export default function ProfileEnhanced({ profile, onUpdateProfile, onDeleteProfile }) {
   // All hooks must be declared first, before any conditional logic
