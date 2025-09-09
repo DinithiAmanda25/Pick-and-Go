@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
-import BusinessOwnerService from '../../Services/business-owner-service.js'
+import businessOwnerService from '../../Services/business-owner-service.js'
 
 function BusinessOwnerProfile({ profile }) {
     const [editMode, setEditMode] = useState(false)
