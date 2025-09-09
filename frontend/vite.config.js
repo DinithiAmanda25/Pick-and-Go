@@ -7,9 +7,6 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  resolve: {
-    extensions: ['.js', '.jsx', '.ts', '.tsx', '.json']
-  },
   build: {
     outDir: 'dist',
     sourcemap: false,
