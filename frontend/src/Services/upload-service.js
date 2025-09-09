@@ -23,12 +23,12 @@ class UploadService {
   // Upload multiple files
   uploadMultipleFiles = async (files, category = 'general', folder = 'pick-and-go') => {
     const formData = new FormData();
-    
+
     // Append each file
     Array.from(files).forEach((file) => {
       formData.append('files', file);
     });
-    
+
     formData.append('category', category);
     formData.append('folder', folder);
 
