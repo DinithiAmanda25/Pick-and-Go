@@ -1,8 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import authService from '../Services/Auth-service';
-import customerService from '../Services/customer-service';
-import vehicleOwnerService from '../Services/VehicleOwner-service';
-import driverService from '../Services/Driver-service';
+import { AuthService, CustomerService, VehicleOwnerService, DriverService } from '../Services';
 
 const AuthContext = createContext();
 
@@ -21,8 +18,8 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check if user is already logged in
-    const currentUser = authService.getCurrentUser();
-    const authStatus = authService.isAuthenticated();
+    const currentUser = AuthService.getCurrentUser();
+    const authStatus = AuthService.isAuthenticated();
 
     if (currentUser && authStatus) {
       setUser(currentUser);
@@ -34,7 +31,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const response = await authService.login(credentials);
+      const response = await AuthService.login(credentials);
 
       if (response.success) {
         setUser(response.user);
@@ -49,14 +46,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    authService.logout();
+    AuthService.logout();
     setUser(null);
     setIsAuthenticated(false);
   };
 
   const registerClient = async (userData) => {
     try {
-      return await customerService.registerCustomer(userData);
+      return await CustomerService.registerCustomer(userData);
     } catch (error) {
       throw error;
     }
@@ -64,7 +61,7 @@ export const AuthProvider = ({ children }) => {
 
   const registerVehicleOwner = async (userData) => {
     try {
-      return await vehicleOwnerService.registerVehicleOwner(userData);
+      return await VehicleOwnerService.registerVehicleOwner(userData);
     } catch (error) {
       throw error;
     }
@@ -72,7 +69,7 @@ export const AuthProvider = ({ children }) => {
 
   const registerDriver = async (userData) => {
     try {
-      return await driverService.registerDriver(userData);
+      return await DriverService.registerDriver(userData);
     } catch (error) {
       throw error;
     }
@@ -80,7 +77,7 @@ export const AuthProvider = ({ children }) => {
 
   const refreshUser = () => {
     // Refresh user data from localStorage
-    const currentUser = authService.getCurrentUser();
+    const currentUser = AuthService.getCurrentUser();
     if (currentUser) {
       setUser(currentUser);
       console.log('AuthContext - User data refreshed from localStorage');
@@ -99,17 +96,17 @@ export const AuthProvider = ({ children }) => {
     registerDriver,
 
     // Session management functions
-    getCurrentUserId: () => authService.getCurrentUserId(),
-    getSessionData: () => authService.getSessionData(),
-    getSessionId: () => authService.getSessionId(),
+    getCurrentUserId: () => AuthService.getCurrentUserId(),
+    getSessionData: () => AuthService.getSessionData(),
+    getSessionId: () => AuthService.getSessionId(),
 
     // Navigation and role functions
-    getDashboardRoute: authService.getDashboardRoute,
-    hasRole: authService.hasRole,
-    isAdminOrBusinessOwner: authService.isAdminOrBusinessOwner,
+    getDashboardRoute: AuthService.getDashboardRoute,
+    hasRole: AuthService.hasRole,
+    isAdminOrBusinessOwner: AuthService.isAdminOrBusinessOwner,
 
     // Utility functions
-    clearCorruptedData: () => authService.clearCorruptedData()
+    clearCorruptedData: () => AuthService.clearCorruptedData()
   };
 
   return (
