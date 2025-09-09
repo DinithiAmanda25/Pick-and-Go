@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import vehicleService from '../../Services/Vehicle-service';
+import vehicleService from '../../Services/vehicle-service.js';
 
 function MaintenanceScheduler({ vehicleId, onClose }) {
     const [maintenanceData, setMaintenanceData] = useState({
