@@ -1,6 +1,7 @@
 require('dotenv').config({ quiet: true });
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const { connectDB } = require("./config/database");
 
 const app = express();
@@ -30,6 +31,16 @@ app.use('/auth', mainAuthRoutes); // Legacy route support
 app.use('/api/upload', uploadRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/business-agreement', businessAgreementRoutes);
+
+// Serve static files from React build in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+  // Handle React routing - serve index.html for non-API routes
+  app.get(/^(?!\/api|\/auth).*/, (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
+  });
+}
 
 // MongoDB Connection & Server Start
 const PORT = process.env.PORT || 9000;
