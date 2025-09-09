@@ -13,6 +13,7 @@ export { default as VehicleOwnerService } from './VehicleOwner-service';
 
 // Other Services
 export { default as VehicleService } from './Vehicle-service';
+export { default as BusinessAgreementService } from './BusinessAgreement-service';
 export { default as UploadService } from './upload-service';
 
 // HTTP Common Service

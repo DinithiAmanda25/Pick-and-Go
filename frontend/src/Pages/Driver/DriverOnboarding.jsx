@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import authService from '../../Services/Auth-service.js'
-import driverService from '../../Services/Driver-service.js'
+import { AuthService, DriverService } from '../../Services'
 import logo from '../../Assets/2.png'
 
 function DriverOnboarding() {

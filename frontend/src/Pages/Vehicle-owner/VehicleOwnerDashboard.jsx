@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import vehicleOwnerService from '../../Services/VehicleOwner-service.js'
+import { VehicleOwnerService } from '../../Services'
 import VehicleOwnerSidebar from '../../Components/Vehicle-owner/Sidebar'
 import VehicleOwnerHeader from '../../Components/Vehicle-owner/Header'
 import VehicleOwnerOverview from '../../Components/Vehicle-owner/Overview'

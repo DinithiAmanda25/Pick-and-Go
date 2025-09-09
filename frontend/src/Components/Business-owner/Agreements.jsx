@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import businessAgreementService from '../../Services/BusinessAgreement-service.js'
+import React, { useState, useEffect } from 'react';
+import { BusinessAgreementService } from '../../Services';
 
 function BusinessOwnerAgreements({ agreements }) {
     const [agreementData, setAgreementData] = useState(agreements)
@@ -23,8 +23,8 @@ function BusinessOwnerAgreements({ agreements }) {
         setLoading(true)
         try {
             // Load both agreement types
-            const vehicleOwnerResponse = await businessAgreementService.previewAgreement('vehicle-owner')
-            const clientRentalResponse = await businessAgreementService.previewAgreement('client-rental')
+            const vehicleOwnerResponse = await BusinessAgreementService.previewAgreement('vehicle-owner')
+            const clientRentalResponse = await BusinessAgreementService.previewAgreement('client-rental')
 
             setVehicleOwnerAgreement(vehicleOwnerResponse.agreement)
             setClientRentalAgreement(clientRentalResponse.agreement)
@@ -51,7 +51,7 @@ function BusinessOwnerAgreements({ agreements }) {
 
         setLoading(true)
         try {
-            const response = await businessAgreementService.updateAgreement({
+            const response = await BusinessAgreementService.updateAgreement({
                 title: editingAgreement.title,
                 terms: editingAgreement.terms,
                 commissionRate: editingAgreement.commissionRate,
@@ -85,7 +85,7 @@ function BusinessOwnerAgreements({ agreements }) {
 
         setLoading(true)
         try {
-            await businessAgreementService.resetToDefault(agreementType)
+            await BusinessAgreementService.resetToDefault(agreementType)
             await loadAgreementTemplates() // Reload templates
             alert('Agreement reset to default successfully!')
         } catch (err) {
