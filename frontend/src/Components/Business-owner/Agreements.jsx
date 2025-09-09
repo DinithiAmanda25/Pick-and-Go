@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BusinessAgreementService } from '../../Services';
+import BusinessAgreementService from '../../Services/BusinessAgreement-service.js';
 
 function BusinessOwnerAgreements({ agreements }) {
     const [agreementData, setAgreementData] = useState(agreements)

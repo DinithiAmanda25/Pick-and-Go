@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import { VehicleOwnerService } from '../../Services'
+import VehicleOwnerService from '../../Services/VehicleOwner-service.js'
 
 function VehicleOwnerProfile({ profile }) {
     const { user, getCurrentUserId } = useAuth()
