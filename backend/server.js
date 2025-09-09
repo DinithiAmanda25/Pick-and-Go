@@ -20,11 +20,6 @@ const uploadRoutes = require('./routes/UploadRoute');
 const vehicleRoutes = require('./routes/VehicleRoute');
 const businessAgreementRoutes = require('./routes/BusinessAgreementRoute');
 
-// Root Route
-app.get("/", (req, res) => {
-  res.send("🚀 Pick & Go Auth Service is Running!");
-});
-
 // API Routes
 app.use('/api/auth', mainAuthRoutes);
 app.use('/auth', mainAuthRoutes); // Legacy route support
@@ -39,6 +34,11 @@ if (process.env.NODE_ENV === 'production') {
   // Handle React routing - serve index.html for non-API routes
   app.get(/^(?!\/api|\/auth).*/, (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
+  });
+} else {
+  // Only show this message in development when frontend is not built
+  app.get("/", (req, res) => {
+    res.send("🚀 Pick & Go Auth Service is Running!");
   });
 }
 
