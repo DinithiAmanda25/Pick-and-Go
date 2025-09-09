@@ -35,7 +35,7 @@ function VehicleOwnerDashboard() {
 
           // Use the VehicleOwner service to fetch profile
           try {
-            const response = await vehicleOwnerService.getProfile(userId);
+            const response = await VehicleOwnerService.getProfile(userId);
             console.log('Profile service response:', response);
 
             if (response.success && response.user) {

@@ -255,7 +255,7 @@ function DriverOnboarding() {
       }
 
       // Use the DriverService for registration
-      const data = await driverService.registerDriver(formDataToSend)
+      const data = await DriverService.registerDriver(formDataToSend)
 
       if (data.success) {
         alert('Your driver application has been submitted successfully! You will receive login credentials via email once your application is approved.')
