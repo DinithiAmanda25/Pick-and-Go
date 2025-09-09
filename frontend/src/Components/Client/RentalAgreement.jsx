@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import businessAgreementService from '../../Services/BusinessAgreement-service';
+import BusinessAgreementService from '../../Services/business-agreement-service.js';
 
 function RentalAgreement({ onAccept, isRequired = true }) {
     const [agreement, setAgreement] = useState(null);
@@ -15,7 +15,7 @@ function RentalAgreement({ onAccept, isRequired = true }) {
         try {
             setLoading(true);
             console.log('Loading client rental agreement...');
-            const response = await businessAgreementService.previewAgreement('client-rental');
+            const response = await BusinessAgreementService.previewAgreement('client-rental');
             console.log('Client rental agreement response:', response);
 
             if (response.success) {
@@ -23,12 +23,12 @@ function RentalAgreement({ onAccept, isRequired = true }) {
             } else {
                 console.warn('Agreement response not successful:', response);
                 // Use default client rental agreement if failed to load
-                setAgreement(businessAgreementService.getDefaultAgreementTemplate('client-rental'));
+                setAgreement(BusinessAgreementService.getDefaultAgreementTemplate('client-rental'));
             }
         } catch (error) {
             console.error('Error loading rental agreement:', error);
             // Use default client rental agreement as fallback
-            setAgreement(businessAgreementService.getDefaultAgreementTemplate('client-rental'));
+            setAgreement(BusinessAgreementService.getDefaultAgreementTemplate('client-rental'));
         } finally {
             setLoading(false);
         }

@@ -1,4 +1,4 @@
-import { HTTP } from './httpCommon-service';
+import { HTTP } from './http-common-service';
 
 // Universal Authentication Service
 // This service handles only universal authentication functions (login, logout, session management)

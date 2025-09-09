@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import vehicleService from '../../Services/Vehicle-service';
+import VehicleService from '../../Services/vehicle-service.js';
 import MaintenanceScheduler from './MaintenanceScheduler';
 import AddVehicleModal from './AddVehicleModal';
 

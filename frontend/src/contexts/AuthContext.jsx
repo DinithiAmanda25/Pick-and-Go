@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import AuthService from '../Services/Auth-service.js';
+import AuthService from '../Services/auth-service.js';
 import CustomerService from '../Services/customer-service.js';
-import VehicleOwnerService from '../Services/VehicleOwner-service.js';
-import DriverService from '../Services/Driver-service.js';
+import VehicleOwnerService from '../Services/vehicle-owner-service.js';
+import DriverService from '../Services/driver-service.js';
 
 const AuthContext = createContext();
 

@@ -1,4 +1,4 @@
-import { HTTP } from "./httpCommon-service";
+import { HTTP } from "./http-common-service";
 
 class VehicleOwnerService {
 

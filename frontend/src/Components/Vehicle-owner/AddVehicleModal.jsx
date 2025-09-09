@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import vehicleService from '../../Services/Vehicle-service';
-import businessAgreementService from '../../Services/BusinessAgreement-service';
+import VehicleService from '../../Services/vehicle-service.js';
+import BusinessAgreementService from '../../Services/business-agreement-service.js';
 
 function AddVehicleModal({ isOpen, onClose, onSuccess, userId }) {
     console.log('AddVehicleModal rendered with props:', { isOpen, userId });
@@ -73,19 +73,19 @@ function AddVehicleModal({ isOpen, onClose, onSuccess, userId }) {
         try {
             setLoadingAgreement(true);
             console.log('Loading business agreement...');
-            const response = await businessAgreementService.previewAgreement();
+            const response = await BusinessAgreementService.previewAgreement();
             console.log('Agreement response:', response);
             if (response.success) {
                 setBusinessAgreement(response.agreement);
             } else {
                 console.warn('Agreement response not successful:', response);
-                setBusinessAgreement(businessAgreementService.getDefaultAgreementTemplate());
+                setBusinessAgreement(BusinessAgreementService.getDefaultAgreementTemplate());
             }
         } catch (error) {
             console.error('Error loading business agreement:', error);
             console.error('Error details:', error.response?.data || error.message);
             // Use default agreement if failed to load
-            setBusinessAgreement(businessAgreementService.getDefaultAgreementTemplate());
+            setBusinessAgreement(BusinessAgreementService.getDefaultAgreementTemplate());
         } finally {
             setLoadingAgreement(false);
         }
@@ -403,7 +403,7 @@ function AddVehicleModal({ isOpen, onClose, onSuccess, userId }) {
             delete vehicleDataForBackend.pricing;
 
             // First, add the vehicle
-            const response = await vehicleService.addVehicle(userId, vehicleDataForBackend);
+            const response = await VehicleService.addVehicle(userId, vehicleDataForBackend);
 
             if (response.success) {
                 // If photos are selected, upload them
@@ -416,7 +416,7 @@ function AddVehicleModal({ isOpen, onClose, onSuccess, userId }) {
                         frontFormData.append('imageType', 'front');
 
                         try {
-                            await vehicleService.uploadVehicleImage(response.vehicle._id, frontFormData);
+                            await VehicleService.uploadVehicleImage(response.vehicle._id, frontFormData);
                         } catch (error) {
                             console.error('Error uploading front photo:', error);
                         }
@@ -428,7 +428,7 @@ function AddVehicleModal({ isOpen, onClose, onSuccess, userId }) {
                         backFormData.append('imageType', 'back');
 
                         try {
-                            await vehicleService.uploadVehicleImage(response.vehicle._id, backFormData);
+                            await VehicleService.uploadVehicleImage(response.vehicle._id, backFormData);
                         } catch (error) {
                             console.error('Error uploading back photo:', error);
                         }
@@ -445,7 +445,7 @@ function AddVehicleModal({ isOpen, onClose, onSuccess, userId }) {
                             const docFormData = new FormData();
                             docFormData.append('document', vehicleDocuments[docType].file);
 
-                            await vehicleService.uploadVehicleDocument(response.vehicle._id, docType, docFormData);
+                            await VehicleService.uploadVehicleDocument(response.vehicle._id, docType, docFormData);
                             console.log(`${docType} document uploaded successfully`);
                         } catch (error) {
                             console.error(`Error uploading ${docType} document:`, error);
@@ -482,7 +482,7 @@ function AddVehicleModal({ isOpen, onClose, onSuccess, userId }) {
             );
         }
 
-        const agreement = businessAgreement || businessAgreementService.getDefaultAgreementTemplate();
+        const agreement = businessAgreement || BusinessAgreementService.getDefaultAgreementTemplate();
         console.log('Agreement data:', agreement);
 
         return (
