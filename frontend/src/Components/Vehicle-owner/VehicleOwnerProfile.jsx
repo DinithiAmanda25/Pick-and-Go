@@ -12,6 +12,9 @@ function VehicleOwnerProfile({ profile }) {
 
     // Debug: Log the profile data to see what we're receiving
     console.log('VehicleOwnerProfile - Received profile data:', profile);
+    console.log('VehicleOwnerProfile - Profile keys:', profile ? Object.keys(profile) : 'No profile');
+    console.log('VehicleOwnerProfile - Profile image:', profile?.profileImage);
+    console.log('VehicleOwnerProfile - Profile image URL:', profile?.profileImage?.url);
 
     // Show loading state if no profile data
     if (!profile) {
@@ -96,6 +99,9 @@ function VehicleOwnerProfile({ profile }) {
     // Update form data when profile changes
     useEffect(() => {
         if (profile) {
+            console.log('VehicleOwnerProfile - Setting form data from profile:', profile);
+            console.log('VehicleOwnerProfile - Profile image data:', profile.profileImage);
+            
             setFormData(prev => ({
                 ...prev,
                 firstName: profile?.firstName || '',
@@ -126,6 +132,17 @@ function VehicleOwnerProfile({ profile }) {
                     identity: !!profile?.documents?.find(doc => doc.type === 'identity')
                 }
             }))
+
+            // Initialize profile image preview if it exists
+            if (profile?.profileImage?.url) {
+                console.log('VehicleOwnerProfile - Setting profile image preview:', profile.profileImage.url);
+                setProfileImage(prev => ({
+                    ...prev,
+                    preview: profile.profileImage.url
+                }));
+            } else {
+                console.log('VehicleOwnerProfile - No profile image URL found');
+            }
         }
     }, [profile])
 
@@ -224,18 +241,69 @@ function VehicleOwnerProfile({ profile }) {
             formData.append('profileImage', file)
 
             const result = await vehicleOwnerService.uploadProfileImage(userId, formData)
+            console.log('Vehicle Owner Upload response:', result)
 
             if (result.success) {
                 alert('Profile image uploaded successfully!')
-                // Force a page refresh to update the profile image
-                window.location.reload()
+
+                // Update the preview with the new Cloudinary URL
+                const newImageUrl = result.profileImage?.url
+
+                if (newImageUrl) {
+                    console.log('Setting new image URL:', newImageUrl)
+
+                    // Update the profile image preview state
+                    setProfileImage(prev => ({
+                        ...prev,
+                        uploading: false,
+                        file: null,
+                        preview: newImageUrl
+                    }))
+
+                    console.log('Profile image state updated successfully')
+                } else {
+                    console.warn('No profile image URL found in response')
+                    setProfileImage(prev => ({
+                        ...prev,
+                        uploading: false,
+                        file: null
+                    }))
+                }
+
+                // Also refresh the profile data from backend to ensure consistency
+                setTimeout(async () => {
+                    try {
+                        console.log('Refreshing vehicle owner profile data from backend...')
+                        const refreshedProfile = await vehicleOwnerService.getProfile(userId)
+                        console.log('Refreshed vehicle owner profile data:', refreshedProfile)
+
+                        if (refreshedProfile.success && (refreshedProfile.data || refreshedProfile.user)) {
+                            const updatedProfile = refreshedProfile.data || refreshedProfile.user
+                            console.log('Updated profile image from backend:', updatedProfile.profileImage)
+
+                            // Update preview if we have the URL from backend
+                            if (updatedProfile.profileImage?.url) {
+                                setProfileImage(prev => ({
+                                    ...prev,
+                                    preview: updatedProfile.profileImage.url
+                                }))
+                                console.log('Profile preview updated from backend data')
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error refreshing vehicle owner profile data:', error)
+                    }
+                }, 1000)
             } else {
                 alert(result.message || 'Failed to upload image')
+                setProfileImage(prev => ({
+                    ...prev,
+                    uploading: false
+                }))
             }
         } catch (error) {
             console.error('Error uploading profile image:', error)
             alert(error.message || 'Failed to upload image')
-        } finally {
             setProfileImage(prev => ({
                 ...prev,
                 uploading: false

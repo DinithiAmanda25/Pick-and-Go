@@ -247,15 +247,32 @@ const uploadVehicleOwnerProfileImage = async (req, res) => {
             });
         }
 
+        // Import uploadToCloudinary function
+        const { uploadToCloudinary, deleteFromCloudinary } = require('../middleware/cloudinaryUpload');
+
         // Delete old profile image if exists
         if (vehicleOwner.profileImage && vehicleOwner.profileImage.publicId) {
-            // Add cloudinary deletion logic here if needed
+            try {
+                await deleteFromCloudinary(vehicleOwner.profileImage.publicId);
+                console.log('Old profile image deleted from Cloudinary');
+            } catch (deleteError) {
+                console.error('Error deleting old image:', deleteError);
+                // Continue with upload even if deletion fails
+            }
         }
 
-        // Update profile image
+        // Generate unique filename
+        const fileName = `profile_vo_${userId}_${Date.now()}`;
+
+        // Upload to Cloudinary
+        const uploadResult = await uploadToCloudinary(req.file.buffer, fileName, 'pick-and-go/vehicle-owners');
+
+        console.log('Cloudinary upload result:', uploadResult);
+
+        // Update profile image with Cloudinary data
         vehicleOwner.profileImage = {
-            url: req.file.path,
-            publicId: req.file.filename,
+            url: uploadResult.secure_url,
+            publicId: uploadResult.public_id,
             uploadedAt: new Date()
         };
         vehicleOwner.updatedAt = new Date();
@@ -263,6 +280,7 @@ const uploadVehicleOwnerProfileImage = async (req, res) => {
         await vehicleOwner.save();
 
         console.log('Profile image uploaded successfully');
+        console.log('New profile image data:', vehicleOwner.profileImage);
 
         res.status(200).json({
             success: true,
@@ -274,7 +292,8 @@ const uploadVehicleOwnerProfileImage = async (req, res) => {
         console.error('Upload vehicle owner profile image error:', error);
         res.status(500).json({
             success: false,
-            message: 'Server error. Please try again later.'
+            message: 'Server error. Please try again later.',
+            error: error.message
         });
     }
 };

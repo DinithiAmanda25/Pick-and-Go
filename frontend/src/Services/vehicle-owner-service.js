@@ -28,11 +28,14 @@ class VehicleOwnerService {
             const response = await HTTP.put(`/auth/profile/vehicle-owner/${userId}`, profileData);
 
             if (response.data.success) {
-                // Update localStorage with new profile data
-                const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-                if (currentUser) {
-                    Object.assign(currentUser, response.data.user);
-                    localStorage.setItem('user', JSON.stringify(currentUser));
+                // Update localStorage with new profile data  
+                const updatedProfile = response.data.user || response.data.profile || response.data.vehicleOwner;
+                if (updatedProfile) {
+                    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+                    if (currentUser) {
+                        Object.assign(currentUser, updatedProfile);
+                        localStorage.setItem('user', JSON.stringify(currentUser));
+                    }
                 }
             }
 
