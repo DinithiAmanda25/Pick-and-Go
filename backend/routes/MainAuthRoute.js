@@ -17,6 +17,7 @@ const businessOwnerRoutes = require('./BusinessOwnerRoute');
 const driverRoutes = require('./DriverRoute');
 const clientRoutes = require('./ClientRoute');
 const vehicleOwnerRoutes = require('./VehicleOwnerRoute');
+const forgotPasswordRoutes = require('./ForgotPasswordRoute');
 
 // Legacy frontend compatibility routes (old pattern: /auth/profile/actor-type/...)
 router.use('/profile/admin', adminRoutes);
@@ -24,6 +25,9 @@ router.use('/profile/business-owner', businessOwnerRoutes);
 router.use('/profile/driver', driverRoutes);
 router.use('/profile/client', clientRoutes);
 router.use('/profile/vehicle-owner', vehicleOwnerRoutes);
+
+// Forgot Password Routes
+router.use('/forgot-password', forgotPasswordRoutes);
 
 // Universal Authentication Routes
 router.post('/login', login);

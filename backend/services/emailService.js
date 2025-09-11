@@ -539,6 +539,237 @@ class EmailService {
             throw new Error(`Failed to send email: ${error.message}`);
         }
     }
+
+    // Send password reset OTP email
+    async sendPasswordResetOTP(email, otp, userName) {
+        if (!this.transporter) {
+            console.warn('Email service not configured. Cannot send password reset OTP.');
+            return { success: false, message: 'Email service not configured' };
+        }
+
+        try {
+            const subject = '🔐 Password Reset OTP - Pick & Go';
+            const htmlContent = this.generatePasswordResetOTPHTML(userName, otp);
+
+            const mailOptions = {
+                from: {
+                    name: 'Pick & Go Security',
+                    address: process.env.EMAIL_USER
+                },
+                to: email,
+                subject: subject,
+                html: htmlContent
+            };
+
+            const info = await this.transporter.sendMail(mailOptions);
+
+            console.log('Password reset OTP email sent:', {
+                messageId: info.messageId,
+                recipient: email
+            });
+
+            return {
+                success: true,
+                messageId: info.messageId,
+                message: 'Password reset OTP sent successfully'
+            };
+
+        } catch (error) {
+            console.error('Error sending password reset OTP email:', error);
+            return {
+                success: false,
+                message: `Failed to send OTP email: ${error.message}`
+            };
+        }
+    }
+
+    // Send password reset confirmation email
+    async sendPasswordResetConfirmation(email, userName) {
+        if (!this.transporter) {
+            console.warn('Email service not configured. Cannot send password reset confirmation.');
+            return { success: false, message: 'Email service not configured' };
+        }
+
+        try {
+            const subject = '✅ Password Reset Successful - Pick & Go';
+            const htmlContent = this.generatePasswordResetConfirmationHTML(userName);
+
+            const mailOptions = {
+                from: {
+                    name: 'Pick & Go Security',
+                    address: process.env.EMAIL_USER
+                },
+                to: email,
+                subject: subject,
+                html: htmlContent
+            };
+
+            const info = await this.transporter.sendMail(mailOptions);
+
+            console.log('Password reset confirmation email sent:', {
+                messageId: info.messageId,
+                recipient: email
+            });
+
+            return {
+                success: true,
+                messageId: info.messageId,
+                message: 'Password reset confirmation sent successfully'
+            };
+
+        } catch (error) {
+            console.error('Error sending password reset confirmation email:', error);
+            return {
+                success: false,
+                message: `Failed to send confirmation email: ${error.message}`
+            };
+        }
+    }
+
+    // Generate password reset OTP email HTML
+    generatePasswordResetOTPHTML(userName, otp) {
+        return `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Password Reset OTP</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; }
+                .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+                .header h1 { font-size: 28px; margin-bottom: 10px; }
+                .content { padding: 40px 30px; }
+                .otp-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 10px; text-align: center; margin: 30px 0; border: 3px solid #5a67d8; }
+                .otp-code { font-size: 36px; font-weight: bold; letter-spacing: 8px; margin: 15px 0; font-family: 'Courier New', monospace; }
+                .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0; }
+                .footer { background-color: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; border-top: 1px solid #dee2e6; }
+                .btn { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                .security-tips { background-color: #e3f2fd; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #2196f3; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🔐 Password Reset Request</h1>
+                    <p>Secure your Pick & Go account</p>
+                </div>
+                
+                <div class="content">
+                    <h2>Hello ${userName}!</h2>
+                    <p>We received a request to reset your password for your Pick & Go account. Use the OTP below to proceed with your password reset:</p>
+                    
+                    <div class="otp-box">
+                        <h3>Your OTP Code</h3>
+                        <div class="otp-code">${otp}</div>
+                        <p><strong>⏱️ Valid for 10 minutes</strong></p>
+                    </div>
+                    
+                    <div class="warning">
+                        <h4>⚠️ Important Security Notice:</h4>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>This OTP is valid for only <strong>10 minutes</strong></li>
+                            <li>Never share this OTP with anyone</li>
+                            <li>Pick & Go will never ask for your OTP via phone or email</li>
+                            <li>If you didn't request this, please ignore this email</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="security-tips">
+                        <h4>🛡️ Security Tips:</h4>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>Use a strong, unique password</li>
+                            <li>Include uppercase, lowercase, numbers, and special characters</li>
+                            <li>Avoid using personal information in passwords</li>
+                            <li>Consider using a password manager</li>
+                        </ul>
+                    </div>
+                    
+                    <p>If you're having trouble, you can contact our support team or try requesting a new OTP.</p>
+                </div>
+                
+                <div class="footer">
+                    <p>📧 This email was sent from Pick & Go Security System</p>
+                    <p>© 2024 Pick & Go. All rights reserved.</p>
+                    <p style="margin-top: 10px; font-size: 12px;">
+                        This is an automated message. Please do not reply to this email.
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+        `;
+    }
+
+    // Generate password reset confirmation email HTML
+    generatePasswordResetConfirmationHTML(userName) {
+        return `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Password Reset Successful</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; }
+                .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+                .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; text-align: center; }
+                .header h1 { font-size: 28px; margin-bottom: 10px; }
+                .content { padding: 40px 30px; }
+                .success-box { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 25px; border-radius: 10px; text-align: center; margin: 30px 0; }
+                .security-notice { background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0; }
+                .footer { background-color: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; border-top: 1px solid #dee2e6; }
+                .btn { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>✅ Password Reset Successful</h1>
+                    <p>Your Pick & Go account is secure</p>
+                </div>
+                
+                <div class="content">
+                    <h2>Hello ${userName}!</h2>
+                    <p>Great news! Your password has been successfully reset for your Pick & Go account.</p>
+                    
+                    <div class="success-box">
+                        <h3>🎉 Password Updated Successfully</h3>
+                        <p>You can now log in with your new password</p>
+                        <p><strong>Reset completed on:</strong> ${new Date().toLocaleString()}</p>
+                    </div>
+                    
+                    <div class="security-notice">
+                        <h4>🔒 Security Reminder:</h4>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>Keep your new password secure and confidential</li>
+                            <li>Log out from all devices and log back in with your new password</li>
+                            <li>If you didn't perform this action, contact support immediately</li>
+                        </ul>
+                    </div>
+                    
+                    <p>You can now access your Pick & Go account with your new credentials. If you experience any issues, please don't hesitate to contact our support team.</p>
+                    
+                    <div style="text-align: center;">
+                        <a href="#" class="btn">Login to Your Account</a>
+                    </div>
+                </div>
+                
+                <div class="footer">
+                    <p>📧 This email was sent from Pick & Go Security System</p>
+                    <p>© 2024 Pick & Go. All rights reserved.</p>
+                    <p style="margin-top: 10px; font-size: 12px;">
+                        This is an automated message. Please do not reply to this email.
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+        `;
+    }
 }
 
 module.exports = new EmailService();
