@@ -101,7 +101,7 @@ function VehicleOwnerProfile({ profile }) {
         if (profile) {
             console.log('VehicleOwnerProfile - Setting form data from profile:', profile);
             console.log('VehicleOwnerProfile - Profile image data:', profile.profileImage);
-            
+
             setFormData(prev => ({
                 ...prev,
                 firstName: profile?.firstName || '',

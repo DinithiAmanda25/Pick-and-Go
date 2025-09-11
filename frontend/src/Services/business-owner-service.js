@@ -110,6 +110,71 @@ class BusinessOwnerService {
             throw error.response?.data || { success: false, message: 'Network error' };
         }
     }
+
+    // Driver Application Management Methods
+
+    // Get Pending Driver Applications
+    async getPendingDriverApplications() {
+        try {
+            const response = await HTTP.get('/drivers/pending');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { success: false, message: 'Network error' };
+        }
+    }
+
+    // Get All Driver Applications (with status filter)
+    async getAllDriverApplications(status = null) {
+        try {
+            const url = status ? `/drivers?status=${status}` : '/drivers';
+            const response = await HTTP.get(url);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { success: false, message: 'Network error' };
+        }
+    }
+
+    // Approve or Reject Driver Application
+    async reviewDriverApplication(driverId, status, newPassword = null) {
+        try {
+            const payload = { status };
+            if (newPassword) {
+                payload.newPassword = newPassword;
+            }
+
+            console.log('🚀 BusinessOwnerService - Making request to:', `/drivers/approve/${driverId}`)
+            console.log('📦 BusinessOwnerService - Payload:', payload)
+
+            const response = await HTTP.put(`/drivers/approve/${driverId}`, payload);
+
+            console.log('📥 BusinessOwnerService - Response:', response.data)
+            return response.data;
+        } catch (error) {
+            console.error('💥 BusinessOwnerService - Error:', error)
+            console.error('💥 BusinessOwnerService - Error response:', error.response?.data)
+            throw error.response?.data || { success: false, message: 'Network error' };
+        }
+    }
+
+    // Get Driver Details
+    async getDriverDetails(driverId) {
+        try {
+            const response = await HTTP.get(`/drivers/${driverId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { success: false, message: 'Network error' };
+        }
+    }
+
+    // Get Pending Applications Count
+    async getPendingApplicationsCount() {
+        try {
+            const response = await HTTP.get('/drivers/pending/count');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { success: false, message: 'Network error' };
+        }
+    }
 }
 
 export default new BusinessOwnerService();

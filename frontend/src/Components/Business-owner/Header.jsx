@@ -1,13 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import businessOwnerService from '../../Services/business-owner-service'
 import logo from '../../Assets/2.png'
 
 function BusinessOwnerHeader() {
     const [showDropdown, setShowDropdown] = useState(false)
+    const [pendingCount, setPendingCount] = useState(0)
     const { logout, user } = useAuth()
     const navigate = useNavigate()
     const dropdownRef = useRef(null)
+
+    // Fetch pending applications count
+    useEffect(() => {
+        const fetchPendingCount = async () => {
+            try {
+                const response = await businessOwnerService.getPendingApplicationsCount()
+                if (response.success) {
+                    setPendingCount(response.count)
+                }
+            } catch (error) {
+                console.error('Error fetching pending count:', error)
+            }
+        }
+
+        fetchPendingCount()
+        // Refresh count every 30 seconds
+        const interval = setInterval(fetchPendingCount, 30000)
+        return () => clearInterval(interval)
+    }, [])
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -49,9 +70,14 @@ function BusinessOwnerHeader() {
                 <div className="flex items-center space-x-4">
                     {/* Pending Applications Count */}
                     <div className="flex items-center space-x-4">
-                        <div className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
-                            5 Pending Applications
-                        </div>
+                        {pendingCount > 0 && (
+                            <Link
+                                to="/business-owner-dashboard?tab=pending-applications"
+                                className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium cursor-pointer hover:bg-yellow-200 transition-colors"
+                            >
+                                {pendingCount} Pending Application{pendingCount !== 1 ? 's' : ''}
+                            </Link>
+                        )}
                     </div>
 
                     {/* Notifications */}

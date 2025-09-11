@@ -19,6 +19,8 @@ const mainAuthRoutes = require('./routes/MainAuthRoute');
 const uploadRoutes = require('./routes/UploadRoute');
 const vehicleRoutes = require('./routes/VehicleRoute');
 const businessAgreementRoutes = require('./routes/BusinessAgreementRoute');
+const driverRoutes = require('./routes/DriverRoute');
+const adminRoutes = require('./routes/AdminRoute');
 
 // API Routes
 app.use('/api/auth', mainAuthRoutes);
@@ -26,6 +28,8 @@ app.use('/auth', mainAuthRoutes); // Legacy route support
 app.use('/api/upload', uploadRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/business-agreement', businessAgreementRoutes);
+app.use('/api/drivers', driverRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Serve static files from React build in production
 if (process.env.NODE_ENV === 'production') {

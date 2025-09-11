@@ -1,5 +1,6 @@
 const { Driver } = require('../models/DriverModel');
 const { uploadToCloudinary } = require('../middleware/cloudinaryUpload');
+const emailService = require('../services/emailService');
 
 // Register Driver (through onboarding)
 const registerDriver = async (req, res) => {
@@ -311,7 +312,7 @@ const updateDriverProfile = async (req, res) => {
 const approveDriver = async (req, res) => {
     try {
         const { driverId } = req.params;
-        const { status } = req.body; // 'approved' or 'rejected'
+        const { status, newPassword } = req.body; // 'approved' or 'rejected', optional newPassword
 
         if (!['approved', 'rejected'].includes(status)) {
             return res.status(400).json({
@@ -320,25 +321,74 @@ const approveDriver = async (req, res) => {
             });
         }
 
-        const driver = await Driver.findByIdAndUpdate(
-            driverId,
-            {
-                status,
-                updatedAt: new Date()
-            },
-            { new: true }
-        ).select('-password');
+        // Find the driver first to get their details
+        const existingDriver = await Driver.findById(driverId).select('-password');
 
-        if (!driver) {
+        if (!existingDriver) {
             return res.status(404).json({
                 success: false,
                 message: 'Driver not found'
             });
         }
 
+        let updateData = {
+            status,
+            updatedAt: new Date()
+        };
+
+        // If approving and a new password is provided, hash and update it
+        if (status === 'approved' && newPassword) {
+            const bcrypt = require('bcrypt');
+            const saltRounds = 10;
+            const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+            updateData.password = hashedPassword;
+        }
+
+        // Update the driver status
+        const driver = await Driver.findByIdAndUpdate(
+            driverId,
+            updateData,
+            { new: true }
+        ).select('-password');
+
+        // Prepare email data
+        const emailData = {
+            fullName: driver.fullName,
+            email: driver.email,
+            status: status
+        };
+
+        let credentials = null;
+        if (status === 'approved') {
+            // Generate temporary password if not provided
+            const tempPassword = newPassword || `PnG${Math.random().toString(36).slice(-8)}`;
+
+            // Update password if we generated a new one
+            if (!newPassword) {
+                const bcrypt = require('bcrypt');
+                const saltRounds = 10;
+                const hashedPassword = await bcrypt.hash(tempPassword, saltRounds);
+                await Driver.findByIdAndUpdate(driverId, { password: hashedPassword });
+            }
+
+            credentials = {
+                email: driver.email,
+                password: newPassword || tempPassword
+            };
+        }
+
+        // Send email notification
+        try {
+            await emailService.sendDriverApprovalEmail(emailData, credentials);
+            console.log(`Driver ${status} email sent successfully to ${driver.email}`);
+        } catch (emailError) {
+            console.error('Failed to send email:', emailError.message);
+            // Continue with the response even if email fails
+        }
+
         res.status(200).json({
             success: true,
-            message: `Driver ${status} successfully`,
+            message: `Driver ${status} successfully. ${status === 'approved' ? 'Login credentials sent to driver email.' : 'Notification sent to driver.'}`,
             driver: driver
         });
 
@@ -440,6 +490,28 @@ const changeDriverPassword = async (req, res) => {
     }
 };
 
+// Get count of pending driver applications
+const getPendingApplicationsCount = async (req, res) => {
+    try {
+        const count = await Driver.countDocuments({
+            status: 'pending',
+            isActive: true
+        });
+
+        res.status(200).json({
+            success: true,
+            count: count
+        });
+
+    } catch (error) {
+        console.error('Get pending applications count error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error. Please try again later.'
+        });
+    }
+};
+
 module.exports = {
     registerDriver,
     driverLogin,
@@ -448,5 +520,6 @@ module.exports = {
     approveDriver,
     getPendingDrivers,
     getAllDrivers,
-    changeDriverPassword
+    changeDriverPassword,
+    getPendingApplicationsCount
 };

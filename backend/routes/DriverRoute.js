@@ -9,7 +9,8 @@ const {
     approveDriver,
     getPendingDrivers,
     getAllDrivers,
-    changeDriverPassword
+    changeDriverPassword,
+    getPendingApplicationsCount
 } = require('../controllers/DriverController');
 
 // Driver Authentication Routes
@@ -24,19 +25,20 @@ router.post('/register', upload.fields([
     { name: 'medicalCertificate', maxCount: 1 }
 ]), registerDriver);
 
-// Driver Profile Routes (for legacy compatibility /auth/profile/driver/...)
-router.get('/:userId', getDriverProfile);
-router.put('/:userId', updateDriverProfile);
-router.put('/:userId/change-password', changeDriverPassword);
+// Admin functions for driver management (must come before parameterized routes)
+router.get('/pending/count', getPendingApplicationsCount);
+router.get('/pending', getPendingDrivers);
+router.get('/all', getAllDrivers);
+router.put('/approve/:driverId', approveDriver);
 
 // Driver Profile Routes (original pattern for direct access)
 router.get('/profile/:userId', getDriverProfile);
 router.put('/profile/:userId', updateDriverProfile);
 router.put('/profile/:userId/change-password', changeDriverPassword);
 
-// Admin functions for driver management
-router.put('/approve/:driverId', approveDriver);
-router.get('/pending', getPendingDrivers);
-router.get('/all', getAllDrivers);
+// Driver Profile Routes (for legacy compatibility /auth/profile/driver/...)
+router.get('/:userId', getDriverProfile);
+router.put('/:userId', updateDriverProfile);
+router.put('/:userId/change-password', changeDriverPassword);
 
 module.exports = router;
