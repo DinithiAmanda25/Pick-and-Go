@@ -116,7 +116,61 @@ class BusinessOwnerService {
     // Get Pending Driver Applications
     async getPendingDriverApplications() {
         try {
-            const response = await HTTP.get('/drivers/pending');
+            // Get current user ID from localStorage
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                throw { success: false, message: 'User not authenticated' };
+            }
+            
+            const response = await HTTP.get(`/business-owner/${userId}/pending-drivers`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { success: false, message: 'Network error' };
+        }
+    }
+
+    // Get Pending Vehicle Applications
+    async getPendingVehicleApplications() {
+        try {
+            // Get current user ID from localStorage
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                throw { success: false, message: 'User not authenticated' };
+            }
+            
+            const response = await HTTP.get(`/business-owner/${userId}/pending-vehicles`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { success: false, message: 'Network error' };
+        }
+    }
+
+    // Get All Pending Applications (both drivers and vehicles)
+    async getAllPendingApplications() {
+        try {
+            // Get current user ID from localStorage
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                throw { success: false, message: 'User not authenticated' };
+            }
+            
+            const response = await HTTP.get(`/business-owner/${userId}/pending-applications`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { success: false, message: 'Network error' };
+        }
+    }
+
+    // Get Approval Statistics for Dashboard
+    async getApprovalStatistics() {
+        try {
+            // Get current user ID from localStorage
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                throw { success: false, message: 'User not authenticated' };
+            }
+            
+            const response = await HTTP.get(`/business-owner/${userId}/approval-statistics`);
             return response.data;
         } catch (error) {
             throw error.response?.data || { success: false, message: 'Network error' };
@@ -135,17 +189,51 @@ class BusinessOwnerService {
     }
 
     // Approve or Reject Driver Application
-    async reviewDriverApplication(driverId, status, newPassword = null) {
+    async reviewDriverApplication(driverId, status, newPassword = null, approvalNotes = '') {
         try {
-            const payload = { status };
+            // Get current user ID from localStorage
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                throw { success: false, message: 'User not authenticated' };
+            }
+
+            const payload = { status, approvalNotes };
             if (newPassword) {
                 payload.newPassword = newPassword;
             }
 
-            console.log('🚀 BusinessOwnerService - Making request to:', `/drivers/approve/${driverId}`)
+            console.log('🚀 BusinessOwnerService - Making request to:', `/business-owner/${userId}/approve-driver/${driverId}`)
             console.log('📦 BusinessOwnerService - Payload:', payload)
 
-            const response = await HTTP.put(`/drivers/approve/${driverId}`, payload);
+            const response = await HTTP.put(`/business-owner/${userId}/approve-driver/${driverId}`, payload);
+
+            console.log('📥 BusinessOwnerService - Response:', response.data)
+            return response.data;
+        } catch (error) {
+            console.error('💥 BusinessOwnerService - Error:', error)
+            console.error('💥 BusinessOwnerService - Error response:', error.response?.data)
+            throw error.response?.data || { success: false, message: 'Network error' };
+        }
+    }
+
+    // Approve or Reject Vehicle Application
+    async reviewVehicleApplication(vehicleId, status, vehicleData = {}) {
+        try {
+            // Get current user ID from localStorage
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                throw { success: false, message: 'User not authenticated' };
+            }
+
+            const payload = { 
+                status,
+                ...vehicleData // This can include dailyRate, weeklyRate, monthlyRate, approvalNotes, rejectionReason
+            };
+
+            console.log('🚀 BusinessOwnerService - Making request to:', `/business-owner/${userId}/approve-vehicle/${vehicleId}`)
+            console.log('📦 BusinessOwnerService - Payload:', payload)
+
+            const response = await HTTP.put(`/business-owner/${userId}/approve-vehicle/${vehicleId}`, payload);
 
             console.log('📥 BusinessOwnerService - Response:', response.data)
             return response.data;

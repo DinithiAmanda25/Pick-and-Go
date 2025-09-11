@@ -8,7 +8,14 @@ const {
     updateBusinessOwnerProfile,
     uploadBusinessOwnerProfileImage,
     changeBusinessOwnerPassword,
-    deleteBusinessOwnerProfile
+    deleteBusinessOwnerProfile,
+    // Pending Applications Management
+    getPendingApplications,
+    getPendingDrivers,
+    getPendingVehicles,
+    approveDriver,
+    approveVehicle,
+    getApprovalStatistics
 } = require('../controllers/BusinessOwnerController');
 
 // Business Owner Authentication Routes
@@ -28,6 +35,26 @@ router.put('/profile/:userId', updateBusinessOwnerProfile);
 router.post('/profile/:userId/upload-image', upload.single('profileImage'), uploadBusinessOwnerProfileImage);
 router.put('/profile/:userId/change-password', changeBusinessOwnerPassword);
 router.delete('/profile/:userId', deleteBusinessOwnerProfile);
+
+// ==================== PENDING APPLICATIONS MANAGEMENT ROUTES ====================
+
+// Get all pending applications (both drivers and vehicles)
+router.get('/:businessOwnerId/pending-applications', getPendingApplications);
+
+// Get pending drivers only
+router.get('/:businessOwnerId/pending-drivers', getPendingDrivers);
+
+// Get pending vehicles only
+router.get('/:businessOwnerId/pending-vehicles', getPendingVehicles);
+
+// Approve/Reject Driver
+router.put('/:businessOwnerId/approve-driver/:driverId', approveDriver);
+
+// Approve/Reject Vehicle
+router.put('/:businessOwnerId/approve-vehicle/:vehicleId', approveVehicle);
+
+// Get approval statistics for dashboard
+router.get('/:businessOwnerId/approval-statistics', getApprovalStatistics);
 
 // Debug route to check business owner data
 router.get('/debug/:userId', async (req, res) => {

@@ -80,6 +80,58 @@ class EmailService {
         }
     }
 
+    // Send vehicle approval email
+    async sendVehicleApprovalEmail(vehicleData) {
+        if (!this.transporter) {
+            console.warn('Email service not configured. Cannot send vehicle approval email.');
+            return { success: false, message: 'Email service not configured' };
+        }
+
+        try {
+            const { ownerName, email, vehicleInfo, status, businessName, approvalNotes, rejectionReason } = vehicleData;
+
+            let subject, htmlContent;
+
+            if (status === 'approved') {
+                subject = '🎉 Your Vehicle has been Approved - Pick & Go';
+                htmlContent = this.generateVehicleApprovalEmailHTML(ownerName, vehicleInfo, businessName, approvalNotes);
+            } else if (status === 'rejected') {
+                subject = '❌ Vehicle Application Status Update - Pick & Go';
+                htmlContent = this.generateVehicleRejectionEmailHTML(ownerName, vehicleInfo, businessName, rejectionReason, approvalNotes);
+            } else {
+                throw new Error('Invalid status for vehicle approval email');
+            }
+
+            const mailOptions = {
+                from: {
+                    name: 'Pick & Go',
+                    address: process.env.EMAIL_USER
+                },
+                to: email,
+                subject: subject,
+                html: htmlContent
+            };
+
+            const info = await this.transporter.sendMail(mailOptions);
+
+            console.log('Vehicle approval email sent:', {
+                messageId: info.messageId,
+                recipient: email,
+                status: status
+            });
+
+            return {
+                success: true,
+                messageId: info.messageId,
+                message: 'Email sent successfully'
+            };
+
+        } catch (error) {
+            console.error('Error sending vehicle approval email:', error);
+            throw new Error(`Failed to send email: ${error.message}`);
+        }
+    }
+
     // Send business owner notification about new driver application
     async sendNewApplicationNotification(businessOwnerEmail, driverData) {
         if (!this.transporter) {
@@ -241,6 +293,140 @@ class EmailService {
                     
                     <p>Best regards,<br>
                     <strong>The Pick & Go Team</strong></p>
+                </div>
+                <div class="footer">
+                    <p>© 2025 Pick & Go. All rights reserved.</p>
+                    <p>This is an automated message. Please do not reply to this email.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        `;
+    }
+
+    // Generate vehicle approval email HTML
+    generateVehicleApprovalEmailHTML(ownerName, vehicleInfo, businessName, approvalNotes) {
+        return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Vehicle Approved</title>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+                .vehicle-box { background: white; border: 2px solid #28a745; border-radius: 8px; padding: 20px; margin: 20px 0; }
+                .button { display: inline-block; background: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 10px 0; }
+                .footer { text-align: center; margin-top: 30px; color: #6c757d; font-size: 14px; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🎉 Congratulations!</h1>
+                    <h2>Your Vehicle has been Approved</h2>
+                </div>
+                <div class="content">
+                    <p>Dear <strong>${ownerName}</strong>,</p>
+                    
+                    <p>Great news! Your vehicle application has been <strong>approved</strong> by <strong>${businessName}</strong>.</p>
+                    
+                    <div class="vehicle-box">
+                        <h3>🚗 Approved Vehicle:</h3>
+                        <p><strong>${vehicleInfo}</strong></p>
+                        ${approvalNotes ? `<p><strong>Approval Notes:</strong><br>${approvalNotes}</p>` : ''}
+                    </div>
+                    
+                    <h3>✅ What's Next?</h3>
+                    <ul>
+                        <li>Your vehicle is now available for rental</li>
+                        <li>You can manage your vehicle listing</li>
+                        <li>Start earning from rentals!</li>
+                        <li>Monitor bookings through your dashboard</li>
+                    </ul>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${process.env.FRONTEND_URL}/vehicle-owner/dashboard" class="button">View Dashboard</a>
+                    </div>
+                    
+                    <p>Congratulations on becoming part of the Pick & Go vehicle owner network!</p>
+                    
+                    <p>Best regards,<br>
+                    <strong>The Pick & Go Team</strong><br>
+                    <em>Approved by: ${businessName}</em></p>
+                </div>
+                <div class="footer">
+                    <p>© 2025 Pick & Go. All rights reserved.</p>
+                    <p>This is an automated message. Please do not reply to this email.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        `;
+    }
+
+    // Generate vehicle rejection email HTML
+    generateVehicleRejectionEmailHTML(ownerName, vehicleInfo, businessName, rejectionReason, approvalNotes) {
+        return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Vehicle Application Status</title>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+                .vehicle-box { background: white; border: 2px solid #dc3545; border-radius: 8px; padding: 20px; margin: 20px 0; }
+                .button { display: inline-block; background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 10px 0; }
+                .footer { text-align: center; margin-top: 30px; color: #6c757d; font-size: 14px; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>📋 Vehicle Application Update</h1>
+                    <h2>Application Status: Not Approved</h2>
+                </div>
+                <div class="content">
+                    <p>Dear <strong>${ownerName}</strong>,</p>
+                    
+                    <p>Thank you for submitting your vehicle to <strong>Pick & Go</strong>. After review by <strong>${businessName}</strong>, we are unable to approve your vehicle application at this time.</p>
+                    
+                    <div class="vehicle-box">
+                        <h3>🚗 Vehicle Details:</h3>
+                        <p><strong>${vehicleInfo}</strong></p>
+                        ${rejectionReason ? `<p><strong>Reason for Rejection:</strong><br>${rejectionReason}</p>` : ''}
+                        ${approvalNotes ? `<p><strong>Additional Notes:</strong><br>${approvalNotes}</p>` : ''}
+                    </div>
+                    
+                    <h3>📝 Common Reasons for Rejection:</h3>
+                    <ul>
+                        <li>Incomplete or missing required documents</li>
+                        <li>Vehicle condition does not meet standards</li>
+                        <li>Insurance or registration issues</li>
+                        <li>Vehicle age or mileage requirements not met</li>
+                        <li>Duplicate vehicle already in system</li>
+                    </ul>
+                    
+                    <p>You can address the issues mentioned and resubmit your vehicle application.</p>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${process.env.FRONTEND_URL}/vehicle-owner/add-vehicle" class="button">Submit New Application</a>
+                    </div>
+                    
+                    <p>If you have questions about this decision or need clarification, please contact our support team.</p>
+                    
+                    <p>Thank you for your interest in Pick & Go.</p>
+                    
+                    <p>Best regards,<br>
+                    <strong>The Pick & Go Team</strong><br>
+                    <em>Reviewed by: ${businessName}</em></p>
                 </div>
                 <div class="footer">
                     <p>© 2025 Pick & Go. All rights reserved.</p>

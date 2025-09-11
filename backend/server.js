@@ -21,6 +21,7 @@ const vehicleRoutes = require('./routes/VehicleRoute');
 const businessAgreementRoutes = require('./routes/BusinessAgreementRoute');
 const driverRoutes = require('./routes/DriverRoute');
 const adminRoutes = require('./routes/AdminRoute');
+const businessOwnerRoutes = require('./routes/BusinessOwnerRoute');
 
 // API Routes
 app.use('/api/auth', mainAuthRoutes);
@@ -30,6 +31,7 @@ app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/business-agreement', businessAgreementRoutes);
 app.use('/api/drivers', driverRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/business-owner', businessOwnerRoutes);
 
 // Serve static files from React build in production
 if (process.env.NODE_ENV === 'production') {

@@ -1,19 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import vehicleService from '../../Services/vehicle-service.js';
+import businessOwnerService from '../../Services/business-owner-service.js';
 
 function PendingVehicleApprovals() {
     const [pendingVehicles, setPendingVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [selectedVehicle, setSelectedVehicle] = useState(null);
-    const [showPricingModal, setShowPricingModal] = useState(false);
     const [viewDetailsVehicle, setViewDetailsVehicle] = useState(null);
-    const [pricing, setPricing] = useState({
-        dailyRate: '',
-        weeklyRate: '',
-        monthlyRate: '',
-        securityDeposit: '',
-        processingFee: ''
-    });
+    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [selectedVehicleForReject, setSelectedVehicleForReject] = useState(null);
+    const [rejectionReason, setRejectionReason] = useState('');
+    const [processingAction, setProcessingAction] = useState(null);
 
     useEffect(() => {
         loadPendingVehicles();
@@ -22,7 +17,7 @@ function PendingVehicleApprovals() {
     const loadPendingVehicles = async () => {
         try {
             setLoading(true);
-            const response = await vehicleService.getPendingVehicles();
+            const response = await businessOwnerService.getPendingVehicleApplications();
             if (response.success) {
                 setPendingVehicles(response.vehicles);
             }
@@ -34,47 +29,17 @@ function PendingVehicleApprovals() {
     };
 
     const handleApprove = async (vehicleId) => {
-        setSelectedVehicle(vehicleId);
-        setShowPricingModal(true);
-    };
-
-    const handleReject = async (vehicleId, reason) => {
-        const rejectionReason = reason || prompt('Please provide a reason for rejection:');
-        if (!rejectionReason) return;
-
+        if (processingAction) return; // Prevent double clicks
+        
+        setProcessingAction('approving');
         try {
-            const response = await vehicleService.rejectVehicle(vehicleId, rejectionReason);
+            const response = await businessOwnerService.reviewVehicleApplication(vehicleId, 'approved', {
+                approvalNotes: 'Vehicle approved by business owner'
+            });
             if (response.success) {
-                alert('Vehicle rejected successfully');
-                loadPendingVehicles();
-            } else {
-                alert(response.message || 'Failed to reject vehicle');
-            }
-        } catch (error) {
-            console.error('Error rejecting vehicle:', error);
-            alert('Error rejecting vehicle');
-        }
-    };
-
-    const handleSubmitPricing = async () => {
-        if (!pricing.dailyRate) {
-            alert('Daily rate is required');
-            return;
-        }
-
-        try {
-            const response = await vehicleService.approveVehicle(selectedVehicle, pricing);
-            if (response.success) {
-                alert('Vehicle approved with pricing successfully');
-                setShowPricingModal(false);
-                setPricing({
-                    dailyRate: '',
-                    weeklyRate: '',
-                    monthlyRate: '',
-                    securityDeposit: '',
-                    processingFee: ''
-                });
-                setSelectedVehicle(null);
+                // Show success message
+                const vehicleName = pendingVehicles.find(v => v._id === vehicleId);
+                alert(`✅ ${vehicleName?.make} ${vehicleName?.model} approved successfully!`);
                 loadPendingVehicles();
             } else {
                 alert(response.message || 'Failed to approve vehicle');
@@ -82,84 +47,131 @@ function PendingVehicleApprovals() {
         } catch (error) {
             console.error('Error approving vehicle:', error);
             alert('Error approving vehicle');
+        } finally {
+            setProcessingAction(null);
         }
     };
 
-    const PricingModal = () => (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl">
-                <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-6 rounded-t-2xl">
-                    <h2 className="text-xl font-bold">Set Vehicle Pricing</h2>
-                    <p className="text-green-100 mt-1">Set competitive rates for this vehicle</p>
+    const handleReject = (vehicleId) => {
+        setSelectedVehicleForReject(vehicleId);
+        setShowRejectModal(true);
+        setRejectionReason('');
+    };
+
+    const submitRejection = async () => {
+        if (!rejectionReason.trim()) {
+            alert('Please provide a reason for rejection');
+            return;
+        }
+
+        if (processingAction) return; // Prevent double clicks
+        
+        setProcessingAction('rejecting');
+        try {
+            const response = await businessOwnerService.reviewVehicleApplication(selectedVehicleForReject, 'rejected', {
+                rejectionReason: rejectionReason.trim()
+            });
+            if (response.success) {
+                // Show success message
+                const vehicleName = pendingVehicles.find(v => v._id === selectedVehicleForReject);
+                alert(`❌ ${vehicleName?.make} ${vehicleName?.model} rejected successfully!`);
+                setShowRejectModal(false);
+                setSelectedVehicleForReject(null);
+                setRejectionReason('');
+                loadPendingVehicles();
+            } else {
+                alert(response.message || 'Failed to reject vehicle');
+            }
+        } catch (error) {
+            console.error('Error rejecting vehicle:', error);
+            alert('Error rejecting vehicle');
+        } finally {
+            setProcessingAction(null);
+        }
+    };
+
+    // Modern Rejection Reason Modal
+    const RejectModal = () => (
+        <div className="fixed inset-0 bg-gradient-to-br from-gray-900/60 via-slate-900/60 to-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-100">
+                <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-6 rounded-t-2xl">
+                    <div className="flex items-center">
+                        <svg className="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.99-.833-2.76 0L3.054 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                        <div>
+                            <h2 className="text-xl font-bold">Reject Vehicle Application</h2>
+                            <p className="text-red-100 mt-1">Please provide a reason for rejection</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="p-6 space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Daily Rate (LKR) *</label>
-                        <input
-                            type="number"
-                            value={pricing.dailyRate}
-                            onChange={(e) => setPricing(prev => ({ ...prev, dailyRate: e.target.value }))}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                            placeholder="5000"
-                            required
+                <div className="p-6">
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Reason for Rejection *
+                        </label>
+                        <textarea
+                            value={rejectionReason}
+                            onChange={(e) => setRejectionReason(e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
+                            rows="4"
+                            placeholder="Please provide a clear reason for rejecting this vehicle application..."
+                            maxLength="500"
                         />
+                        <div className="text-right text-xs text-gray-500 mt-1">
+                            {rejectionReason.length}/500 characters
+                        </div>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Weekly Rate (LKR)</label>
-                        <input
-                            type="number"
-                            value={pricing.weeklyRate}
-                            onChange={(e) => setPricing(prev => ({ ...prev, weeklyRate: e.target.value }))}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                            placeholder="30000"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Monthly Rate (LKR)</label>
-                        <input
-                            type="number"
-                            value={pricing.monthlyRate}
-                            onChange={(e) => setPricing(prev => ({ ...prev, monthlyRate: e.target.value }))}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                            placeholder="120000"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Security Deposit (LKR)</label>
-                        <input
-                            type="number"
-                            value={pricing.securityDeposit}
-                            onChange={(e) => setPricing(prev => ({ ...prev, securityDeposit: e.target.value }))}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                            placeholder="25000"
-                        />
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                        <div className="flex items-start">
+                            <svg className="w-5 h-5 text-amber-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div className="text-sm text-amber-800">
+                                <p className="font-medium">Note:</p>
+                                <p>The vehicle owner will receive an email with your rejection reason. Please be professional and constructive.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div className="bg-gray-50 p-6 border-t rounded-b-2xl">
                     <div className="flex space-x-3">
                         <button
-                            onClick={() => setShowPricingModal(false)}
-                            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+                            onClick={() => {
+                                setShowRejectModal(false);
+                                setSelectedVehicleForReject(null);
+                                setRejectionReason('');
+                            }}
+                            disabled={processingAction === 'rejecting'}
+                            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
                         >
                             Cancel
                         </button>
                         <button
-                            onClick={handleSubmitPricing}
-                            className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                            onClick={submitRejection}
+                            disabled={!rejectionReason.trim() || processingAction === 'rejecting'}
+                            className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Approve & Set Pricing
+                            {processingAction === 'rejecting' ? (
+                                <div className="flex items-center justify-center">
+                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Rejecting...
+                                </div>
+                            ) : (
+                                'Reject Vehicle'
+                            )}
                         </button>
                     </div>
                 </div>
             </div>
         </div>
     );
-
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
@@ -189,9 +201,13 @@ function PendingVehicleApprovals() {
                                 <div className="h-48 bg-gray-200 flex items-center justify-center">
                                     {vehicle.images && vehicle.images.length > 0 ? (
                                         <img
-                                            src={vehicle.images[0]}
+                                            src={vehicle.images[0].url || vehicle.images[0]}
                                             alt={`${vehicle.make} ${vehicle.model}`}
                                             className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                e.target.style.display = 'none';
+                                                e.target.nextElementSibling.style.display = 'block';
+                                            }}
                                         />
                                     ) : (
                                         <div className="text-center text-gray-500">
@@ -199,6 +215,11 @@ function PendingVehicleApprovals() {
                                             <p className="text-sm">No Image</p>
                                         </div>
                                     )}
+                                    {/* Fallback for broken images */}
+                                    <div className="text-center text-gray-500" style={{display: 'none'}}>
+                                        <div className="text-4xl mb-2">🚗</div>
+                                        <p className="text-sm">Image Not Available</p>
+                                    </div>
                                 </div>
 
                                 <div className="absolute top-3 right-3">
@@ -240,6 +261,37 @@ function PendingVehicleApprovals() {
                                     </div>
                                 </div>
 
+                                {/* Document Status Summary */}
+                                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                                    <h4 className="text-sm font-medium text-gray-800 mb-2">Documentation Status</h4>
+                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                        <div className="flex items-center justify-between">
+                                            <span>Registration:</span>
+                                            <span className={vehicle.documents?.registration?.url ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
+                                                {vehicle.documents?.registration?.url ? "✅" : "❌"}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span>Insurance:</span>
+                                            <span className={vehicle.documents?.insurance?.url ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
+                                                {vehicle.documents?.insurance?.url ? "✅" : "❌"}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span>Inspection:</span>
+                                            <span className={vehicle.documents?.emissionTest?.url ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
+                                                {vehicle.documents?.emissionTest?.url ? "✅" : "❌"}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span>Photos:</span>
+                                            <span className={vehicle.images?.length > 0 ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
+                                                {vehicle.images?.length > 0 ? `✅ (${vehicle.images.length})` : "❌"}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {vehicle.description && (
                                     <div className="mb-4">
                                         <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">
@@ -257,14 +309,16 @@ function PendingVehicleApprovals() {
                                     </button>
                                     <button
                                         onClick={() => handleApprove(vehicle._id)}
-                                        className="flex-1 px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+                                        disabled={processingAction === 'approving'}
+                                        className="flex-1 px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
                                     >
-                                        Approve
+                                        {processingAction === 'approving' ? 'Approving...' : 'Approve'}
                                     </button>
 
                                     <button
                                         onClick={() => handleReject(vehicle._id)}
-                                        className="flex-1 px-3 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
+                                        disabled={processingAction === 'rejecting'}
+                                        className="flex-1 px-3 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
                                     >
                                         Reject
                                     </button>
@@ -275,7 +329,7 @@ function PendingVehicleApprovals() {
                 </div>
             )}
 
-            {showPricingModal && <PricingModal />}
+            {showRejectModal && <RejectModal />}
 
             {/* Vehicle Details Modal */}
             {viewDetailsVehicle && (
@@ -375,18 +429,21 @@ function PendingVehicleApprovals() {
                             <div className="p-6 border-b border-gray-200">
                                 <h3 className="text-xl font-semibold text-gray-900 mb-4">Vehicle Documentation & Photos</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {viewDetailsVehicle.photos && viewDetailsVehicle.photos.length > 0 ? (
-                                        viewDetailsVehicle.photos.map((photo, index) => (
+                                    {viewDetailsVehicle.images && viewDetailsVehicle.images.length > 0 ? (
+                                        viewDetailsVehicle.images.map((image, index) => (
                                             <div key={index} className="relative">
                                                 <img
-                                                    src={photo.url || photo}
-                                                    alt={`${viewDetailsVehicle.make} ${viewDetailsVehicle.model} - ${photo.type || 'Photo'}`}
+                                                    src={image.url || image}
+                                                    alt={`${viewDetailsVehicle.make} ${viewDetailsVehicle.model} - ${image.description || 'Photo'}`}
                                                     className="w-full h-48 object-cover rounded-lg shadow-md border border-gray-200"
+                                                    onError={(e) => {
+                                                        e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNGM0Y0RjYiLz48dGV4dCB4PSIxMDAiIHk9IjEwMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOUM5Q0E0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2UgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
+                                                    }}
                                                 />
-                                                {photo.type && (
+                                                {image.description && (
                                                     <div className="absolute bottom-2 left-2">
                                                         <span className="bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs capitalize">
-                                                            {photo.type.replace('-', ' ')}
+                                                            {image.description}
                                                         </span>
                                                     </div>
                                                 )}
@@ -558,26 +615,90 @@ function PendingVehicleApprovals() {
                             <div className="p-6">
                                 <h3 className="text-xl font-semibold text-gray-900 mb-4">Documentation Status</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-                                        <h4 className="font-medium text-red-900 mb-3">Required Documentation</h4>
+                                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                        <h4 className="font-medium text-gray-900 mb-3">Required Documentation</h4>
                                         <div className="space-y-2 text-sm">
+                                            {/* Registration Papers */}
                                             <div className="flex items-center justify-between">
-                                                <span className="text-red-700">Registration Papers</span>
-                                                <span className="text-red-600 font-medium">⚠️ Verify Required</span>
+                                                <span className={viewDetailsVehicle.documents?.registration?.url ? "text-green-700" : "text-red-700"}>
+                                                    Registration Papers
+                                                </span>
+                                                <span className={`font-medium ${viewDetailsVehicle.documents?.registration?.url ? "text-green-600" : "text-red-600"}`}>
+                                                    {viewDetailsVehicle.documents?.registration?.url ? "✅ Uploaded" : "❌ Missing"}
+                                                </span>
                                             </div>
+                                            
+                                            {/* Insurance Certificate */}
                                             <div className="flex items-center justify-between">
-                                                <span className="text-red-700">Insurance Certificate</span>
-                                                <span className="text-red-600 font-medium">⚠️ Verify Required</span>
+                                                <span className={viewDetailsVehicle.documents?.insurance?.url ? "text-green-700" : "text-red-700"}>
+                                                    Insurance Certificate
+                                                </span>
+                                                <span className={`font-medium ${viewDetailsVehicle.documents?.insurance?.url ? "text-green-600" : "text-red-600"}`}>
+                                                    {viewDetailsVehicle.documents?.insurance?.url ? "✅ Uploaded" : "❌ Missing"}
+                                                </span>
                                             </div>
+                                            
+                                            {/* Emission Test / Vehicle Inspection */}
                                             <div className="flex items-center justify-between">
-                                                <span className="text-red-700">Owner's License</span>
-                                                <span className="text-red-600 font-medium">⚠️ Verify Required</span>
+                                                <span className={viewDetailsVehicle.documents?.emissionTest?.url ? "text-green-700" : "text-red-700"}>
+                                                    Vehicle Inspection
+                                                </span>
+                                                <span className={`font-medium ${viewDetailsVehicle.documents?.emissionTest?.url ? "text-green-600" : "text-red-600"}`}>
+                                                    {viewDetailsVehicle.documents?.emissionTest?.url ? "✅ Uploaded" : "❌ Missing"}
+                                                </span>
                                             </div>
+                                            
+                                            {/* Owner Information Status */}
                                             <div className="flex items-center justify-between">
-                                                <span className="text-red-700">Vehicle Inspection</span>
-                                                <span className="text-red-600 font-medium">⚠️ Verify Required</span>
+                                                <span className={viewDetailsVehicle.ownerId?.firstName ? "text-green-700" : "text-red-700"}>
+                                                    Owner Information
+                                                </span>
+                                                <span className={`font-medium ${viewDetailsVehicle.ownerId?.firstName ? "text-green-600" : "text-red-600"}`}>
+                                                    {viewDetailsVehicle.ownerId?.firstName ? "✅ Complete" : "❌ Incomplete"}
+                                                </span>
                                             </div>
                                         </div>
+                                        
+                                        {/* Document Links for Review */}
+                                        {(viewDetailsVehicle.documents?.registration?.url || 
+                                          viewDetailsVehicle.documents?.insurance?.url || 
+                                          viewDetailsVehicle.documents?.emissionTest?.url) && (
+                                            <div className="mt-4 pt-3 border-t border-gray-200">
+                                                <h5 className="text-sm font-medium text-gray-800 mb-2">View Documents:</h5>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {viewDetailsVehicle.documents?.registration?.url && (
+                                                        <a 
+                                                            href={viewDetailsVehicle.documents.registration.url} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200"
+                                                        >
+                                                            📄 Registration
+                                                        </a>
+                                                    )}
+                                                    {viewDetailsVehicle.documents?.insurance?.url && (
+                                                        <a 
+                                                            href={viewDetailsVehicle.documents.insurance.url} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200"
+                                                        >
+                                                            🛡️ Insurance
+                                                        </a>
+                                                    )}
+                                                    {viewDetailsVehicle.documents?.emissionTest?.url && (
+                                                        <a 
+                                                            href={viewDetailsVehicle.documents.emissionTest.url} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded hover:bg-purple-200"
+                                                        >
+                                                            🔍 Inspection
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
                                         <h4 className="font-medium text-yellow-900 mb-3">Review Checklist</h4>
@@ -635,9 +756,20 @@ function PendingVehicleApprovals() {
                                         handleApprove(viewDetailsVehicle._id);
                                         setViewDetailsVehicle(null);
                                     }}
-                                    className="px-8 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                                    disabled={processingAction === 'approving'}
+                                    className="px-8 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50"
                                 >
-                                    Approve & Set Pricing
+                                    {processingAction === 'approving' ? (
+                                        <div className="flex items-center">
+                                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Approving...
+                                        </div>
+                                    ) : (
+                                        'Approve Vehicle'
+                                    )}
                                 </button>
                             </div>
                         </div>

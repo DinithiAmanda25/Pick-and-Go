@@ -527,10 +527,16 @@ const rejectVehicle = async (req, res) => {
 // Upload Vehicle Document
 const uploadVehicleDocument = async (req, res) => {
     try {
+        console.log('📄 Upload Vehicle Document - Request received');
+        console.log('📄 Vehicle ID:', req.params.vehicleId);
+        console.log('📄 Document Type:', req.body.documentType);
+        console.log('📄 File provided:', !!req.file);
+        
         const { vehicleId } = req.params;
         const { documentType } = req.body;
 
         if (!req.file) {
+            console.log('❌ No document file provided');
             return res.status(400).json({
                 success: false,
                 message: 'No document file provided'
@@ -539,6 +545,7 @@ const uploadVehicleDocument = async (req, res) => {
 
         const vehicle = await Vehicle.findById(vehicleId);
         if (!vehicle) {
+            console.log('❌ Vehicle not found:', vehicleId);
             return res.status(404).json({
                 success: false,
                 message: 'Vehicle not found'
@@ -548,14 +555,22 @@ const uploadVehicleDocument = async (req, res) => {
         // Validate document type
         const validDocumentTypes = ['insurance', 'registration', 'emissionTest'];
         if (!validDocumentTypes.includes(documentType)) {
+            console.log('❌ Invalid document type:', documentType);
             return res.status(400).json({
                 success: false,
                 message: 'Invalid document type'
             });
         }
 
+        console.log('⏳ Uploading to Cloudinary...');
         // Upload to Cloudinary
-        const result = await uploadToCloudinary(req.file.path, `vehicles/${vehicleId}/documents`);
+        const fileName = `${documentType}-${vehicleId}-${Date.now()}`;
+        const result = await uploadToCloudinary(
+            req.file.buffer, 
+            fileName, 
+            `pick-and-go/vehicles/${vehicleId}/documents`
+        );
+        console.log('✅ Cloudinary upload successful:', result.secure_url);
 
         // Update vehicle document in database
         const documentData = {
@@ -570,6 +585,7 @@ const uploadVehicleDocument = async (req, res) => {
         vehicle.documents[documentType] = documentData;
 
         await vehicle.save();
+        console.log('✅ Vehicle document saved to database');
 
         res.status(200).json({
             success: true,
@@ -578,7 +594,7 @@ const uploadVehicleDocument = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Upload vehicle document error:', error);
+        console.error('💥 Upload vehicle document error:', error);
         res.status(500).json({
             success: false,
             message: 'Server error. Please try again later.'

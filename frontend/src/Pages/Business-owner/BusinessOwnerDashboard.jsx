@@ -17,6 +17,7 @@ import BusinessOwnerFeedback from '../../Components/Business-owner/Feedback'
 import BusinessOwnerAnalytics from '../../Components/Business-owner/Analytics'
 import BusinessOwnerProfile from '../../Components/Business-owner/Profile'
 import PendingDriverApplications from '../../Components/Business-owner/PendingDriverApplications'
+import PendingApplications from '../../Components/Business-owner/PendingApplications'
 
 function BusinessOwnerDashboard() {
   const location = useLocation()
@@ -455,6 +456,8 @@ function BusinessOwnerDashboard() {
       case 'drivers':
         return <BusinessOwnerDrivers drivers={mockData.drivers} />
       case 'pending-applications':
+        return <PendingApplications />
+      case 'pending-drivers':
         return <PendingDriverApplications />
       case 'users':
         return <BusinessOwnerUsers users={mockData.users} />
