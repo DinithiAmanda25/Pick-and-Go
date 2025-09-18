@@ -11,6 +11,7 @@ import PaymentEnhanced from '../../Components/Clients/PaymentEnhanced'
 import FavoritesEnhanced from '../../Components/Clients/FavoritesEnhanced'
 import Support from '../../Components/Clients/Support'
 import RatingsFeedback from '../../Components/Clients/RatingsFeedback'
+import FeedbackRatings from '../Feedback_Ratings/FeedbackDetail'
 
 function ClientDashboard() {
   const location = useLocation()
@@ -160,6 +161,8 @@ function ClientDashboard() {
         return <PaymentEnhanced />
       case 'ratings':
         return <RatingsFeedback />
+      case 'feedback_ratings':
+        return <FeedbackRatings />
       case 'favorites':
         return <FavoritesEnhanced />
       case 'profile':
