@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
+import { useAuth } from '../../contexts/AuthContext'
+import authService from '../../Services/Auth-service'
 import ClientSidebar from '../../Components/Clients/Sidebar'
 import ClientHeader from '../../Components/Clients/Header'
 import Overview from '../../Components/Clients/Overview'
@@ -13,174 +15,187 @@ import RatingsFeedback from '../../Components/Clients/RatingsFeedback'
 function ClientDashboard() {
   const location = useLocation()
   const params = new URLSearchParams(location.search)
-  const initialTab = params.get('tab') || 'overview'
+  const initialTab = params.get('tab') || 'profile'
   const [activeTab, setActiveTab] = useState(initialTab)
+
+  // Get authenticated user data
+  const { user, getCurrentUserId, getSessionData } = useAuth()
+  const userId = getCurrentUserId()
+  const sessionData = getSessionData()
 
   useEffect(() => {
     const p = new URLSearchParams(location.search)
-    const t = p.get('tab') || 'overview'
+    const t = p.get('tab') || 'profile'
     if (t !== activeTab) {
       setActiveTab(t)
     }
   }, [location.search, activeTab])
-  const [profileData, setProfileData] = useState({
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 234 567 8900',
-    address: '123 Main Street',
-    city: 'New York',
-    zipCode: '10001',
-    dateOfBirth: '1990-01-15',
-    licenseNumber: 'DL123456789'
-  })
+
+  // Get real user profile data
+  const getUserProfile = () => {
+    if (!user) return null;
+
+    return {
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      dateOfBirth: user.dateOfBirth || '',
+      address: user.address || {},
+      preferences: user.preferences || {},
+      profileImage: user.profileImage || null,
+      joinDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A',
+      userId: user._id || user.id,
+      role: user.role || 'client'
+    };
+  };
+
+  const profile = getUserProfile();
 
   // Profile actions
-  const handleProfileUpdate = (updatedData) => {
-    setProfileData((prev) => ({ ...prev, ...updatedData }))
-    alert('Profile updated successfully')
+  const handleProfileUpdate = async (updatedData) => {
+    try {
+      console.log('Profile update requested:', updatedData);
+
+      if (!userId) {
+        alert('User ID not found. Please log in again.');
+        return;
+      }
+
+      // Call the API to update client profile
+      const response = await authService.updateClientProfile(userId, updatedData);
+
+      if (response.success) {
+        alert('Profile updated successfully!');
+        // The auth service automatically updates localStorage
+        // Force a re-render by updating the auth context
+        window.location.reload(); // Simple way to refresh user data
+      } else {
+        alert('Failed to update profile: ' + response.message);
+      }
+    } catch (error) {
+      console.error('Profile update error:', error);
+      alert('Failed to update profile. Please try again.');
+    }
   }
 
   const handleProfileDelete = () => {
     const ok = window.confirm('Are you sure you want to delete your profile? This action cannot be undone.')
     if (ok) {
-      // Clear profile data locally — in a real app, call API then log out/navigate
-      setProfileData({})
+      // TODO: Implement API call to delete client profile
+      console.log('Profile deletion requested for user:', userId);
       // navigate to home or login after deletion
-      window.location.href = '/'
     }
   }
 
-
-  // Enhanced mock booking data with more comprehensive details
+  // Mock data for bookings and other sections
   const mockBookings = [
     {
       id: 1,
-      vehicle: {
-        name: 'Toyota Camry 2023',
-        image: '/api/placeholder/300/200',
-        type: 'sedan'
-      },
-      driver: {
-        name: 'John Smith',
-        image: '/api/placeholder/100/100'
-      },
-      withDriver: true,
-      bookingDate: '2024-01-15',
-      pickupDate: '2024-01-20',
-      dropoffDate: '2024-01-25',
+      vehicle: 'Honda Civic 2023',
+      driver: 'John Smith',
+      status: 'upcoming',
+      pickupLocation: 'Colombo Airport',
+      dropoffLocation: 'Kandy',
+      pickupDate: '2024-01-25',
+      dropoffDate: '2024-01-27',
       pickupTime: '10:00',
-      dropoffTime: '18:00',
-      status: 'confirmed',
-      totalAmount: 375,
-      invoiceId: 'INV-001'
+      dropoffTime: '10:00',
+      totalAmount: 5500,
+      duration: '2 days'
     },
     {
       id: 2,
-      vehicle: {
-        name: 'Honda CR-V 2022',
-        image: '/api/placeholder/300/200',
-        type: 'suv'
-      },
-      driver: null,
-      withDriver: false,
-      bookingDate: '2024-01-10',
-      pickupDate: '2024-01-12',
-      dropoffDate: '2024-01-15',
-      pickupTime: '09:00',
-      dropoffTime: '17:00',
-      status: 'completed',
-      totalAmount: 225,
-      invoiceId: 'INV-002'
+      vehicle: 'Toyota Corolla 2022',
+      driver: 'Sarah Wilson',
+      status: 'confirmed',
+      pickupLocation: 'Galle Fort',
+      dropoffLocation: 'Colombo',
+      pickupDate: '2024-01-20',
+      dropoffDate: '2024-01-21',
+      pickupTime: '08:00',
+      dropoffTime: '18:00',
+      totalAmount: 3200,
+      duration: '1 day'
     },
     {
       id: 3,
-      vehicle: {
-        name: 'BMW X3 2023',
-        image: '/api/placeholder/300/200',
-        type: 'luxury'
-      },
-      driver: {
-        name: 'Mike Johnson',
-        image: '/api/placeholder/100/100'
-      },
-      withDriver: true,
-      bookingDate: '2024-02-01',
-      pickupDate: '2024-02-05',
-      dropoffDate: '2024-02-08',
-      pickupTime: '11:00',
-      dropoffTime: '16:00',
-      status: 'pending',
-      totalAmount: 450,
-      invoiceId: 'INV-003'
+      vehicle: 'Nissan Sentra 2023',
+      driver: 'Mike Johnson',
+      status: 'completed',
+      pickupLocation: 'Negombo Beach',
+      dropoffLocation: 'Nuwara Eliya',
+      pickupDate: '2024-01-15',
+      dropoffDate: '2024-01-18',
+      pickupTime: '06:00',
+      dropoffTime: '20:00',
+      totalAmount: 8500,
+      duration: '3 days'
     }
   ]
 
-  // Mock payments & favorites
-  const mockPayments = [
-    { id: 1, description: 'Booking Payment — Honda CR-V', date: '2024-01-15', amount: 225 },
-    { id: 2, description: 'Booking Payment — Toyota Camry', date: '2024-01-20', amount: 375 },
-  ]
-
-  const mockFavorites = [
-    { id: 101, name: 'Toyota Camry', image: '/api/placeholder/400/200', type: 'Sedan' }
-  ]
-
-  // (profile updates handled by handleProfileUpdate(updatedData) above)
-
-  const handleInputChange = (e) => {
-    setProfileData({
-      ...profileData,
-      [e.target.name]: e.target.value
-    })
+  const handleViewBookingDetails = (bookingId) => {
+    console.log('Viewing details for booking:', bookingId)
+    alert(`Viewing details for booking ${bookingId}`)
   }
 
-  const downloadInvoice = (invoiceId) => {
-    alert(`Downloading invoice ${invoiceId}`)
+  const downloadInvoice = (bookingId) => {
+    console.log('Downloading invoice for booking:', bookingId)
+    alert(`Downloading invoice for booking ${bookingId}`)
   }
 
-  // Enhanced booking management functions
-  const handleCancelBooking = (bookingId, reason) => {
-    console.log(`Cancelling booking ${bookingId} with reason: ${reason}`)
-    alert('Booking cancelled successfully!')
-  }
-
-  const handleModifyBooking = (bookingId, modifications) => {
-    console.log(`Modifying booking ${bookingId}:`, modifications)
-    alert('Booking modified successfully!')
-  }
-
-  const handleViewBookingDetails = (booking) => {
-    console.log('Viewing booking details:', booking)
-    alert(`Viewing details for booking #${booking.id}`)
-  }
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'confirmed':
-        return 'bg-blue-100 text-blue-800'
-      case 'ongoing':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'completed':
-        return 'bg-green-100 text-green-800'
-      case 'cancelled':
-        return 'bg-red-100 text-red-800'
+  const getContentByTab = (tab) => {
+    switch (tab) {
+      case 'overview':
+        return <Overview mockBookings={mockBookings} setActiveTab={setActiveTab} />
+      case 'bookings':
+        return (
+          <BookingsEnhanced
+            mockBookings={mockBookings}
+            onViewDetails={handleViewBookingDetails}
+            downloadInvoice={downloadInvoice}
+          />
+        )
+      case 'payments':
+        return <PaymentEnhanced />
+      case 'ratings':
+        return <RatingsFeedback />
+      case 'favorites':
+        return <FavoritesEnhanced />
+      case 'profile':
+        return (
+          <ProfileSimplified
+            profile={profile}
+            onUpdateProfile={handleProfileUpdate}
+            onDeleteProfile={handleProfileDelete}
+          />
+        )
+      case 'support':
+        return <Support />
       default:
-        return 'bg-gray-100 text-gray-800'
+        return (
+          <ProfileSimplified
+            profile={profile}
+            onUpdateProfile={handleProfileUpdate}
+            onDeleteProfile={handleProfileDelete}
+          />
+        )
     }
   }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 z-50">
+      {/* Sidebar - Fixed Position */}
+      <div className="fixed top-0 left-0 h-full z-10">
         <ClientSidebar />
       </div>
 
-      {/* Main Content */}
+      {/* Main Content - With proper margin to account for fixed sidebar */}
       <div className="flex-1 ml-64">
         {/* Header */}
-        <ClientHeader />
+        <div className="w-full">
+          <ClientHeader />
+        </div>
 
         {/* Dashboard Content */}
         <div className="p-6">
@@ -188,39 +203,7 @@ function ClientDashboard() {
           <div className="bg-white rounded-xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl">
             <div className="p-8">
               <div className="animate-slide-in">
-                {activeTab === 'overview' && (
-                  <Overview mockBookings={mockBookings} setActiveTab={setActiveTab} />
-                )}
-
-                {activeTab === 'bookings' && (
-                  <BookingsEnhanced
-                    mockBookings={mockBookings}
-                    onCancelBooking={handleCancelBooking}
-                    onModifyBooking={handleModifyBooking}
-                    onViewDetails={handleViewBookingDetails}
-                    downloadInvoice={downloadInvoice}
-                  />
-                )}
-
-                {activeTab === 'payments' && (
-                  <PaymentEnhanced />
-                )}
-
-                {activeTab === 'ratings' && (
-                  <RatingsFeedback />
-                )}
-
-                {activeTab === 'favorites' && (
-                  <FavoritesEnhanced />
-                )}
-
-                {activeTab === 'profile' && (
-                  <ProfileSimplified />
-                )}
-
-                {activeTab === 'support' && (
-                  <Support />
-                )}
+                {getContentByTab(activeTab)}
               </div>
             </div>
           </div>

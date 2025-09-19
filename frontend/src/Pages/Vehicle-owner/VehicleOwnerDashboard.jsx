@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import vehicleOwnerService from '../../Services/VehicleOwner-service'
 import VehicleOwnerSidebar from '../../Components/Vehicle-owner/Sidebar'
 import VehicleOwnerHeader from '../../Components/Vehicle-owner/Header'
 import VehicleOwnerOverview from '../../Components/Vehicle-owner/Overview'
-import VehicleOwnerVehicles from '../../Components/Vehicle-owner/Vehicles'
+import MyVehicles from '../../Components/Vehicle-owner/MyVehicles'
 import VehicleOwnerReports from '../../Components/Vehicle-owner/Reports'
 import VehicleOwnerAgreements from '../../Components/Vehicle-owner/Agreements'
 import VehicleOwnerBookings from '../../Components/Vehicle-owner/Bookings'
@@ -17,11 +18,51 @@ function VehicleOwnerDashboard() {
   const params = new URLSearchParams(location.search)
   const initialTab = params.get('tab') || 'profile'
   const [activeTab, setActiveTab] = useState(initialTab)
+  const [profile, setProfile] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   // Get authenticated user data
   const { user, getCurrentUserId, getSessionData } = useAuth()
   const userId = getCurrentUserId()
   const sessionData = getSessionData()
+
+  // Fetch fresh profile data from backend
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        if (userId) {
+          console.log('Fetching fresh profile data for userId:', userId)
+
+          // Use the VehicleOwner service to fetch profile
+          try {
+            const response = await vehicleOwnerService.getProfile(userId);
+            console.log('Profile service response:', response);
+
+            if (response.success && response.user) {
+              console.log('Setting profile from service response:', response.user)
+              setProfile(response.user)
+              setLoading(false)
+              return
+            }
+          } catch (apiError) {
+            console.error('VehicleOwner service call failed:', apiError)
+          }
+
+          // Fallback to context data
+          console.log('Using fallback context data')
+          setProfile(getUserProfileFromContext())
+        }
+      } catch (error) {
+        console.error('Failed to fetch profile:', error)
+        // Fallback to user data from context
+        setProfile(getUserProfileFromContext())
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProfile()
+  }, [userId])
 
   useEffect(() => {
     const p = new URLSearchParams(location.search)
@@ -31,10 +72,13 @@ function VehicleOwnerDashboard() {
     }
   }, [location.search, activeTab])
 
-  // Get real user profile data
-  const getUserProfile = () => {
+  // Fallback: Get user profile data from context
+  const getUserProfileFromContext = () => {
     if (!user) return null;
-    
+
+    console.log('getUserProfileFromContext - Raw user data:', user);
+    console.log('getUserProfileFromContext - User address:', user.address);
+
     return {
       // Core user information from MongoDB document
       name: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.name || 'Vehicle Owner',
@@ -42,37 +86,44 @@ function VehicleOwnerDashboard() {
       phone: user.phone || 'No phone provided',
       firstName: user.firstName || '',
       lastName: user.lastName || '',
-      
-      // Address information from nested address object
+
+      // Address information from nested address object - try multiple possible locations
       address: {
-        street: user.address?.street || '',
-        city: user.address?.city || '',
-        state: user.address?.state || '',
-        zipCode: user.address?.zipCode || ''
+        street: user.address?.street || user.street || '',
+        city: user.address?.city || user.city || '',
+        state: user.address?.state || user.state || '',
+        zipCode: user.address?.zipCode || user.zipCode || ''
       },
-      
+
       // Dates and timestamps
       joinDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A',
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-      
+
       // Vehicle owner specific data
       role: user.role,
       isActive: user.isActive,
       documents: user.documents || [],
-      
+
       // Business metrics (would come from vehicle/booking services in real implementation)
       totalVehicles: 0,
       totalEarnings: 0,
       averageRating: 0,
-      
+
       // Database identifiers
       userId: user._id || user.id,
       _id: user._id
     };
   };
 
-  const profile = getUserProfile();
+  // Show loading state while fetching profile
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-lg text-gray-500">Loading dashboard...</div>
+      </div>
+    );
+  }
 
   // Mock data for other sections (vehicles, bookings, etc.) - to be replaced with real data later
   const mockData = {
@@ -347,7 +398,7 @@ function VehicleOwnerDashboard() {
                 )}
 
                 {activeTab === 'vehicles' && (
-                  <VehicleOwnerVehicles vehicles={mockData.vehicles} />
+                  <MyVehicles />
                 )}
 
                 {activeTab === 'bookings' && (

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
-import authService from '../../Services/auth-service'
+import businessOwnerService from '../../Services/BusinessOwner-service'
 
 function BusinessOwnerProfile({ profile }) {
     const [editMode, setEditMode] = useState(false)
@@ -29,7 +29,7 @@ function BusinessOwnerProfile({ profile }) {
             console.log('Saving profile with userId:', userId)
             console.log('Form data:', formData)
 
-            const response = await authService.updateBusinessOwnerProfile(userId, formData)
+            const response = await businessOwnerService.updateProfile(userId, formData)
             console.log('Update response:', response)
 
             if (response.success) {
@@ -566,8 +566,8 @@ function BusinessOwnerProfile({ profile }) {
             {/* Message Display */}
             {message && (
                 <div className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg transition-all duration-300 ${message.includes('successfully')
-                        ? 'bg-green-500 text-white'
-                        : 'bg-red-500 text-white'
+                    ? 'bg-green-500 text-white'
+                    : 'bg-red-500 text-white'
                     }`}>
                     <div className="flex items-center gap-3">
                         {message.includes('successfully') ? (

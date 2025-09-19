@@ -1,362 +1,590 @@
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
+import React, { useState, useEffect } from 'react';
+import { Calendar, MapPin, Clock, Car, User, Phone, Download, Eye, X, Star, MessageCircle, CreditCard } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
-export default function BookingsEnhanced({ mockBookings, onCancelBooking, onModifyBooking, onViewDetails, downloadInvoice }) {
-    const [filter, setFilter] = useState('all')
-    const [sortBy, setSortBy] = useState('date')
-    const [showCancelModal, setShowCancelModal] = useState(false)
-    const [selectedBooking, setSelectedBooking] = useState(null)
-    const [cancelReason, setCancelReason] = useState('')
-    const [showModifyModal, setShowModifyModal] = useState(false)
-    const [modificationDetails, setModificationDetails] = useState({})
+// Import your booking service - you'll need to create this
+const bookingService = {
+  getClientBookings: async (clientId, status = null) => {
+    clientId = '68bb08dc25e12b1c5fbfa835';
+    const baseURL = 'http://localhost:9000/api/bookings';
+    const url = status ? `${baseURL}/client/${clientId}?status=${status}` : `${baseURL}/client/${clientId}`;
+    
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch bookings');
+    return response.json();
+  },
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'confirmed':
-                return 'bg-blue-100 text-blue-800'
-            case 'ongoing':
-                return 'bg-yellow-100 text-yellow-800'
-            case 'completed':
-                return 'bg-green-100 text-green-800'
-            case 'cancelled':
-                return 'bg-red-100 text-red-800'
-            case 'pending':
-                return 'bg-orange-100 text-orange-800'
-            default:
-                return 'bg-gray-100 text-gray-800'
-        }
+  updateBookingStatus: async (bookingId, status, data = {}) => {
+    const response = await fetch(`http://localhost:9000/api/bookings/${bookingId}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status, ...data })
+    });
+    if (!response.ok) throw new Error('Failed to update booking status');
+    return response.json();
+  },
+
+  cancelBooking: async (bookingId, reason, cancelledBy) => {
+    const response = await fetch(`http://localhost:9000/api/bookings/${bookingId}/cancel`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason, cancelledBy })
+    });
+    if (!response.ok) throw new Error('Failed to cancel booking');
+    return response.json();
+  },
+
+  addBookingReview: async (bookingId, rating, comment) => {
+    const response = await fetch(`http://localhost:9000/api/bookings/${bookingId}/review`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reviewType: 'client', rating, comment })
+    });
+    if (!response.ok) throw new Error('Failed to add review');
+    return response.json();
+  }
+};
+
+function BookingsEnhanced({ onViewDetails = () => {}, downloadInvoice = () => {} }) {
+  const { user, getCurrentUserId } = useAuth();
+  const userId = getCurrentUserId();
+  
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('all');
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [reviewData, setReviewData] = useState({ rating: 5, comment: '' });
+
+  // Load bookings when component mounts
+  useEffect(() => {
+    loadBookings();
+  }, [userId, activeTab]);
+
+  const loadBookings = async () => {
+    if (!userId) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const status = activeTab === 'all' ? null : activeTab;
+      const response = await bookingService.getClientBookings(userId, status);
+      
+      if (response.success) {
+        setBookings(response.bookings || []);
+      } else {
+        setError(response.message || 'Failed to load bookings');
+      }
+    } catch (err) {
+      console.error('Error loading bookings:', err);
+      setError('Failed to load bookings. Please try again.');
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const filteredBookings = mockBookings.filter(booking => {
-        if (filter === 'all') return true
-        return booking.status === filter
-    })
+  const getStatusColor = (status) => {
+    const colors = {
+      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      confirmed: 'bg-blue-100 text-blue-800 border-blue-200',
+      payment_pending: 'bg-orange-100 text-orange-800 border-orange-200',
+      paid: 'bg-green-100 text-green-800 border-green-200',
+      active: 'bg-purple-100 text-purple-800 border-purple-200',
+      completed: 'bg-green-100 text-green-800 border-green-200',
+      cancelled: 'bg-red-100 text-red-800 border-red-200',
+      rejected: 'bg-gray-100 text-gray-800 border-gray-200'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
+  };
 
-    const sortedBookings = [...filteredBookings].sort((a, b) => {
-        switch (sortBy) {
-            case 'date':
-                return new Date(b.pickupDate) - new Date(a.pickupDate)
-            case 'status':
-                return a.status.localeCompare(b.status)
-            case 'amount':
-                return b.totalAmount - a.totalAmount
-            default:
-                return 0
-        }
-    })
+  const getStatusText = (status) => {
+    const statusTexts = {
+      pending: 'Pending Approval',
+      confirmed: 'Confirmed',
+      payment_pending: 'Payment Required',
+      paid: 'Payment Complete',
+      active: 'Active Rental',
+      completed: 'Completed',
+      cancelled: 'Cancelled',
+      rejected: 'Rejected'
+    };
+    return statusTexts[status] || status;
+  };
 
-    const handleCancelBooking = (booking) => {
-        setSelectedBooking(booking)
-        setShowCancelModal(true)
+  const handleCancelBooking = async () => {
+    if (!selectedBooking || !cancelReason.trim()) return;
+
+    try {
+      const response = await bookingService.cancelBooking(
+        selectedBooking._id, 
+        cancelReason, 
+        'client'
+      );
+      
+      if (response.success) {
+        setShowCancelModal(false);
+        setCancelReason('');
+        setSelectedBooking(null);
+        loadBookings(); // Refresh the list
+        alert('Booking cancelled successfully');
+      }
+    } catch (err) {
+      console.error('Error cancelling booking:', err);
+      alert('Failed to cancel booking');
     }
+  };
 
-    const confirmCancellation = () => {
-        if (cancelReason.trim()) {
-            onCancelBooking && onCancelBooking(selectedBooking.id, cancelReason)
-            setShowCancelModal(false)
-            setCancelReason('')
-            setSelectedBooking(null)
-        }
+  const handleAddReview = async () => {
+    if (!selectedBooking || !reviewData.rating) return;
+
+    try {
+      const response = await bookingService.addBookingReview(
+        selectedBooking._id,
+        reviewData.rating,
+        reviewData.comment
+      );
+      
+      if (response.success) {
+        setShowReviewModal(false);
+        setReviewData({ rating: 5, comment: '' });
+        setSelectedBooking(null);
+        loadBookings(); // Refresh the list
+        alert('Review submitted successfully');
+      }
+    } catch (err) {
+      console.error('Error adding review:', err);
+      alert('Failed to submit review');
     }
+  };
 
-    const handleModifyBooking = (booking) => {
-        setSelectedBooking(booking)
-        setModificationDetails({
-            pickupDate: booking.pickupDate,
-            dropoffDate: booking.dropoffDate,
-            pickupTime: booking.pickupTime || '10:00',
-            dropoffTime: booking.dropoffTime || '10:00'
-        })
-        setShowModifyModal(true)
-    }
+  const canCancelBooking = (booking) => {
+    const now = new Date();
+    const startDate = new Date(booking.rentalPeriod.startDate);
+    return startDate > now && !['cancelled', 'completed', 'rejected'].includes(booking.status);
+  };
 
-    const confirmModification = () => {
-        onModifyBooking && onModifyBooking(selectedBooking.id, modificationDetails)
-        setShowModifyModal(false)
-        setModificationDetails({})
-        setSelectedBooking(null)
-    }
+  const canReviewBooking = (booking) => {
+    return booking.status === 'completed' && !booking.review?.clientReview?.rating;
+  };
 
-    const calculateDuration = (pickup, dropoff) => {
-        const days = Math.ceil((new Date(dropoff) - new Date(pickup)) / (1000 * 60 * 60 * 24))
-        return days
-    }
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
-    const canCancelOrModify = (booking) => {
-        return ['confirmed', 'pending'].includes(booking.status)
-    }
+  const formatCurrency = (amount) => {
+    return `LKR ${amount?.toLocaleString() || '0'}`;
+  };
 
-    const canViewInvoice = (booking) => {
-        return ['completed', 'ongoing'].includes(booking.status)
-    }
+  const filteredBookings = bookings.filter(booking => {
+    if (activeTab === 'all') return true;
+    return booking.status === activeTab;
+  });
 
+  if (loading) {
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-lg shadow-lg">
-                <h2 className="text-2xl font-bold mb-2">My Bookings</h2>
-                <p className="text-green-100">Manage your vehicle reservations and track booking history</p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                    <span className="bg-green-400 bg-opacity-50 px-3 py-1 rounded-full text-sm">
-                        Total Bookings: {mockBookings.length}
-                    </span>
-                    <span className="bg-green-400 bg-opacity-50 px-3 py-1 rounded-full text-sm">
-                        Active: {mockBookings.filter(b => ['confirmed', 'ongoing'].includes(b.status)).length}
-                    </span>
-                </div>
-            </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <span className="ml-2 text-gray-600">Loading bookings...</span>
+      </div>
+    );
+  }
 
-            {/* Filters and Sorting */}
-            <div className="bg-white rounded-lg p-4 shadow-md">
-                <div className="flex flex-wrap gap-4 items-center justify-between">
-                    <div className="flex gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Status</label>
-                            <select
-                                value={filter}
-                                onChange={(e) => setFilter(e.target.value)}
-                                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="all">All Bookings</option>
-                                <option value="pending">Pending</option>
-                                <option value="confirmed">Confirmed</option>
-                                <option value="ongoing">Ongoing</option>
-                                <option value="completed">Completed</option>
-                                <option value="cancelled">Cancelled</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Sort by</label>
-                            <select
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value)}
-                                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="date">Booking Date</option>
-                                <option value="status">Status</option>
-                                <option value="amount">Amount</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Bookings List */}
-            <div className="space-y-4">
-                {sortedBookings.length === 0 ? (
-                    <div className="text-center py-8 bg-white rounded-lg shadow-md">
-                        <div className="text-gray-400 mb-2">
-                            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
-                        </div>
-                        <p className="text-gray-600">No bookings found for the selected filter</p>
-                    </div>
-                ) : (
-                    sortedBookings.map((booking) => (
-                        <motion.div
-                            key={booking.id}
-                            className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow duration-300"
-                            whileHover={{ scale: 1.01 }}
-                        >
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="flex items-start space-x-4">
-                                    <img
-                                        src={booking.vehicle.image}
-                                        alt={booking.vehicle.name}
-                                        className="w-24 h-20 object-cover rounded-lg"
-                                    />
-                                    <div className="flex-1">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <h3 className="text-lg font-semibold text-gray-900">
-                                                {booking.vehicle.name}
-                                            </h3>
-                                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
-                                                {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                                            </span>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-                                            <div>
-                                                <p><strong>Booking ID:</strong> #{booking.id}</p>
-                                                <p><strong>Pickup:</strong> {new Date(booking.pickupDate).toLocaleDateString()}</p>
-                                                <p><strong>Dropoff:</strong> {new Date(booking.dropoffDate).toLocaleDateString()}</p>
-                                                <p><strong>Duration:</strong> {calculateDuration(booking.pickupDate, booking.dropoffDate)} days</p>
-                                            </div>
-
-                                            <div>
-                                                <p><strong>Total Amount:</strong> <span className="text-lg font-semibold text-green-600">${booking.totalAmount}</span></p>
-                                                <p><strong>Booking Date:</strong> {new Date(booking.bookingDate).toLocaleDateString()}</p>
-                                                {booking.withDriver && booking.driver && (
-                                                    <div className="flex items-center mt-2">
-                                                        <img
-                                                            src={booking.driver.image || '/api/placeholder/30/30'}
-                                                            alt={booking.driver.name}
-                                                            className="w-6 h-6 rounded-full mr-2"
-                                                        />
-                                                        <span>Driver: {booking.driver.name}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-200">
-                                <button
-                                    onClick={() => onViewDetails && onViewDetails(booking)}
-                                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                >
-                                    View Details
-                                </button>
-
-                                {canViewInvoice(booking) && (
-                                    <button
-                                        onClick={() => downloadInvoice && downloadInvoice(booking.invoiceId)}
-                                        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                                    >
-                                        Download Invoice
-                                    </button>
-                                )}
-
-                                {canCancelOrModify(booking) && (
-                                    <>
-                                        <button
-                                            onClick={() => handleModifyBooking(booking)}
-                                            className="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                                        >
-                                            Modify
-                                        </button>
-
-                                        <button
-                                            onClick={() => handleCancelBooking(booking)}
-                                            className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
-                                        >
-                                            Cancel
-                                        </button>
-                                    </>
-                                )}
-                            </div>
-                        </motion.div>
-                    ))
-                )}
-            </div>
-
-            {/* Cancel Modal */}
-            {showCancelModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Cancel Booking</h3>
-                        <p className="text-gray-600 mb-4">
-                            Are you sure you want to cancel your booking for {selectedBooking?.vehicle.name}?
-                        </p>
-
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Reason for cancellation *
-                            </label>
-                            <textarea
-                                value={cancelReason}
-                                onChange={(e) => setCancelReason(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                rows="3"
-                                placeholder="Please provide a reason for cancellation"
-                                required
-                            />
-                        </div>
-
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => setShowCancelModal(false)}
-                                className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
-                            >
-                                Keep Booking
-                            </button>
-                            <button
-                                onClick={confirmCancellation}
-                                disabled={!cancelReason.trim()}
-                                className="flex-1 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 disabled:opacity-50"
-                            >
-                                Cancel Booking
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Modify Modal */}
-            {showModifyModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Modify Booking</h3>
-                        <p className="text-gray-600 mb-4">
-                            Update your booking details for {selectedBooking?.vehicle.name}
-                        </p>
-
-                        <div className="space-y-4 mb-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Date</label>
-                                <input
-                                    type="date"
-                                    value={modificationDetails.pickupDate}
-                                    onChange={(e) => setModificationDetails(prev => ({ ...prev, pickupDate: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Dropoff Date</label>
-                                <input
-                                    type="date"
-                                    value={modificationDetails.dropoffDate}
-                                    onChange={(e) => setModificationDetails(prev => ({ ...prev, dropoffDate: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Time</label>
-                                    <input
-                                        type="time"
-                                        value={modificationDetails.pickupTime}
-                                        onChange={(e) => setModificationDetails(prev => ({ ...prev, pickupTime: e.target.value }))}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Dropoff Time</label>
-                                    <input
-                                        type="time"
-                                        value={modificationDetails.dropoffTime}
-                                        onChange={(e) => setModificationDetails(prev => ({ ...prev, dropoffTime: e.target.value }))}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => setShowModifyModal(false)}
-                                className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={confirmModification}
-                                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                            >
-                                Update Booking
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+          <p className="text-red-600">{error}</p>
+          <button 
+            onClick={loadBookings}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Try Again
+          </button>
         </div>
-    )
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-900">My Bookings</h2>
+        <button 
+          onClick={loadBookings}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Refresh
+        </button>
+      </div>
+
+      {/* Status Filter Tabs */}
+      <div className="border-b border-gray-200">
+        <nav className="flex space-x-8">
+          {[
+            { key: 'all', label: 'All Bookings', count: bookings.length },
+            { key: 'pending', label: 'Pending', count: bookings.filter(b => b.status === 'pending').length },
+            { key: 'confirmed', label: 'Confirmed', count: bookings.filter(b => b.status === 'confirmed').length },
+            { key: 'active', label: 'Active', count: bookings.filter(b => b.status === 'active').length },
+            { key: 'completed', label: 'Completed', count: bookings.filter(b => b.status === 'completed').length }
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === tab.key
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {tab.label} {tab.count > 0 && <span className="ml-1">({tab.count})</span>}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Bookings List */}
+      {filteredBookings.length === 0 ? (
+        <div className="text-center py-12">
+          <Car className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No bookings found</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            {activeTab === 'all' ? 'You haven\'t made any bookings yet.' : `No ${activeTab} bookings found.`}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredBookings.map((booking) => (
+            <div key={booking._id} className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+              <div className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    {/* Booking Header */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <div className="flex items-center space-x-3">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {booking.vehicleId?.make} {booking.vehicleId?.model} {booking.vehicleId?.year}
+                          </h3>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(booking.status)}`}>
+                            {getStatusText(booking.status)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Booking #{booking.bookingReference}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          License Plate: {booking.vehicleId?.licensePlate}
+                        </p>
+                      </div>
+                      
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-gray-900">
+                          {formatCurrency(booking.pricing?.totalAmount)}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {booking.pricing?.totalDays} day{booking.pricing?.totalDays !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Booking Details Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="h-4 w-4 text-gray-400" />
+                        <div>
+                          <p className="text-xs text-gray-500">Pickup Date</p>
+                          <p className="text-sm font-medium">{formatDate(booking.rentalPeriod.startDate)}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="h-4 w-4 text-gray-400" />
+                        <div>
+                          <p className="text-xs text-gray-500">Return Date</p>
+                          <p className="text-sm font-medium">{formatDate(booking.rentalPeriod.endDate)}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Clock className="h-4 w-4 text-gray-400" />
+                        <div>
+                          <p className="text-xs text-gray-500">Time</p>
+                          <p className="text-sm font-medium">{booking.rentalPeriod.startTime} - {booking.rentalPeriod.endTime}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <MapPin className="h-4 w-4 text-gray-400" />
+                        <div>
+                          <p className="text-xs text-gray-500">Pickup Location</p>
+                          <p className="text-sm font-medium">{booking.pickupLocation?.city}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Vehicle Owner Info */}
+                    {booking.vehicleOwnerId && (
+                      <div className="flex items-center space-x-2 mb-4 p-3 bg-gray-50 rounded-lg">
+                        <User className="h-4 w-4 text-gray-400" />
+                        <div>
+                          <p className="text-xs text-gray-500">Vehicle Owner</p>
+                          <p className="text-sm font-medium">
+                            {booking.vehicleOwnerId.firstName} {booking.vehicleOwnerId.lastName}
+                          </p>
+                        </div>
+                        {booking.vehicleOwnerId.phone && (
+                          <div className="ml-auto">
+                            <Phone className="h-4 w-4 text-gray-400" />
+                            <span className="text-sm text-gray-600 ml-1">{booking.vehicleOwnerId.phone}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        onClick={() => {
+                          setSelectedBooking(booking);
+                          setShowDetails(true);
+                        }}
+                        className="flex items-center space-x-1 px-3 py-2 text-sm bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span>View Details</span>
+                      </button>
+
+                      {booking.status === 'completed' && (
+                        <button
+                          onClick={() => downloadInvoice(booking._id)}
+                          className="flex items-center space-x-1 px-3 py-2 text-sm bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors"
+                        >
+                          <Download className="h-4 w-4" />
+                          <span>Download Invoice</span>
+                        </button>
+                      )}
+
+                      {canCancelBooking(booking) && (
+                        <button
+                          onClick={() => {
+                            setSelectedBooking(booking);
+                            setShowCancelModal(true);
+                          }}
+                          className="flex items-center space-x-1 px-3 py-2 text-sm bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors"
+                        >
+                          <X className="h-4 w-4" />
+                          <span>Cancel</span>
+                        </button>
+                      )}
+
+                      {canReviewBooking(booking) && (
+                        <button
+                          onClick={() => {
+                            setSelectedBooking(booking);
+                            setShowReviewModal(true);
+                          }}
+                          className="flex items-center space-x-1 px-3 py-2 text-sm bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors"
+                        >
+                          <Star className="h-4 w-4" />
+                          <span>Add Review</span>
+                        </button>
+                      )}
+
+                      {['confirmed', 'paid', 'active'].includes(booking.status) && (
+                        <button
+                          onClick={() => {/* Handle message */}}
+                          className="flex items-center space-x-1 px-3 py-2 text-sm bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                          <span>Message Owner</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Booking Details Modal */}
+      {showDetails && selectedBooking && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">Booking Details</h3>
+              <button
+                onClick={() => setShowDetails(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              <div>
+                <h4 className="font-semibold mb-2">Vehicle Information</h4>
+                <p><strong>Vehicle:</strong> {selectedBooking.vehicleId?.make} {selectedBooking.vehicleId?.model} {selectedBooking.vehicleId?.year}</p>
+                <p><strong>License Plate:</strong> {selectedBooking.vehicleId?.licensePlate}</p>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold mb-2">Rental Period</h4>
+                <p><strong>Start:</strong> {formatDate(selectedBooking.rentalPeriod.startDate)} at {selectedBooking.rentalPeriod.startTime}</p>
+                <p><strong>End:</strong> {formatDate(selectedBooking.rentalPeriod.endDate)} at {selectedBooking.rentalPeriod.endTime}</p>
+                <p><strong>Duration:</strong> {selectedBooking.pricing?.totalDays} day(s)</p>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold mb-2">Location Details</h4>
+                <p><strong>Pickup:</strong> {selectedBooking.pickupLocation?.address}, {selectedBooking.pickupLocation?.city}</p>
+                <p><strong>Dropoff:</strong> {selectedBooking.dropoffLocation?.address}, {selectedBooking.dropoffLocation?.city}</p>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold mb-2">Pricing Breakdown</h4>
+                <p><strong>Daily Rate:</strong> {formatCurrency(selectedBooking.pricing?.dailyRate)}</p>
+                <p><strong>Subtotal:</strong> {formatCurrency(selectedBooking.pricing?.subtotal)}</p>
+                <p><strong>Service Fee:</strong> {formatCurrency(selectedBooking.pricing?.serviceFee)}</p>
+                <p><strong>Taxes:</strong> {formatCurrency(selectedBooking.pricing?.taxes)}</p>
+                <p><strong>Security Deposit:</strong> {formatCurrency(selectedBooking.pricing?.securityDeposit)}</p>
+                <p className="text-lg font-bold"><strong>Total:</strong> {formatCurrency(selectedBooking.pricing?.totalAmount)}</p>
+              </div>
+
+              {selectedBooking.specialRequirements && (
+                <div>
+                  <h4 className="font-semibold mb-2">Special Requirements</h4>
+                  <p>{selectedBooking.specialRequirements}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Booking Modal */}
+      {showCancelModal && selectedBooking && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-red-600">Cancel Booking</h3>
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <p className="mb-4 text-gray-600">
+              Are you sure you want to cancel this booking? This action cannot be undone.
+            </p>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Reason for cancellation <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                rows="3"
+                placeholder="Please provide a reason for cancellation..."
+                required
+              />
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+              >
+                Keep Booking
+              </button>
+              <button
+                onClick={handleCancelBooking}
+                disabled={!cancelReason.trim()}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed"
+              >
+                Cancel Booking
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Review Modal */}
+      {showReviewModal && selectedBooking && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">Add Review</h3>
+              <button
+                onClick={() => setShowReviewModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Rating <span className="text-red-500">*</span>
+              </label>
+              <div className="flex space-x-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => setReviewData({...reviewData, rating: star})}
+                    className={`p-1 ${star <= reviewData.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                  >
+                    <Star className="h-6 w-6 fill-current" />
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Comment (Optional)
+              </label>
+              <textarea
+                value={reviewData.comment}
+                onChange={(e) => setReviewData({...reviewData, comment: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows="4"
+                placeholder="Share your experience with this vehicle and owner..."
+              />
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowReviewModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddReview}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              >
+                Submit Review
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
+export default BookingsEnhanced;

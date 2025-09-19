@@ -1,9 +1,11 @@
 import { HTTP } from './httpCommon-service';
 
-// Authentication Service
+// Universal Authentication Service
+// This service handles only universal authentication functions (login, logout, session management)
+// Actor-specific functions should be in their respective service files
 class AuthService {
 
-  // Login function
+  // Universal Login function - works for all actors
   async login(credentials) {
     try {
       // Send only identifier and password - backend will auto-detect role
@@ -50,154 +52,79 @@ class AuthService {
     }
   }
 
-  // Register Client
-  async registerClient(userData) {
-    try {
-      const response = await HTTP.post('/auth/register/client', userData);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { success: false, message: 'Network error' };
-    }
-  }
-
-  // Register Vehicle Owner
-  async registerVehicleOwner(userData) {
-    try {
-      const response = await HTTP.post('/auth/register/vehicle-owner', userData);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { success: false, message: 'Network error' };
-    }
-  }
-
-  // Register Driver (through onboarding)
-  async registerDriver(userData) {
-    try {
-      // For FormData uploads, we need to remove the default Content-Type header
-      // to let the browser set the correct multipart/form-data boundary
-      const response = await HTTP.post('/auth/register-driver', userData, {
-        headers: {
-          'Content-Type': undefined  // This removes the default application/json header
-        }
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { success: false, message: 'Network error' };
-    }
-  }
-
-  // Get User Profile
-  async getProfile(role, userId) {
-    try {
-      const response = await HTTP.get(`/auth/profile/${role}/${userId}`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { success: false, message: 'Network error' };
-    }
-  }
-
-  // Approve Driver (Admin function)
-  async approveDriver(driverId, status) {
-    try {
-      const response = await HTTP.put(`/auth/admin/approve-driver/${driverId}`, { status });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { success: false, message: 'Network error' };
-    }
-  }
-
-  // Update Business Owner Profile
-  async updateBusinessOwnerProfile(userId, profileData) {
-    try {
-      console.log('Auth service - updating profile for userId:', userId)
-      console.log('Auth service - profile data:', profileData)
-
-      const response = await HTTP.put(`/auth/profile/business-owner/${userId}`, profileData);
-      console.log('Auth service - response:', response.data)
-
-      if (response.data.success) {
-        // Update the stored user data with the fresh data from database
-        const updatedProfile = response.data.profile;
-
-        // Update localStorage with the complete updated profile
-        localStorage.setItem('user', JSON.stringify(updatedProfile));
-
-        // Also update userId if it exists separately
-        if (updatedProfile._id) {
-          localStorage.setItem('userId', updatedProfile._id);
-        }
-
-        console.log('Auth service - localStorage updated with fresh profile data');
-      }
-
-      return response.data;
-    } catch (error) {
-      console.error('Auth service - error:', error)
-      throw error.response?.data || { success: false, message: 'Network error' };
-    }
-  }
-
-  // Logout function
+  // Universal Logout function
   logout() {
-    // Clear all localStorage items
+    // Clear all stored authentication data
     localStorage.removeItem('user');
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('userRole');
     localStorage.removeItem('userId');
-
-    // Clear all sessionStorage items
+    localStorage.removeItem('token');
     sessionStorage.removeItem('userSession');
-    sessionStorage.clear();
+
+    console.log('User logged out successfully');
   }
 
-  // Get current user
+  // Get current authenticated user data
   getCurrentUser() {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
+    const userData = localStorage.getItem('user');
+    if (!userData || userData === 'undefined' || userData === 'null') {
+      return null;
+    }
+    try {
+      return JSON.parse(userData);
+    } catch (error) {
+      console.warn('Invalid user data in localStorage, clearing it:', error);
+      localStorage.removeItem('user');
+      return null;
+    }
   }
 
-  // Get current user's MongoDB Object ID
+  // Get current user ID
   getCurrentUserId() {
-    const userId = localStorage.getItem('userId');
-    if (userId) return userId;
-
-    // Fallback to getting from user object
-    const user = this.getCurrentUser();
-    return user ? user.userId : null;
+    const userData = this.getCurrentUser();
+    return userData?.userId || userData?.id || localStorage.getItem('userId');
   }
 
   // Get session data
   getSessionData() {
-    const session = sessionStorage.getItem('userSession');
-    return session ? JSON.parse(session) : null;
+    const sessionData = sessionStorage.getItem('userSession');
+    if (!sessionData || sessionData === 'undefined' || sessionData === 'null') {
+      return null;
+    }
+    try {
+      return JSON.parse(sessionData);
+    } catch (error) {
+      console.warn('Invalid session data in sessionStorage, clearing it:', error);
+      sessionStorage.removeItem('userSession');
+      return null;
+    }
   }
 
   // Get session ID
   getSessionId() {
-    const session = this.getSessionData();
-    return session ? session.sessionId : null;
+    const sessionData = this.getSessionData();
+    return sessionData?.sessionId;
   }
 
   // Check if user is authenticated
   isAuthenticated() {
-    return localStorage.getItem('isAuthenticated') === 'true';
+    const isAuth = localStorage.getItem('isAuthenticated') === 'true';
+    const userData = this.getCurrentUser();
+    return isAuth && userData;
   }
 
-  // Get user role
+  // Get current user role
   getUserRole() {
-    return localStorage.getItem('userRole');
+    const userData = this.getCurrentUser();
+    return userData?.role || localStorage.getItem('userRole');
   }
 
-  // Get dashboard route based on role
-  getDashboardRoute(role) {
-    const routes = {
-      admin: '/admin-dashboard',
-      business_owner: '/business-owner-dashboard?tab=profile',
-      driver: '/driver-dashboard',
-      client: '/client-dashboard',
-      vehicle_owner: '/vehicle-owner-dashboard?tab=profile'
-    };
-    return routes[role] || '/';
+  // Get dashboard route for current user
+  getDashboardRoute() {
+    const sessionData = this.getSessionData();
+    const userData = this.getCurrentUser();
+    return sessionData?.dashboardRoute || userData?.dashboardRoute;
   }
 
   // Check if user has specific role
@@ -208,13 +135,28 @@ class AuthService {
   // Check if user is admin or business owner
   isAdminOrBusinessOwner() {
     const role = this.getUserRole();
-    return role === 'admin' || role === 'business_owner';
+    return role === 'admin' || role === 'business-owner';
   }
 
-  // Check if user can register (client or vehicle_owner)
-  canRegister() {
-    const role = this.getUserRole();
-    return !role || role === 'client' || role === 'vehicle_owner';
+  // Update stored user data (useful when profile is updated)
+  updateStoredUser(updatedUserData) {
+    const currentUser = this.getCurrentUser();
+    if (currentUser) {
+      const updatedUser = { ...currentUser, ...updatedUserData };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      return updatedUser;
+    }
+    return null;
+  }
+
+  // Clear corrupted data (utility function)
+  clearCorruptedData() {
+    console.log('Clearing potentially corrupted auth data...');
+    localStorage.removeItem('user');
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userId');
+    sessionStorage.removeItem('userSession');
   }
 }
 

@@ -4,8 +4,8 @@ import logo from '../../Assets/2.png'
 
 function ClientHeader() {
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
-      <div className="flex justify-between items-center">
+    <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4 w-full">
+      <div className="flex justify-between items-center max-w-full">
         <div className="flex items-center space-x-3">
           <img
             src={logo}

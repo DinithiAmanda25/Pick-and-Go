@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import authService from '../../Services/auth-service'
+import authService from '../../Services/Auth-service'
+import driverService from '../../Services/Driver-service'
 import logo from '../../Assets/2.png'
 
 function DriverOnboarding() {
@@ -253,8 +254,8 @@ function DriverOnboarding() {
         }
       }
 
-      // Use the AuthService instead of direct fetch
-      const data = await authService.registerDriver(formDataToSend)
+      // Use the DriverService for registration
+      const data = await driverService.registerDriver(formDataToSend)
 
       if (data.success) {
         alert('Your driver application has been submitted successfully! You will receive login credentials via email once your application is approved.')

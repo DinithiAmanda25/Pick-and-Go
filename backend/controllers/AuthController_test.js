@@ -1,8 +1,11 @@
-const { User, Admin, BusinessOwner, Driver, Client, VehicleOwner } = require('../models/UserModel');
+const { Admin } = require('../models/AdminModel');
+const { BusinessOwner } = require('../models/BusinessOwnerModel');
+const { Driver } = require('../models/DriverModel');
+const { Client } = require('../models/ClientModel');
+const { VehicleOwner } = require('../models/VehicleOwnerModel');
 
 // Test if the import is working
 console.log('✅ Successfully imported models:', {
-    User: !!User,
     Admin: !!Admin,
     BusinessOwner: !!BusinessOwner,
     Driver: !!Driver,
