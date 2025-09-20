@@ -31,6 +31,8 @@ function PendingDriverApplications() {
     }
 
     const handleViewApplication = (driver) => {
+        console.log('🔍 Viewing driver application:', driver)
+        console.log('📄 Documents structure:', driver.documents)
         setSelectedDriver(driver)
         setShowModal(true)
     }
@@ -80,6 +82,41 @@ function PendingDriverApplications() {
         } finally {
             setProcessing(false)
             console.log('✅ Processing finished')
+        }
+    }
+
+    // Format date helper function
+    const formatDate = (dateString) => {
+        if (!dateString) return 'Date not available';
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return 'Invalid date';
+        }
+    }
+    
+    // Helper function to format document URLs
+    const formatDocumentUrl = (document) => {
+        if (!document || !document.url) return null;
+        
+        // If the URL already contains http or https, return as is
+        if (document.url.startsWith('http://') || document.url.startsWith('https://')) {
+            return document.url;
+        }
+        
+        // For relative paths, prepend the API base URL
+        // Assuming you use HTTP_API_URL from your config or env settings
+        const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+        if (document.url.startsWith('/')) {
+            return `${baseUrl}${document.url}`;
+        } else {
+            return `${baseUrl}/${document.url}`;
         }
     }
 
@@ -140,7 +177,7 @@ function PendingDriverApplications() {
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Information</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documents</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Applied Date</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
@@ -166,13 +203,35 @@ function PendingDriverApplications() {
                                             <div className="text-sm text-gray-500">{driver.phone}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-900">
-                                                {driver.vehicleType} - {driver.vehicleModel}
+                                            <div className="flex items-center mb-1">
+                                                <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                                    !driver.documents ? 'bg-red-100 text-red-800' :
+                                                    Object.keys(driver.documents).length >= 3 ? 'bg-green-100 text-green-800' : 
+                                                    'bg-yellow-100 text-yellow-800'
+                                                }`}>
+                                                    {driver.documents && Object.keys(driver.documents).filter(key => driver.documents[key]).length > 0 ? (
+                                                        <span className="flex items-center">
+                                                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                            {Object.keys(driver.documents).filter(key => driver.documents[key]).length} document(s)
+                                                        </span>
+                                                    ) : (
+                                                        <span className="flex items-center">
+                                                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                            </svg>
+                                                            No documents
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <div className="text-sm text-gray-500">{driver.vehiclePlateNumber}</div>
+                                            <div className="text-sm text-gray-500">
+                                                {driver.vehicleInfo?.type ? driver.vehicleInfo.type : 'Not specified'}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {new Date(driver.createdAt).toLocaleDateString()}
+                                            {formatDate(driver.createdAt)}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                             <button
@@ -218,7 +277,7 @@ function PendingDriverApplications() {
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-bold text-gray-900">{selectedDriver.fullName}</h3>
-                                    <p className="text-sm text-gray-500">Driver Application Review</p>
+                                    <p className="text-sm text-gray-500">Driver ID: {selectedDriver.driverId}</p>
                                 </div>
                             </div>
                             <button
@@ -231,11 +290,17 @@ function PendingDriverApplications() {
                             </button>
                         </div>
 
-                        {/* Content - Key Information Only */}
-                        <div className="p-6 space-y-6">
-                            {/* Contact & Basic Info */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-4">
+                        {/* Content - Only relevant information */}
+                        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+                            {/* Personal Information */}
+                            <div>
+                                <h4 className="text-lg font-semibold text-gray-800 mb-3 flex items-center border-b pb-2">
+                                    <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                    Contact Information
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl">
                                         <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                                             <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -260,53 +325,281 @@ function PendingDriverApplications() {
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <div className="space-y-4">
-                                    <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl">
-                                        <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                                            <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 uppercase tracking-wide">License</p>
-                                            <p className="font-medium text-gray-900">{selectedDriver.licenseNumber}</p>
-                                        </div>
+                            {/* Address Information - If available */}
+                            {selectedDriver.address && (
+                                <div>
+                                    <h4 className="text-lg font-semibold text-gray-800 mb-3 flex items-center border-b pb-2">
+                                        <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        Address
+                                    </h4>
+                                    <div className="p-4 bg-gray-50 rounded-xl">
+                                        <p className="text-gray-900">
+                                            {selectedDriver.address.street && `${selectedDriver.address.street}, `}
+                                            {selectedDriver.address.city && `${selectedDriver.address.city}, `}
+                                            {selectedDriver.address.state && `${selectedDriver.address.state}, `}
+                                            {selectedDriver.address.zipCode && `${selectedDriver.address.zipCode}, `}
+                                            {selectedDriver.address.country && selectedDriver.address.country}
+                                        </p>
                                     </div>
+                                </div>
+                            )}
 
-                                    <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl">
-                                        <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                                            <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
+                            {/* Vehicle Information */}
+                            {selectedDriver.vehicleInfo && (
+                                <div>
+                                    <h4 className="text-lg font-semibold text-gray-800 mb-3 flex items-center border-b pb-2">
+                                        <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0M15 17a2 2 0 104 0" />
+                                        </svg>
+                                        Vehicle Information
+                                    </h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="p-3 bg-gray-50 rounded-xl">
+                                            <p className="text-xs text-gray-500 uppercase tracking-wide">Vehicle Type</p>
+                                            <p className="font-medium text-gray-900 capitalize">{selectedDriver.vehicleInfo.type}</p>
                                         </div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 uppercase tracking-wide">Experience</p>
-                                            <p className="font-medium text-gray-900">{selectedDriver.yearsOfExperience} years</p>
+                                        <div className="p-3 bg-gray-50 rounded-xl">
+                                            <p className="text-xs text-gray-500 uppercase tracking-wide">Model</p>
+                                            <p className="font-medium text-gray-900">{selectedDriver.vehicleInfo.model}</p>
+                                        </div>
+                                        <div className="p-3 bg-gray-50 rounded-xl">
+                                            <p className="text-xs text-gray-500 uppercase tracking-wide">Plate Number</p>
+                                            <p className="font-medium text-gray-900">{selectedDriver.vehicleInfo.plateNumber}</p>
+                                        </div>
+                                        <div className="p-3 bg-gray-50 rounded-xl">
+                                            <p className="text-xs text-gray-500 uppercase tracking-wide">Color</p>
+                                            <p className="font-medium text-gray-900">{selectedDriver.vehicleInfo.color}</p>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
 
-                            {/* Vehicle Info - Simplified */}
-                            <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-100">
-                                <h4 className="font-semibold text-purple-900 mb-3 flex items-center">
-                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0M15 17a2 2 0 104 0" />
+                            {/* Documents */}
+                            <div>
+                                <h4 className="text-lg font-semibold text-gray-800 mb-3 flex items-center border-b pb-2">
+                                    <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
-                                    Vehicle Information
+                                    Required Documents
                                 </h4>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <p className="text-sm font-medium text-purple-800">
-                                            {selectedDriver.vehicleType} - {selectedDriver.vehicleModel}
-                                        </p>
-                                        <p className="text-sm text-gray-600">Type & Model</p>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* License Document */}
+                                    <div className="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <h5 className="font-semibold text-purple-900 flex items-center">
+                                                <svg className="w-4 h-4 mr-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0" />
+                                                </svg>
+                                                Driver's License
+                                            </h5>
+                                            <span className={`px-2 py-1 text-xs rounded-full ${selectedDriver.documents?.license ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                {selectedDriver.documents?.license ? 'Uploaded' : 'Missing'}
+                                            </span>
+                                        </div>
+                                        {selectedDriver.documents?.license ? (
+                                            <>
+                                                <div className="bg-gray-50 rounded-lg p-2 mb-2 flex justify-center">
+                                                    {formatDocumentUrl(selectedDriver.documents.license) ? (
+                                                        <img 
+                                                            src={formatDocumentUrl(selectedDriver.documents.license)} 
+                                                            alt="Driver's License" 
+                                                            className="max-h-32 object-contain rounded"
+                                                            onError={(e) => {
+                                                                e.target.onerror = null;
+                                                                e.target.src = "https://via.placeholder.com/200x150?text=Image+Not+Available";
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="h-32 w-full flex items-center justify-center bg-gray-100 rounded">
+                                                            <p className="text-gray-400">Image not available</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <p className="text-xs text-gray-500">
+                                                        {selectedDriver.documents.license.uploadedAt ? 
+                                                            `Uploaded: ${new Date(selectedDriver.documents.license.uploadedAt).toLocaleDateString()}` : 
+                                                            'Recently uploaded'}
+                                                    </p>
+                                                    {formatDocumentUrl(selectedDriver.documents.license) && (
+                                                        <a href={formatDocumentUrl(selectedDriver.documents.license)} target="_blank" rel="noopener noreferrer" 
+                                                            className="text-xs text-blue-600 hover:text-blue-800">
+                                                            View Full Image
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="bg-red-50 rounded-lg p-4 text-center">
+                                                <p className="text-sm text-red-700">Document not uploaded</p>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-purple-800">{selectedDriver.vehiclePlateNumber}</p>
-                                        <p className="text-sm text-gray-600">License Plate</p>
+
+                                    {/* Identity Card Document */}
+                                    <div className="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <h5 className="font-semibold text-purple-900 flex items-center">
+                                                <svg className="w-4 h-4 mr-1 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0" />
+                                                </svg>
+                                                Identity Card
+                                            </h5>
+                                            <span className={`px-2 py-1 text-xs rounded-full ${selectedDriver.documents?.identityCard ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                {selectedDriver.documents?.identityCard ? 'Uploaded' : 'Missing'}
+                                            </span>
+                                        </div>
+                                        {selectedDriver.documents?.identityCard ? (
+                                            <>
+                                                <div className="bg-gray-50 rounded-lg p-2 mb-2 flex justify-center">
+                                                    {formatDocumentUrl(selectedDriver.documents.identityCard) ? (
+                                                        <img 
+                                                            src={formatDocumentUrl(selectedDriver.documents.identityCard)} 
+                                                            alt="Identity Card" 
+                                                            className="max-h-32 object-contain rounded"
+                                                            onError={(e) => {
+                                                                e.target.onerror = null;
+                                                                e.target.src = "https://via.placeholder.com/200x150?text=Image+Not+Available";
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="h-32 w-full flex items-center justify-center bg-gray-100 rounded">
+                                                            <p className="text-gray-400">Image not available</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <p className="text-xs text-gray-500">
+                                                        {selectedDriver.documents.identityCard.uploadedAt ? 
+                                                            `Uploaded: ${new Date(selectedDriver.documents.identityCard.uploadedAt).toLocaleDateString()}` : 
+                                                            'Recently uploaded'}
+                                                    </p>
+                                                    {formatDocumentUrl(selectedDriver.documents.identityCard) && (
+                                                        <a href={formatDocumentUrl(selectedDriver.documents.identityCard)} target="_blank" rel="noopener noreferrer" 
+                                                            className="text-xs text-blue-600 hover:text-blue-800">
+                                                            View Full Image
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="bg-red-50 rounded-lg p-4 text-center">
+                                                <p className="text-sm text-red-700">Document not uploaded</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Insurance Document */}
+                                    <div className="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <h5 className="font-semibold text-purple-900 flex items-center">
+                                                <svg className="w-4 h-4 mr-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                                </svg>
+                                                Insurance Document
+                                            </h5>
+                                            <span className={`px-2 py-1 text-xs rounded-full ${selectedDriver.documents?.insurance ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                {selectedDriver.documents?.insurance ? 'Uploaded' : 'Missing'}
+                                            </span>
+                                        </div>
+                                        {selectedDriver.documents?.insurance ? (
+                                            <>
+                                                <div className="bg-gray-50 rounded-lg p-2 mb-2 flex justify-center">
+                                                    {formatDocumentUrl(selectedDriver.documents.insurance) ? (
+                                                        <img 
+                                                            src={formatDocumentUrl(selectedDriver.documents.insurance)} 
+                                                            alt="Insurance Document" 
+                                                            className="max-h-32 object-contain rounded"
+                                                            onError={(e) => {
+                                                                e.target.onerror = null;
+                                                                e.target.src = "https://via.placeholder.com/200x150?text=Image+Not+Available";
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="h-32 w-full flex items-center justify-center bg-gray-100 rounded">
+                                                            <p className="text-gray-400">Image not available</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <p className="text-xs text-gray-500">
+                                                        {selectedDriver.documents.insurance.uploadedAt ? 
+                                                            `Uploaded: ${new Date(selectedDriver.documents.insurance.uploadedAt).toLocaleDateString()}` : 
+                                                            'Recently uploaded'}
+                                                    </p>
+                                                    {formatDocumentUrl(selectedDriver.documents.insurance) && (
+                                                        <a href={formatDocumentUrl(selectedDriver.documents.insurance)} target="_blank" rel="noopener noreferrer" 
+                                                            className="text-xs text-blue-600 hover:text-blue-800">
+                                                            View Full Image
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="bg-red-50 rounded-lg p-4 text-center">
+                                                <p className="text-sm text-red-700">Document not uploaded</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Medical Certificate Document */}
+                                    <div className="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <h5 className="font-semibold text-purple-900 flex items-center">
+                                                <svg className="w-4 h-4 mr-1 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                </svg>
+                                                Medical Certificate
+                                            </h5>
+                                            <span className={`px-2 py-1 text-xs rounded-full ${selectedDriver.documents?.medicalCertificate ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                {selectedDriver.documents?.medicalCertificate ? 'Uploaded' : 'Missing'}
+                                            </span>
+                                        </div>
+                                        {selectedDriver.documents?.medicalCertificate ? (
+                                            <>
+                                                <div className="bg-gray-50 rounded-lg p-2 mb-2 flex justify-center">
+                                                    {formatDocumentUrl(selectedDriver.documents.medicalCertificate) ? (
+                                                        <img 
+                                                            src={formatDocumentUrl(selectedDriver.documents.medicalCertificate)} 
+                                                            alt="Medical Certificate" 
+                                                            className="max-h-32 object-contain rounded"
+                                                            onError={(e) => {
+                                                                e.target.onerror = null;
+                                                                e.target.src = "https://via.placeholder.com/200x150?text=Image+Not+Available";
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="h-32 w-full flex items-center justify-center bg-gray-100 rounded">
+                                                            <p className="text-gray-400">Image not available</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <p className="text-xs text-gray-500">
+                                                        {selectedDriver.documents.medicalCertificate.uploadedAt ? 
+                                                            `Uploaded: ${new Date(selectedDriver.documents.medicalCertificate.uploadedAt).toLocaleDateString()}` : 
+                                                            'Recently uploaded'}
+                                                    </p>
+                                                    {formatDocumentUrl(selectedDriver.documents.medicalCertificate) && (
+                                                        <a href={formatDocumentUrl(selectedDriver.documents.medicalCertificate)} target="_blank" rel="noopener noreferrer" 
+                                                            className="text-xs text-blue-600 hover:text-blue-800">
+                                                            View Full Image
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="bg-red-50 rounded-lg p-4 text-center">
+                                                <p className="text-sm text-red-700">Document not uploaded</p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -316,7 +609,6 @@ function PendingDriverApplications() {
                                 <p className="text-xs text-gray-500 uppercase tracking-wide">Applied On</p>
                                 <p className="font-medium text-gray-900">
                                     {new Date(selectedDriver.createdAt).toLocaleDateString('en-US', {
-                                        weekday: 'long',
                                         year: 'numeric',
                                         month: 'long',
                                         day: 'numeric'
