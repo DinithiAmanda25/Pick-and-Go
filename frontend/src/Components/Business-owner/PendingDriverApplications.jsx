@@ -100,24 +100,58 @@ function PendingDriverApplications() {
             return 'Invalid date';
         }
     }
-    
+
+    // Helper function to get document by type from array
+    const getDocumentByType = (documentArray, type) => {
+        if (!documentArray || !Array.isArray(documentArray)) {
+            console.log('Document array is invalid:', documentArray);
+            return null;
+        }
+
+        return documentArray.find(doc => doc.type === type);
+    }
+
     // Helper function to format document URLs
     const formatDocumentUrl = (document) => {
-        if (!document || !document.url) return null;
-        
+        // Debug the document object
+        console.log('Document object:', document);
+
+        if (!document || !document.url) {
+            console.log('Document URL is missing');
+            return null;
+        }
+
         // If the URL already contains http or https, return as is
         if (document.url.startsWith('http://') || document.url.startsWith('https://')) {
+            console.log('Document URL is already absolute:', document.url);
             return document.url;
         }
-        
+
         // For relative paths, prepend the API base URL
-        // Assuming you use HTTP_API_URL from your config or env settings
-        const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-        if (document.url.startsWith('/')) {
-            return `${baseUrl}${document.url}`;
+        // Make sure we're using the correct API URL based on the environment
+        // Priority: REACT_APP_API_URL env var > window.location.origin > fallback to localhost
+        let baseUrl;
+
+        if (process.env.REACT_APP_API_URL) {
+            baseUrl = process.env.REACT_APP_API_URL;
+        } else if (typeof window !== 'undefined') {
+            // Use the current origin as the API base if we're in a browser
+            // This is useful for deployed environments where frontend and backend share the same origin
+            baseUrl = window.location.origin;
         } else {
-            return `${baseUrl}/${document.url}`;
+            // Fallback
+            baseUrl = 'http://localhost:5000';
         }
+
+        console.log('Using base URL:', baseUrl);
+
+        // Clean up the URL path to avoid double slashes
+        const cleanPath = document.url.startsWith('/') ? document.url : `/${document.url}`;
+
+        // Construct the full URL
+        const fullUrl = `${baseUrl}${cleanPath}`;
+        console.log('Constructed full URL:', fullUrl);
+        return fullUrl;
     }
 
     if (loading) {
@@ -204,11 +238,10 @@ function PendingDriverApplications() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center mb-1">
-                                                <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                                    !driver.documents ? 'bg-red-100 text-red-800' :
-                                                    Object.keys(driver.documents).length >= 3 ? 'bg-green-100 text-green-800' : 
-                                                    'bg-yellow-100 text-yellow-800'
-                                                }`}>
+                                                <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${!driver.documents ? 'bg-red-100 text-red-800' :
+                                                        Object.keys(driver.documents).length >= 3 ? 'bg-green-100 text-green-800' :
+                                                            'bg-yellow-100 text-yellow-800'
+                                                    }`}>
                                                     {driver.documents && Object.keys(driver.documents).filter(key => driver.documents[key]).length > 0 ? (
                                                         <span className="flex items-center">
                                                             <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -225,9 +258,6 @@ function PendingDriverApplications() {
                                                         </span>
                                                     )}
                                                 </div>
-                                            </div>
-                                            <div className="text-sm text-gray-500">
-                                                {driver.vehicleInfo?.type ? driver.vehicleInfo.type : 'Not specified'}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -349,37 +379,6 @@ function PendingDriverApplications() {
                                 </div>
                             )}
 
-                            {/* Vehicle Information */}
-                            {selectedDriver.vehicleInfo && (
-                                <div>
-                                    <h4 className="text-lg font-semibold text-gray-800 mb-3 flex items-center border-b pb-2">
-                                        <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0M15 17a2 2 0 104 0" />
-                                        </svg>
-                                        Vehicle Information
-                                    </h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="p-3 bg-gray-50 rounded-xl">
-                                            <p className="text-xs text-gray-500 uppercase tracking-wide">Vehicle Type</p>
-                                            <p className="font-medium text-gray-900 capitalize">{selectedDriver.vehicleInfo.type}</p>
-                                        </div>
-                                        <div className="p-3 bg-gray-50 rounded-xl">
-                                            <p className="text-xs text-gray-500 uppercase tracking-wide">Model</p>
-                                            <p className="font-medium text-gray-900">{selectedDriver.vehicleInfo.model}</p>
-                                        </div>
-                                        <div className="p-3 bg-gray-50 rounded-xl">
-                                            <p className="text-xs text-gray-500 uppercase tracking-wide">Plate Number</p>
-                                            <p className="font-medium text-gray-900">{selectedDriver.vehicleInfo.plateNumber}</p>
-                                        </div>
-                                        <div className="p-3 bg-gray-50 rounded-xl">
-                                            <p className="text-xs text-gray-500 uppercase tracking-wide">Color</p>
-                                            <p className="font-medium text-gray-900">{selectedDriver.vehicleInfo.color}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
                             {/* Documents */}
                             <div>
                                 <h4 className="text-lg font-semibold text-gray-800 mb-3 flex items-center border-b pb-2">
@@ -388,7 +387,7 @@ function PendingDriverApplications() {
                                     </svg>
                                     Required Documents
                                 </h4>
-                                
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {/* License Document */}
                                     <div className="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
@@ -399,19 +398,72 @@ function PendingDriverApplications() {
                                                 </svg>
                                                 Driver's License
                                             </h5>
-                                            <span className={`px-2 py-1 text-xs rounded-full ${selectedDriver.documents?.license ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                {selectedDriver.documents?.license ? 'Uploaded' : 'Missing'}
+                                            <span className={`px-2 py-1 text-xs rounded-full ${getDocumentByType(selectedDriver.documents, 'license') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                {getDocumentByType(selectedDriver.documents, 'license') ? 'Uploaded' : 'Missing'}
                                             </span>
                                         </div>
-                                        {selectedDriver.documents?.license ? (
+                                        {getDocumentByType(selectedDriver.documents, 'license') ? (
                                             <>
                                                 <div className="bg-gray-50 rounded-lg p-2 mb-2 flex justify-center">
-                                                    {formatDocumentUrl(selectedDriver.documents.license) ? (
-                                                        <img 
-                                                            src={formatDocumentUrl(selectedDriver.documents.license)} 
-                                                            alt="Driver's License" 
+                                                    {(() => {
+                                                        // Display document using available information
+                                                        try {
+                                                            // Get license document from array
+                                                            const docInfo = getDocumentByType(selectedDriver.documents, 'license');
+                                                            let displayUrl = null;
+
+                                                            if (docInfo) {
+                                                                // Log the complete document object
+                                                                console.log('License document object:', docInfo);
+
+                                                                // Handle Cloudinary URL directly
+                                                                if (docInfo.url && docInfo.url.includes('cloudinary.com')) {
+                                                                    displayUrl = docInfo.url;
+                                                                    console.log('Using direct Cloudinary URL:', displayUrl);
+                                                                } else {
+                                                                    // Format URL through our helper
+                                                                    displayUrl = formatDocumentUrl(docInfo);
+
+                                                                    // Direct access to URL properties as fallback
+                                                                    if (!displayUrl && docInfo.secure_url) {
+                                                                        displayUrl = docInfo.secure_url;
+                                                                    } else if (!displayUrl && docInfo.url) {
+                                                                        displayUrl = docInfo.url;
+                                                                    } else if (!displayUrl && typeof docInfo === 'string') {
+                                                                        displayUrl = docInfo;
+                                                                    }
+                                                                }
+
+                                                                console.log('Final display URL for license:', displayUrl);
+                                                            }
+
+                                                            return displayUrl;
+                                                        } catch (error) {
+                                                            console.error('Error processing license document:', error);
+                                                            return null;
+                                                        }
+                                                    })() ? (
+                                                        <img
+                                                            src={(() => {
+                                                                const doc = getDocumentByType(selectedDriver.documents, 'license');
+                                                                if (!doc) return null;
+
+                                                                // Direct URL from Cloudinary in the console log
+                                                                if (doc.url && doc.url.includes('cloudinary.com')) {
+                                                                    return doc.url;
+                                                                }
+
+                                                                // Other formats
+                                                                if (doc.secure_url) return doc.secure_url;
+                                                                if (doc.url) return formatDocumentUrl(doc);
+                                                                if (typeof doc === 'string') return doc;
+
+                                                                return formatDocumentUrl(doc);
+                                                            })()}
+                                                            alt="Driver's License"
                                                             className="max-h-32 object-contain rounded"
                                                             onError={(e) => {
+                                                                console.log('Image load error for License');
                                                                 e.target.onerror = null;
                                                                 e.target.src = "https://via.placeholder.com/200x150?text=Image+Not+Available";
                                                             }}
@@ -424,16 +476,39 @@ function PendingDriverApplications() {
                                                 </div>
                                                 <div className="flex justify-between items-center">
                                                     <p className="text-xs text-gray-500">
-                                                        {selectedDriver.documents.license.uploadedAt ? 
-                                                            `Uploaded: ${new Date(selectedDriver.documents.license.uploadedAt).toLocaleDateString()}` : 
-                                                            'Recently uploaded'}
+                                                        {(() => {
+                                                            const doc = getDocumentByType(selectedDriver.documents, 'license');
+                                                            return doc && doc.uploadedAt ?
+                                                                `Uploaded: ${new Date(doc.uploadedAt).toLocaleDateString()}` :
+                                                                'Recently uploaded';
+                                                        })()}
                                                     </p>
-                                                    {formatDocumentUrl(selectedDriver.documents.license) && (
-                                                        <a href={formatDocumentUrl(selectedDriver.documents.license)} target="_blank" rel="noopener noreferrer" 
-                                                            className="text-xs text-blue-600 hover:text-blue-800">
-                                                            View Full Image
-                                                        </a>
-                                                    )}
+                                                    {(() => {
+                                                        const doc = getDocumentByType(selectedDriver.documents, 'license');
+                                                        if (!doc) return null;
+
+                                                        let url = null;
+
+                                                        // Handle Cloudinary URLs directly
+                                                        if (doc.url && doc.url.includes('cloudinary.com')) {
+                                                            url = doc.url;
+                                                        } else if (doc.secure_url) {
+                                                            url = doc.secure_url;
+                                                        } else if (doc.url) {
+                                                            url = formatDocumentUrl(doc);
+                                                        } else if (typeof doc === 'string') {
+                                                            url = doc;
+                                                        } else {
+                                                            url = formatDocumentUrl(doc);
+                                                        }
+
+                                                        return url ? (
+                                                            <a href={url} target="_blank" rel="noopener noreferrer"
+                                                                className="text-xs text-blue-600 hover:text-blue-800">
+                                                                View Full Image
+                                                            </a>
+                                                        ) : null;
+                                                    })()}
                                                 </div>
                                             </>
                                         ) : (
@@ -452,72 +527,72 @@ function PendingDriverApplications() {
                                                 </svg>
                                                 Identity Card
                                             </h5>
-                                            <span className={`px-2 py-1 text-xs rounded-full ${selectedDriver.documents?.identityCard ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                {selectedDriver.documents?.identityCard ? 'Uploaded' : 'Missing'}
+                                            <span className={`px-2 py-1 text-xs rounded-full ${getDocumentByType(selectedDriver.documents, 'identityCard') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                {getDocumentByType(selectedDriver.documents, 'identityCard') ? 'Uploaded' : 'Missing'}
                                             </span>
                                         </div>
-                                        {selectedDriver.documents?.identityCard ? (
+                                        {getDocumentByType(selectedDriver.documents, 'identityCard') ? (
                                             <>
                                                 <div className="bg-gray-50 rounded-lg p-2 mb-2 flex justify-center">
-                                                    {formatDocumentUrl(selectedDriver.documents.identityCard) ? (
-                                                        <img 
-                                                            src={formatDocumentUrl(selectedDriver.documents.identityCard)} 
-                                                            alt="Identity Card" 
-                                                            className="max-h-32 object-contain rounded"
-                                                            onError={(e) => {
-                                                                e.target.onerror = null;
-                                                                e.target.src = "https://via.placeholder.com/200x150?text=Image+Not+Available";
-                                                            }}
-                                                        />
-                                                    ) : (
-                                                        <div className="h-32 w-full flex items-center justify-center bg-gray-100 rounded">
-                                                            <p className="text-gray-400">Image not available</p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="flex justify-between items-center">
-                                                    <p className="text-xs text-gray-500">
-                                                        {selectedDriver.documents.identityCard.uploadedAt ? 
-                                                            `Uploaded: ${new Date(selectedDriver.documents.identityCard.uploadedAt).toLocaleDateString()}` : 
-                                                            'Recently uploaded'}
-                                                    </p>
-                                                    {formatDocumentUrl(selectedDriver.documents.identityCard) && (
-                                                        <a href={formatDocumentUrl(selectedDriver.documents.identityCard)} target="_blank" rel="noopener noreferrer" 
-                                                            className="text-xs text-blue-600 hover:text-blue-800">
-                                                            View Full Image
-                                                        </a>
-                                                    )}
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <div className="bg-red-50 rounded-lg p-4 text-center">
-                                                <p className="text-sm text-red-700">Document not uploaded</p>
-                                            </div>
-                                        )}
-                                    </div>
+                                                    {(() => {
+                                                        // Display document using available information
+                                                        try {
+                                                            // Get identity card document from array
+                                                            const docInfo = getDocumentByType(selectedDriver.documents, 'identityCard');
+                                                            let displayUrl = null;
 
-                                    {/* Insurance Document */}
-                                    <div className="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <h5 className="font-semibold text-purple-900 flex items-center">
-                                                <svg className="w-4 h-4 mr-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                                </svg>
-                                                Insurance Document
-                                            </h5>
-                                            <span className={`px-2 py-1 text-xs rounded-full ${selectedDriver.documents?.insurance ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                {selectedDriver.documents?.insurance ? 'Uploaded' : 'Missing'}
-                                            </span>
-                                        </div>
-                                        {selectedDriver.documents?.insurance ? (
-                                            <>
-                                                <div className="bg-gray-50 rounded-lg p-2 mb-2 flex justify-center">
-                                                    {formatDocumentUrl(selectedDriver.documents.insurance) ? (
-                                                        <img 
-                                                            src={formatDocumentUrl(selectedDriver.documents.insurance)} 
-                                                            alt="Insurance Document" 
+                                                            if (docInfo) {
+                                                                // Log the complete document object
+                                                                console.log('Identity Card document object:', docInfo);
+
+                                                                // Handle Cloudinary URL directly
+                                                                if (docInfo.url && docInfo.url.includes('cloudinary.com')) {
+                                                                    displayUrl = docInfo.url;
+                                                                    console.log('Using direct Cloudinary URL:', displayUrl);
+                                                                } else {
+                                                                    // Format URL through our helper
+                                                                    displayUrl = formatDocumentUrl(docInfo);
+
+                                                                    // Direct access to URL properties as fallback
+                                                                    if (!displayUrl && docInfo.secure_url) {
+                                                                        displayUrl = docInfo.secure_url;
+                                                                    } else if (!displayUrl && docInfo.url) {
+                                                                        displayUrl = docInfo.url;
+                                                                    } else if (!displayUrl && typeof docInfo === 'string') {
+                                                                        displayUrl = docInfo;
+                                                                    }
+                                                                }
+
+                                                                console.log('Final display URL for identity card:', displayUrl);
+                                                            }
+
+                                                            return displayUrl;
+                                                        } catch (error) {
+                                                            console.error('Error processing identity card document:', error);
+                                                            return null;
+                                                        }
+                                                    })() ? (
+                                                        <img
+                                                            src={(() => {
+                                                                const doc = getDocumentByType(selectedDriver.documents, 'identityCard');
+                                                                if (!doc) return null;
+
+                                                                // Direct URL from Cloudinary in the console log
+                                                                if (doc.url && doc.url.includes('cloudinary.com')) {
+                                                                    return doc.url;
+                                                                }
+
+                                                                // Other formats
+                                                                if (doc.secure_url) return doc.secure_url;
+                                                                if (doc.url) return formatDocumentUrl(doc);
+                                                                if (typeof doc === 'string') return doc;
+
+                                                                return formatDocumentUrl(doc);
+                                                            })()}
+                                                            alt="Identity Card"
                                                             className="max-h-32 object-contain rounded"
                                                             onError={(e) => {
+                                                                console.log('Image load error for Identity Card');
                                                                 e.target.onerror = null;
                                                                 e.target.src = "https://via.placeholder.com/200x150?text=Image+Not+Available";
                                                             }}
@@ -530,16 +605,39 @@ function PendingDriverApplications() {
                                                 </div>
                                                 <div className="flex justify-between items-center">
                                                     <p className="text-xs text-gray-500">
-                                                        {selectedDriver.documents.insurance.uploadedAt ? 
-                                                            `Uploaded: ${new Date(selectedDriver.documents.insurance.uploadedAt).toLocaleDateString()}` : 
-                                                            'Recently uploaded'}
+                                                        {(() => {
+                                                            const doc = getDocumentByType(selectedDriver.documents, 'identityCard');
+                                                            return doc && doc.uploadedAt ?
+                                                                `Uploaded: ${new Date(doc.uploadedAt).toLocaleDateString()}` :
+                                                                'Recently uploaded';
+                                                        })()}
                                                     </p>
-                                                    {formatDocumentUrl(selectedDriver.documents.insurance) && (
-                                                        <a href={formatDocumentUrl(selectedDriver.documents.insurance)} target="_blank" rel="noopener noreferrer" 
-                                                            className="text-xs text-blue-600 hover:text-blue-800">
-                                                            View Full Image
-                                                        </a>
-                                                    )}
+                                                    {(() => {
+                                                        const doc = getDocumentByType(selectedDriver.documents, 'identityCard');
+                                                        if (!doc) return null;
+
+                                                        let url = null;
+
+                                                        // Handle Cloudinary URLs directly
+                                                        if (doc.url && doc.url.includes('cloudinary.com')) {
+                                                            url = doc.url;
+                                                        } else if (doc.secure_url) {
+                                                            url = doc.secure_url;
+                                                        } else if (doc.url) {
+                                                            url = formatDocumentUrl(doc);
+                                                        } else if (typeof doc === 'string') {
+                                                            url = doc;
+                                                        } else {
+                                                            url = formatDocumentUrl(doc);
+                                                        }
+
+                                                        return url ? (
+                                                            <a href={url} target="_blank" rel="noopener noreferrer"
+                                                                className="text-xs text-blue-600 hover:text-blue-800">
+                                                                View Full Image
+                                                            </a>
+                                                        ) : null;
+                                                    })()}
                                                 </div>
                                             </>
                                         ) : (
@@ -558,19 +656,72 @@ function PendingDriverApplications() {
                                                 </svg>
                                                 Medical Certificate
                                             </h5>
-                                            <span className={`px-2 py-1 text-xs rounded-full ${selectedDriver.documents?.medicalCertificate ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                {selectedDriver.documents?.medicalCertificate ? 'Uploaded' : 'Missing'}
+                                            <span className={`px-2 py-1 text-xs rounded-full ${getDocumentByType(selectedDriver.documents, 'medicalCertificate') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                {getDocumentByType(selectedDriver.documents, 'medicalCertificate') ? 'Uploaded' : 'Missing'}
                                             </span>
                                         </div>
-                                        {selectedDriver.documents?.medicalCertificate ? (
+                                        {getDocumentByType(selectedDriver.documents, 'medicalCertificate') ? (
                                             <>
                                                 <div className="bg-gray-50 rounded-lg p-2 mb-2 flex justify-center">
-                                                    {formatDocumentUrl(selectedDriver.documents.medicalCertificate) ? (
-                                                        <img 
-                                                            src={formatDocumentUrl(selectedDriver.documents.medicalCertificate)} 
-                                                            alt="Medical Certificate" 
+                                                    {(() => {
+                                                        // Display document using available information
+                                                        try {
+                                                            // Get medical certificate document from array
+                                                            const docInfo = getDocumentByType(selectedDriver.documents, 'medicalCertificate');
+                                                            let displayUrl = null;
+
+                                                            if (docInfo) {
+                                                                // Log the complete document object
+                                                                console.log('Medical Certificate document object:', docInfo);
+
+                                                                // Handle Cloudinary URL directly
+                                                                if (docInfo.url && docInfo.url.includes('cloudinary.com')) {
+                                                                    displayUrl = docInfo.url;
+                                                                    console.log('Using direct Cloudinary URL:', displayUrl);
+                                                                } else {
+                                                                    // Format URL through our helper
+                                                                    displayUrl = formatDocumentUrl(docInfo);
+
+                                                                    // Direct access to URL properties as fallback
+                                                                    if (!displayUrl && docInfo.secure_url) {
+                                                                        displayUrl = docInfo.secure_url;
+                                                                    } else if (!displayUrl && docInfo.url) {
+                                                                        displayUrl = docInfo.url;
+                                                                    } else if (!displayUrl && typeof docInfo === 'string') {
+                                                                        displayUrl = docInfo;
+                                                                    }
+                                                                }
+
+                                                                console.log('Final display URL for medical certificate:', displayUrl);
+                                                            }
+
+                                                            return displayUrl;
+                                                        } catch (error) {
+                                                            console.error('Error processing medical certificate document:', error);
+                                                            return null;
+                                                        }
+                                                    })() ? (
+                                                        <img
+                                                            src={(() => {
+                                                                const doc = getDocumentByType(selectedDriver.documents, 'medicalCertificate');
+                                                                if (!doc) return null;
+
+                                                                // Direct URL from Cloudinary in the console log
+                                                                if (doc.url && doc.url.includes('cloudinary.com')) {
+                                                                    return doc.url;
+                                                                }
+
+                                                                // Other formats
+                                                                if (doc.secure_url) return doc.secure_url;
+                                                                if (doc.url) return formatDocumentUrl(doc);
+                                                                if (typeof doc === 'string') return doc;
+
+                                                                return formatDocumentUrl(doc);
+                                                            })()}
+                                                            alt="Medical Certificate"
                                                             className="max-h-32 object-contain rounded"
                                                             onError={(e) => {
+                                                                console.log('Image load error for Medical Certificate');
                                                                 e.target.onerror = null;
                                                                 e.target.src = "https://via.placeholder.com/200x150?text=Image+Not+Available";
                                                             }}
@@ -583,16 +734,39 @@ function PendingDriverApplications() {
                                                 </div>
                                                 <div className="flex justify-between items-center">
                                                     <p className="text-xs text-gray-500">
-                                                        {selectedDriver.documents.medicalCertificate.uploadedAt ? 
-                                                            `Uploaded: ${new Date(selectedDriver.documents.medicalCertificate.uploadedAt).toLocaleDateString()}` : 
-                                                            'Recently uploaded'}
+                                                        {(() => {
+                                                            const doc = getDocumentByType(selectedDriver.documents, 'medicalCertificate');
+                                                            return doc && doc.uploadedAt ?
+                                                                `Uploaded: ${new Date(doc.uploadedAt).toLocaleDateString()}` :
+                                                                'Recently uploaded';
+                                                        })()}
                                                     </p>
-                                                    {formatDocumentUrl(selectedDriver.documents.medicalCertificate) && (
-                                                        <a href={formatDocumentUrl(selectedDriver.documents.medicalCertificate)} target="_blank" rel="noopener noreferrer" 
-                                                            className="text-xs text-blue-600 hover:text-blue-800">
-                                                            View Full Image
-                                                        </a>
-                                                    )}
+                                                    {(() => {
+                                                        const doc = getDocumentByType(selectedDriver.documents, 'medicalCertificate');
+                                                        if (!doc) return null;
+
+                                                        let url = null;
+
+                                                        // Handle Cloudinary URLs directly
+                                                        if (doc.url && doc.url.includes('cloudinary.com')) {
+                                                            url = doc.url;
+                                                        } else if (doc.secure_url) {
+                                                            url = doc.secure_url;
+                                                        } else if (doc.url) {
+                                                            url = formatDocumentUrl(doc);
+                                                        } else if (typeof doc === 'string') {
+                                                            url = doc;
+                                                        } else {
+                                                            url = formatDocumentUrl(doc);
+                                                        }
+
+                                                        return url ? (
+                                                            <a href={url} target="_blank" rel="noopener noreferrer"
+                                                                className="text-xs text-blue-600 hover:text-blue-800">
+                                                                View Full Image
+                                                            </a>
+                                                        ) : null;
+                                                    })()}
                                                 </div>
                                             </>
                                         ) : (

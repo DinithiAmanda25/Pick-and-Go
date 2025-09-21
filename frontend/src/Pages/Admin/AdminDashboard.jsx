@@ -4,6 +4,8 @@ import { motion } from 'framer-motion'
 import AdminSidebar from '../../Components/Admin/Sidebar'
 import AdminHeader from '../../Components/Admin/Header'
 import AdminOverview from './AdminOverview'
+import UserManagement from '../../Components/Admin/UserManagement'
+import VehicleManagement from '../../Components/Admin/VehicleManagement'
 
 const AdminDashboard = () => {
   const location = useLocation()
@@ -63,17 +65,11 @@ const AdminDashboard = () => {
               )}
 
               {activeTab === 'users' && (
-                <div>
-                  <h2 className="text-2xl font-bold mb-6">User Management</h2>
-                  {/* User management component will go here */}
-                </div>
+                <UserManagement />
               )}
 
               {activeTab === 'vehicles' && (
-                <div>
-                  <h2 className="text-2xl font-bold mb-6">Vehicle Management</h2>
-                  {/* Vehicle management component will go here */}
-                </div>
+                <VehicleManagement />
               )}
 
               {activeTab === 'bookings' && (
