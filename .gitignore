@@ -1,1 +1,3 @@
 node_modules/
+# Local uploads - now using Cloudinary
+backend/uploads/

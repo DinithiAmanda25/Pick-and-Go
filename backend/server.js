@@ -46,7 +46,6 @@ const { debugDatabase, debugGetAllDrivers } = require('./controllers/DebugContro
 
 
 
-
 // Special direct routes for admin dashboard - with and without /api prefix
 // These endpoints are designed to never fail - they will use fallback data if the database call fails
 app.get('/auth/admin/all-drivers', async (req, res) => {

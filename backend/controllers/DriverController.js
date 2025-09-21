@@ -109,10 +109,11 @@ const registerDriver = async (req, res) => {
                             uploadedAt: new Date()
                         };
                     } else {
-                        // Fallback for direct uploads (in case middleware didn't process it)
+                        // Fallback - this should not happen with properly configured middleware
+                        console.warn(`Warning: Document ${docType} was not processed by Cloudinary middleware`);
                         documents[docType] = {
-                            url: file.path || 'unknown',
-                            publicId: file.filename || `driver_${finalDriverId}_${docType}`,
+                            url: 'https://res.cloudinary.com/demo/image/upload/placeholder.jpg',
+                            publicId: `driver_${finalDriverId}_${docType}_placeholder`,
                             uploadedAt: new Date()
                         };
                     }
