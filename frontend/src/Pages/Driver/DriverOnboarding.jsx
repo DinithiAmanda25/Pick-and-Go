@@ -51,6 +51,16 @@ function DriverOnboarding() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState({})
+  const [validationErrors, setValidationErrors] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    dateOfBirth: '',
+    licenseNumber: '',
+    licenseExpiryDate: '',
+    vehicleType: '',
+    yearsOfExperience: ''
+  })
   const [uploadProgress, setUploadProgress] = useState({})
 
   const { registerDriver } = useAuth()
@@ -77,6 +87,90 @@ function DriverOnboarding() {
     'Other'
   ]
 
+  const validateField = (name, value) => {
+    let newErrors = { ...validationErrors }
+    
+    switch (name) {
+      case 'fullName':
+        newErrors.fullName = !value.trim() ? 'Full name is required' : ''
+        break
+        
+      case 'email':
+        if (!value.trim()) {
+          newErrors.email = 'Email is required'
+        } else if (!/\S+@\S+\.\S+/.test(value)) {
+          newErrors.email = 'Email format is invalid'
+        } else {
+          newErrors.email = ''
+        }
+        break
+        
+      case 'phone':
+        if (!value.trim()) {
+          newErrors.phone = 'Phone number is required'
+        } else if (!/^\d{10}$/.test(value.replace(/[^0-9]/g, ''))) {
+          newErrors.phone = 'Phone number should have 10 digits'
+        } else {
+          newErrors.phone = ''
+        }
+        break
+        
+      case 'dateOfBirth':
+        if (!value) {
+          newErrors.dateOfBirth = 'Date of birth is required'
+        } else {
+          const dob = new Date(value)
+          const today = new Date()
+          const age = today.getFullYear() - dob.getFullYear()
+          if (age < 18) {
+            newErrors.dateOfBirth = 'You must be at least 18 years old'
+          } else if (age > 70) {
+            newErrors.dateOfBirth = 'Age exceeds the maximum limit for drivers'
+          } else {
+            newErrors.dateOfBirth = ''
+          }
+        }
+        break
+        
+      case 'licenseNumber':
+        newErrors.licenseNumber = !value.trim() ? 'License number is required' : ''
+        break
+        
+      case 'licenseExpiryDate':
+        if (!value) {
+          newErrors.licenseExpiryDate = 'License expiry date is required'
+        } else {
+          const expiryDate = new Date(value)
+          const today = new Date()
+          if (expiryDate <= today) {
+            newErrors.licenseExpiryDate = 'License is expired'
+          } else {
+            newErrors.licenseExpiryDate = ''
+          }
+        }
+        break
+        
+      case 'vehicleType':
+        newErrors.vehicleType = !value ? 'Vehicle type is required' : ''
+        break
+        
+      case 'yearsOfExperience':
+        if (!value) {
+          newErrors.yearsOfExperience = 'Years of experience is required'
+        } else if (isNaN(value) || Number(value) < 0) {
+          newErrors.yearsOfExperience = 'Please enter a valid number'
+        } else {
+          newErrors.yearsOfExperience = ''
+        }
+        break
+        
+      default:
+        break
+    }
+    
+    setValidationErrors(newErrors)
+  }
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
 
@@ -94,6 +188,12 @@ function DriverOnboarding() {
         ...prev,
         [name]: type === 'checkbox' ? checked : value
       }))
+      
+      // Validate fields that we're tracking
+      if (['fullName', 'email', 'phone', 'dateOfBirth', 'licenseNumber', 
+           'licenseExpiryDate', 'vehicleType', 'yearsOfExperience'].includes(name)) {
+        validateField(name, value)
+      }
     }
 
     // Clear error when user starts typing
@@ -157,14 +257,39 @@ function DriverOnboarding() {
 
     switch (step) {
       case 1: // Personal Information
+        // First run individual field validations to update the validationErrors state
+        validateField('fullName', formData.fullName)
+        validateField('email', formData.email)
+        validateField('phone', formData.phone)
+        validateField('dateOfBirth', formData.dateOfBirth)
+        
+        // Copy validation errors to display errors
+        if (validationErrors.fullName) newErrors.fullName = validationErrors.fullName
+        if (validationErrors.email) newErrors.email = validationErrors.email
+        if (validationErrors.phone) newErrors.phone = validationErrors.phone
+        if (validationErrors.dateOfBirth) newErrors.dateOfBirth = validationErrors.dateOfBirth
+        
+        // Also check for empty fields
         if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required'
         if (!formData.email.trim()) newErrors.email = 'Email is required'
-        if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid'
         if (!formData.phone.trim()) newErrors.phone = 'Phone number is required'
         if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required'
         break
 
       case 2: // Driver Information
+        // Validate individual fields
+        validateField('licenseNumber', formData.licenseNumber)
+        validateField('licenseExpiryDate', formData.licenseExpiryDate)
+        validateField('vehicleType', formData.vehicleType)
+        validateField('yearsOfExperience', formData.yearsOfExperience)
+        
+        // Copy validation errors
+        if (validationErrors.licenseNumber) newErrors.licenseNumber = validationErrors.licenseNumber
+        if (validationErrors.licenseExpiryDate) newErrors.licenseExpiryDate = validationErrors.licenseExpiryDate
+        if (validationErrors.vehicleType) newErrors.vehicleType = validationErrors.vehicleType
+        if (validationErrors.yearsOfExperience) newErrors.yearsOfExperience = validationErrors.yearsOfExperience
+        
+        // Also check for empty fields
         if (!formData.licenseNumber.trim()) newErrors.licenseNumber = 'License number is required'
         if (!formData.licenseExpiryDate) newErrors.licenseExpiryDate = 'License expiry date is required'
         if (!formData.vehicleType) newErrors.vehicleType = 'Vehicle type is required'
@@ -433,11 +558,15 @@ function DriverOnboarding() {
                     required
                     value={formData.fullName}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors.fullName ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                      }`}
+                    onBlur={(e) => validateField('fullName', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${
+                      errors.fullName || validationErrors.fullName ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
                     placeholder="John Doe"
                   />
-                  {errors.fullName && <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>}
+                  {(errors.fullName || validationErrors.fullName) && (
+                    <p className="mt-1 text-sm text-red-600">{errors.fullName || validationErrors.fullName}</p>
+                  )}
                 </div>
 
                 <div>
@@ -451,11 +580,15 @@ function DriverOnboarding() {
                     required
                     value={formData.email}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                      }`}
+                    onBlur={(e) => validateField('email', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${
+                      errors.email || validationErrors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
                     placeholder="john.doe@example.com"
                   />
-                  {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+                  {(errors.email || validationErrors.email) && (
+                    <p className="mt-1 text-sm text-red-600">{errors.email || validationErrors.email}</p>
+                  )}
                 </div>
 
                 <div>
@@ -469,8 +602,10 @@ function DriverOnboarding() {
                     required
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                      }`}
+                    onBlur={(e) => validateField('phone', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${
+                      errors.phone || validationErrors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
                     placeholder="+94 71 234 5678"
                   />
                   {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}

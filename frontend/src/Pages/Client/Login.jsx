@@ -11,21 +11,77 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [validationErrors, setValidationErrors] = useState({
+    identifier: '',
+    password: ''
+  })
 
   const { login } = useAuth()
   const navigate = useNavigate()
 
   const handleInputChange = (e) => {
+    const { name, value } = e.target
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     })
+    
+    // Validate input fields
+    validateField(name, value)
+    
     // Clear error when user starts typing
     if (error) setError('')
   }
+  
+  const validateField = (name, value) => {
+    let errors = { ...validationErrors }
+    
+    switch (name) {
+      case 'identifier':
+        if (!value.trim()) {
+          errors.identifier = 'Email or username is required'
+        } else if (value.includes('@') && !/\S+@\S+\.\S+/.test(value)) {
+          errors.identifier = 'Email format is invalid'
+        } else {
+          errors.identifier = ''
+        }
+        break
+        
+      case 'password':
+        if (!value) {
+          errors.password = 'Password is required'
+        } else if (value.length < 6) {
+          errors.password = 'Password must be at least 6 characters'
+        } else {
+          errors.password = ''
+        }
+        break
+        
+      default:
+        break
+    }
+    
+    setValidationErrors(errors)
+  }
 
+  const validateForm = () => {
+    // Validate all fields
+    validateField('identifier', formData.identifier)
+    validateField('password', formData.password)
+    
+    // Check if there are any validation errors
+    return !Object.values(validationErrors).some(error => error !== '')
+  }
+  
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Validate form before submission
+    if (!validateForm()) {
+      setError('Please correct the errors before submitting')
+      return
+    }
+    
     setIsLoading(true)
     setError('')
 
@@ -187,10 +243,14 @@ function Login() {
                   required
                   value={formData.identifier}
                   onChange={handleInputChange}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  onBlur={(e) => validateField('identifier', e.target.value)}
+                  className={`block w-full pl-10 pr-3 py-3 border ${validationErrors.identifier ? 'border-red-300' : 'border-gray-300'} rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
                   placeholder="Enter your email address or username"
                 />
               </div>
+              {validationErrors.identifier && (
+                <p className="mt-1 text-sm text-red-600">{validationErrors.identifier}</p>
+              )}
             </div>
 
             <div>
@@ -211,7 +271,8 @@ function Login() {
                   required
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  onBlur={(e) => validateField('password', e.target.value)}
+                  className={`block w-full pl-10 pr-10 py-3 border ${validationErrors.password ? 'border-red-300' : 'border-gray-300'} rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
                   placeholder="Enter your password"
                 />
                 <button
@@ -231,6 +292,9 @@ function Login() {
                   )}
                 </button>
               </div>
+              {validationErrors.password && (
+                <p className="mt-1 text-sm text-red-600">{validationErrors.password}</p>
+              )}
             </div>
 
             <div className="flex items-center justify-between">
