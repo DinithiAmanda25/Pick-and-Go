@@ -175,12 +175,12 @@ function BusinessOwnerDashboard() {
       },
       {
         id: 3,
-        customer: 'Carol Brown',
+        customer: 'Nimal Gamage',
         vehicle: 'Nissan Altima',
-        driver: 'Michael Johnson',
-        startDate: '2024-01-25',
-        endDate: '2024-01-27',
-        amount: 110,
+        driver: 'Rithuu',
+        startDate: '2026-02-25',
+        endDate: '2026-02-27',
+        amount: 12100,
         status: 'Upcoming',
         mileage: 0,
         rating: null
