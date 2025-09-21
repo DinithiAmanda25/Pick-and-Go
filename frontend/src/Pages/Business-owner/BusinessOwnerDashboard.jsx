@@ -151,12 +151,12 @@ function BusinessOwnerDashboard() {
     bookings: [
       {
         id: 1,
-        customer: 'Alice Johnson',
+        customer: 'Isuru Udayanga',
         vehicle: 'Toyota Camry',
-        driver: 'John Smith',
-        startDate: '2024-01-20',
-        endDate: '2024-01-22',
-        amount: 120,
+        driver: 'Kamal Senevirathna',
+        startDate: '2025-09-20',
+        endDate: '2025-09-22',
+        amount: 3200,
         status: 'Completed',
         mileage: 250,
         rating: 5
