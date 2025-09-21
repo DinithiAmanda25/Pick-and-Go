@@ -165,7 +165,7 @@ function BusinessOwnerDashboard() {
         id: 2,
         customer: 'Nimal Perera',
         vehicle: 'Honda Accord',
-        driver: 'Emily Davis',
+        driver: 'Nuwan',
         startDate: '2026-03-05',
         endDate: '2026-03-10',
         amount: 28500,
