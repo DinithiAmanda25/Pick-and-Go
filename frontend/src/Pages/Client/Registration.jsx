@@ -41,22 +41,22 @@ function Registration() {
     password: '',
     confirmPassword: ''
   })
-  
+
   const { registerClient, registerVehicleOwner } = useAuth()
   const navigate = useNavigate()
 
   const validateField = (name, value) => {
     let errors = { ...validationErrors }
-    
+
     switch (name) {
       case 'firstName':
         errors.firstName = !value.trim() ? 'First name is required' : ''
         break
-        
+
       case 'lastName':
         errors.lastName = !value.trim() ? 'Last name is required' : ''
         break
-        
+
       case 'email':
         if (!value.trim()) {
           errors.email = 'Email is required'
@@ -66,7 +66,7 @@ function Registration() {
           errors.email = ''
         }
         break
-        
+
       case 'phone':
         if (!value.trim()) {
           errors.phone = 'Phone number is required'
@@ -76,7 +76,7 @@ function Registration() {
           errors.phone = ''
         }
         break
-        
+
       case 'password':
         if (!value) {
           errors.password = 'Password is required'
@@ -87,7 +87,7 @@ function Registration() {
         } else {
           errors.password = ''
         }
-        
+
         // Also check confirm password match if it has a value
         if (formData.confirmPassword && formData.confirmPassword !== value) {
           errors.confirmPassword = 'Passwords do not match'
@@ -95,7 +95,7 @@ function Registration() {
           errors.confirmPassword = ''
         }
         break
-        
+
       case 'confirmPassword':
         if (!value) {
           errors.confirmPassword = 'Confirm password is required'
@@ -105,17 +105,17 @@ function Registration() {
           errors.confirmPassword = ''
         }
         break
-        
+
       default:
         break
     }
-    
+
     setValidationErrors(errors)
   }
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
-    
+
     if (name.includes('.')) {
       // Handle nested objects
       const [parent, child] = name.split('.')
@@ -151,13 +151,13 @@ function Registration() {
         ...formData,
         [name]: type === 'checkbox' ? checked : value
       })
-      
+
       // Validate the field if it's one we're tracking
       if (['firstName', 'lastName', 'email', 'phone', 'password', 'confirmPassword'].includes(name)) {
         validateField(name, value)
       }
     }
-    
+
     // Clear error when user starts typing
     if (error) setError('')
   }
@@ -179,34 +179,34 @@ function Registration() {
         validateField('lastName', formData.lastName)
         validateField('email', formData.email)
         validateField('phone', formData.phone)
-        
+
         // Check if any validation errors exist
-        if (validationErrors.firstName || validationErrors.lastName || 
-            validationErrors.email || validationErrors.phone ||
-            !formData.firstName || !formData.lastName || 
-            !formData.email || !formData.phone) {
+        if (validationErrors.firstName || validationErrors.lastName ||
+          validationErrors.email || validationErrors.phone ||
+          !formData.firstName || !formData.lastName ||
+          !formData.email || !formData.phone) {
           setError('Please correct all errors before proceeding')
           return false
         }
         break
-        
+
       case 2:
         // Validate password fields
         validateField('password', formData.password)
         validateField('confirmPassword', formData.confirmPassword)
-        
+
         if (validationErrors.password || validationErrors.confirmPassword ||
-            !formData.password || !formData.confirmPassword) {
+          !formData.password || !formData.confirmPassword) {
           setError('Please correct all password errors before proceeding')
           return false
         }
-        
+
         if (formData.userType === 'client' && !formData.dateOfBirth) {
           setError('Please provide your date of birth')
           return false
         }
         break
-        
+
       case 3:
         if (!formData.terms) {
           setError('Please accept the terms and conditions')
@@ -233,15 +233,15 @@ function Registration() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     if (!validateStep()) return
-    
+
     setIsLoading(true)
     setError('')
 
     try {
       let response
-      
+
       if (formData.userType === 'client') {
         response = await registerClient({
           firstName: formData.firstName,
@@ -263,7 +263,7 @@ function Registration() {
           address: formData.address
         })
       }
-      
+
       if (response.success) {
         alert(`Registration successful! Welcome, ${formData.firstName}!`)
         navigate('/login')
@@ -365,21 +365,18 @@ function Registration() {
 
           {/* Progress indicator */}
           <div className="flex items-center justify-center space-x-4 mb-8">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
-            }`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
+              }`}>
               1
             </div>
             <div className={`w-8 h-1 ${currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
-            }`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
+              }`}>
               2
             </div>
             <div className={`w-8 h-1 ${currentStep >= 3 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
-            }`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
+              }`}>
               3
             </div>
           </div>
@@ -394,11 +391,10 @@ function Registration() {
                 <button
                   type="button"
                   onClick={() => handleUserTypeChange('client')}
-                  className={`p-4 border-2 rounded-lg flex items-start space-x-3 transition-all ${
-                    formData.userType === 'client'
+                  className={`p-4 border-2 rounded-lg flex items-start space-x-3 transition-all ${formData.userType === 'client'
                       ? 'border-blue-500 bg-blue-50 text-blue-700'
                       : 'border-gray-200 hover:border-gray-300 text-gray-600'
-                  }`}
+                    }`}
                 >
                   <svg className="w-6 h-6 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -411,11 +407,10 @@ function Registration() {
                 <button
                   type="button"
                   onClick={() => handleUserTypeChange('vehicle_owner')}
-                  className={`p-4 border-2 rounded-lg flex items-start space-x-3 transition-all ${
-                    formData.userType === 'vehicle_owner'
+                  className={`p-4 border-2 rounded-lg flex items-start space-x-3 transition-all ${formData.userType === 'vehicle_owner'
                       ? 'border-blue-500 bg-blue-50 text-blue-700'
                       : 'border-gray-200 hover:border-gray-300 text-gray-600'
-                  }`}
+                    }`}
                 >
                   <svg className="w-6 h-6 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -739,7 +734,7 @@ function Registration() {
                   Previous
                 </button>
               )}
-              
+
               {currentStep < 3 ? (
                 <button
                   type="button"

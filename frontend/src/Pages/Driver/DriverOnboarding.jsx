@@ -89,12 +89,12 @@ function DriverOnboarding() {
 
   const validateField = (name, value) => {
     let newErrors = { ...validationErrors }
-    
+
     switch (name) {
       case 'fullName':
         newErrors.fullName = !value.trim() ? 'Full name is required' : ''
         break
-        
+
       case 'email':
         if (!value.trim()) {
           newErrors.email = 'Email is required'
@@ -104,7 +104,7 @@ function DriverOnboarding() {
           newErrors.email = ''
         }
         break
-        
+
       case 'phone':
         if (!value.trim()) {
           newErrors.phone = 'Phone number is required'
@@ -114,7 +114,7 @@ function DriverOnboarding() {
           newErrors.phone = ''
         }
         break
-        
+
       case 'dateOfBirth':
         if (!value) {
           newErrors.dateOfBirth = 'Date of birth is required'
@@ -131,11 +131,11 @@ function DriverOnboarding() {
           }
         }
         break
-        
+
       case 'licenseNumber':
         newErrors.licenseNumber = !value.trim() ? 'License number is required' : ''
         break
-        
+
       case 'licenseExpiryDate':
         if (!value) {
           newErrors.licenseExpiryDate = 'License expiry date is required'
@@ -149,11 +149,11 @@ function DriverOnboarding() {
           }
         }
         break
-        
+
       case 'vehicleType':
         newErrors.vehicleType = !value ? 'Vehicle type is required' : ''
         break
-        
+
       case 'yearsOfExperience':
         if (!value) {
           newErrors.yearsOfExperience = 'Years of experience is required'
@@ -163,11 +163,11 @@ function DriverOnboarding() {
           newErrors.yearsOfExperience = ''
         }
         break
-        
+
       default:
         break
     }
-    
+
     setValidationErrors(newErrors)
   }
 
@@ -188,10 +188,10 @@ function DriverOnboarding() {
         ...prev,
         [name]: type === 'checkbox' ? checked : value
       }))
-      
+
       // Validate fields that we're tracking
-      if (['fullName', 'email', 'phone', 'dateOfBirth', 'licenseNumber', 
-           'licenseExpiryDate', 'vehicleType', 'yearsOfExperience'].includes(name)) {
+      if (['fullName', 'email', 'phone', 'dateOfBirth', 'licenseNumber',
+        'licenseExpiryDate', 'vehicleType', 'yearsOfExperience'].includes(name)) {
         validateField(name, value)
       }
     }
@@ -262,13 +262,13 @@ function DriverOnboarding() {
         validateField('email', formData.email)
         validateField('phone', formData.phone)
         validateField('dateOfBirth', formData.dateOfBirth)
-        
+
         // Copy validation errors to display errors
         if (validationErrors.fullName) newErrors.fullName = validationErrors.fullName
         if (validationErrors.email) newErrors.email = validationErrors.email
         if (validationErrors.phone) newErrors.phone = validationErrors.phone
         if (validationErrors.dateOfBirth) newErrors.dateOfBirth = validationErrors.dateOfBirth
-        
+
         // Also check for empty fields
         if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required'
         if (!formData.email.trim()) newErrors.email = 'Email is required'
@@ -282,13 +282,13 @@ function DriverOnboarding() {
         validateField('licenseExpiryDate', formData.licenseExpiryDate)
         validateField('vehicleType', formData.vehicleType)
         validateField('yearsOfExperience', formData.yearsOfExperience)
-        
+
         // Copy validation errors
         if (validationErrors.licenseNumber) newErrors.licenseNumber = validationErrors.licenseNumber
         if (validationErrors.licenseExpiryDate) newErrors.licenseExpiryDate = validationErrors.licenseExpiryDate
         if (validationErrors.vehicleType) newErrors.vehicleType = validationErrors.vehicleType
         if (validationErrors.yearsOfExperience) newErrors.yearsOfExperience = validationErrors.yearsOfExperience
-        
+
         // Also check for empty fields
         if (!formData.licenseNumber.trim()) newErrors.licenseNumber = 'License number is required'
         if (!formData.licenseExpiryDate) newErrors.licenseExpiryDate = 'License expiry date is required'
@@ -559,9 +559,8 @@ function DriverOnboarding() {
                     value={formData.fullName}
                     onChange={handleInputChange}
                     onBlur={(e) => validateField('fullName', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${
-                      errors.fullName || validationErrors.fullName ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors.fullName || validationErrors.fullName ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
                     placeholder="John Doe"
                   />
                   {(errors.fullName || validationErrors.fullName) && (
@@ -581,9 +580,8 @@ function DriverOnboarding() {
                     value={formData.email}
                     onChange={handleInputChange}
                     onBlur={(e) => validateField('email', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${
-                      errors.email || validationErrors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors.email || validationErrors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
                     placeholder="john.doe@example.com"
                   />
                   {(errors.email || validationErrors.email) && (
@@ -603,9 +601,8 @@ function DriverOnboarding() {
                     value={formData.phone}
                     onChange={handleInputChange}
                     onBlur={(e) => validateField('phone', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${
-                      errors.phone || validationErrors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors.phone || validationErrors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
                     placeholder="+94 71 234 5678"
                   />
                   {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}

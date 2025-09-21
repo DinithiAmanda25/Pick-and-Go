@@ -25,17 +25,17 @@ function Login() {
       ...formData,
       [name]: value
     })
-    
+
     // Validate input fields
     validateField(name, value)
-    
+
     // Clear error when user starts typing
     if (error) setError('')
   }
-  
+
   const validateField = (name, value) => {
     let errors = { ...validationErrors }
-    
+
     switch (name) {
       case 'identifier':
         if (!value.trim()) {
@@ -46,7 +46,7 @@ function Login() {
           errors.identifier = ''
         }
         break
-        
+
       case 'password':
         if (!value) {
           errors.password = 'Password is required'
@@ -56,11 +56,11 @@ function Login() {
           errors.password = ''
         }
         break
-        
+
       default:
         break
     }
-    
+
     setValidationErrors(errors)
   }
 
@@ -68,20 +68,20 @@ function Login() {
     // Validate all fields
     validateField('identifier', formData.identifier)
     validateField('password', formData.password)
-    
+
     // Check if there are any validation errors
     return !Object.values(validationErrors).some(error => error !== '')
   }
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     // Validate form before submission
     if (!validateForm()) {
       setError('Please correct the errors before submitting')
       return
     }
-    
+
     setIsLoading(true)
     setError('')
 
