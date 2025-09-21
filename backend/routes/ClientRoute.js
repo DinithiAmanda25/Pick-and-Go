@@ -16,6 +16,9 @@ const {
 router.post('/register', registerClient);
 router.post('/login', clientLogin);
 
+// Admin function to get all clients - must be placed before routes with parameters
+router.get('/all', getAllClients);
+
 // Client Profile Routes (for legacy compatibility /auth/profile/client/...)
 router.get('/:userId', getClientProfile);
 router.put('/:userId', updateClientProfile);
@@ -30,7 +33,6 @@ router.post('/profile/:userId/upload-image', upload.single('profileImage'), uplo
 router.put('/profile/:userId/change-password', changeClientPassword);
 router.delete('/profile/:userId', deleteClientProfile);
 
-// Admin function to get all clients
-router.get('/all', getAllClients);
+// This route is now placed above to avoid conflicts with /:userId
 
 module.exports = router;

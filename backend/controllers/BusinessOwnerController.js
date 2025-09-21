@@ -399,11 +399,11 @@ const getPendingApplications = async (req, res) => {
         }).select('-password').sort({ createdAt: -1 });
 
         // Get pending vehicles with owner info
-        const pendingVehicles = await Vehicle.find({ 
-            status: 'pending' 
+        const pendingVehicles = await Vehicle.find({
+            status: 'pending'
         })
-        .populate('ownerId', 'firstName lastName email phone rating')
-        .sort({ createdAt: -1 });
+            .populate('ownerId', 'firstName lastName email phone rating')
+            .sort({ createdAt: -1 });
 
         res.status(200).json({
             success: true,
@@ -455,11 +455,11 @@ const getPendingDrivers = async (req, res) => {
 // Get Pending Vehicles Only
 const getPendingVehicles = async (req, res) => {
     try {
-        const pendingVehicles = await Vehicle.find({ 
-            status: 'pending' 
+        const pendingVehicles = await Vehicle.find({
+            status: 'pending'
         })
-        .populate('ownerId', 'firstName lastName email phone rating')
-        .sort({ createdAt: -1 });
+            .populate('ownerId', 'firstName lastName email phone rating')
+            .sort({ createdAt: -1 });
 
         res.status(200).json({
             success: true,
@@ -640,12 +640,12 @@ const approveVehicle = async (req, res) => {
             // Update vehicle with approval details
             vehicle.status = 'available';
             vehicle.availability = { isAvailable: true };
-            
+
             // Set rental prices if provided
             if (dailyRate !== undefined) vehicle.rentalPrice.dailyRate = dailyRate;
             if (weeklyRate !== undefined) vehicle.rentalPrice.weeklyRate = weeklyRate;
             if (monthlyRate !== undefined) vehicle.rentalPrice.monthlyRate = monthlyRate;
-            
+
             vehicle.approvalDetails = {
                 approvedBy: businessOwnerId,
                 approvedAt: new Date(),
@@ -781,6 +781,26 @@ const getApprovalStatistics = async (req, res) => {
     }
 };
 
+// Get All Business Owners
+const getAllBusinessOwners = async (req, res) => {
+    try {
+        // Find all business owners, exclude sensitive information like password
+        const businessOwners = await BusinessOwner.find({}).select('-password');
+
+        res.status(200).json({
+            success: true,
+            count: businessOwners.length,
+            businessOwners: businessOwners
+        });
+    } catch (error) {
+        console.error('Get all business owners error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error. Please try again later.'
+        });
+    }
+};
+
 module.exports = {
     registerBusinessOwner,
     businessOwnerLogin,
@@ -795,5 +815,7 @@ module.exports = {
     getPendingVehicles,
     approveDriver,
     approveVehicle,
-    getApprovalStatistics
+    getApprovalStatistics,
+    // Admin endpoints
+    getAllBusinessOwners
 };

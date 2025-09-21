@@ -43,17 +43,15 @@ function PendingApplications() {
     const TabButton = ({ id, label, isActive, count, onClick }) => (
         <button
             onClick={() => onClick(id)}
-            className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${
-                isActive
+            className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${isActive
                     ? 'bg-blue-600 text-white shadow-lg'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
+                }`}
         >
             {label}
             {count !== undefined && (
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                    isActive ? 'bg-blue-500' : 'bg-gray-300'
-                }`}>
+                <span className={`px-2 py-1 rounded-full text-xs ${isActive ? 'bg-blue-500' : 'bg-gray-300'
+                    }`}>
                     {count}
                 </span>
             )}
@@ -101,27 +99,6 @@ function PendingApplications() {
 
         return (
             <div className="space-y-6">
-                {/* Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <StatCard
-                        title="Pending Drivers"
-                        count={allApplications.drivers.count}
-                        color="bg-gradient-to-r from-orange-500 to-orange-600"
-                        icon="👨‍💼"
-                    />
-                    <StatCard
-                        title="Pending Vehicles"
-                        count={allApplications.vehicles.count}
-                        color="bg-gradient-to-r from-blue-500 to-blue-600"
-                        icon="🚗"
-                    />
-                    <StatCard
-                        title="Total Pending"
-                        count={allApplications.totalPending}
-                        color="bg-gradient-to-r from-purple-500 to-purple-600"
-                        icon="📋"
-                    />
-                </div>
 
                 {/* Drivers Section */}
                 {allApplications.drivers.count > 0 && (

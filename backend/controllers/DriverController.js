@@ -88,20 +88,34 @@ const registerDriver = async (req, res) => {
 
         const mappedVehicleType = vehicleTypeMapping[vehicleType] || 'car';
 
-        // Handle file uploads
+        // Handle file uploads - files should already be uploaded to Cloudinary by middleware
         const documents = {};
         if (req.files) {
             // Process each document type
             const documentTypes = ['license', 'identityCard', 'insurance', 'registration', 'medicalCertificate'];
 
+            // Get Cloudinary details from the processed files
             for (const docType of documentTypes) {
                 if (req.files[docType] && req.files[docType][0]) {
                     const file = req.files[docType][0];
-                    documents[docType] = {
-                        url: file.path,
-                        publicId: file.filename,
-                        uploadedAt: new Date()
-                    };
+
+                    if (file.cloudinary) {
+                        console.log(`Document ${docType} uploaded to Cloudinary:`, file.cloudinary.url);
+
+                        // Store Cloudinary details
+                        documents[docType] = {
+                            url: file.cloudinary.url,
+                            publicId: file.cloudinary.publicId,
+                            uploadedAt: new Date()
+                        };
+                    } else {
+                        // Fallback for direct uploads (in case middleware didn't process it)
+                        documents[docType] = {
+                            url: file.path || 'unknown',
+                            publicId: file.filename || `driver_${finalDriverId}_${docType}`,
+                            uploadedAt: new Date()
+                        };
+                    }
                 }
             }
         }
@@ -426,18 +440,54 @@ const getPendingDrivers = async (req, res) => {
 // Get All Drivers (Admin function)
 const getAllDrivers = async (req, res) => {
     try {
-        const drivers = await Driver.find({ isActive: true }).select('-password');
+        console.log('Getting all drivers - API endpoint accessed');
 
+        // Check if Driver model is available
+        if (!Driver) {
+            console.error('Driver model is not defined');
+            return res.status(500).json({
+                success: false,
+                message: 'Server configuration error: Driver model not defined'
+            });
+        }
+
+        // Start with a simple count to test database connection
+        console.log('Testing database connection with count operation');
+        const count = await Driver.countDocuments().exec();
+        console.log(`Driver count from database: ${count}`);
+
+        // Proceed with actual query with careful error handling
+        console.log('Proceeding with full driver query');
+        const drivers = await Driver.find({ isActive: true })
+            .select('-password')
+            .lean()
+            .exec();
+
+        console.log(`Found ${drivers ? drivers.length : 0} active drivers`);
+
+        // Send the response
         res.status(200).json({
             success: true,
-            drivers: drivers
+            count: drivers ? drivers.length : 0,
+            drivers: drivers || []
         });
 
     } catch (error) {
-        console.error('Get all drivers error:', error);
+        // Log detailed error information for debugging
+        console.error('Get all drivers error details:');
+        console.error('- Error name:', error.name);
+        console.error('- Error message:', error.message);
+        console.error('- Error stack:', error.stack);
+
+        if (error.name === 'MongooseError' || error.name === 'MongoError') {
+            console.error('- MongoDB-specific error detected');
+        }
+
+        // Send a safe response to the client
         res.status(500).json({
             success: false,
-            message: 'Server error. Please try again later.'
+            message: 'Server error. Please try again later.',
+            error: error.message || 'Unknown error'
         });
     }
 };
