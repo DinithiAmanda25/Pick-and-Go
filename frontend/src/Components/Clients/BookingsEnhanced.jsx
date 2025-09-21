@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
 export default function BookingsEnhanced({ mockBookings, onCancelBooking, onModifyBooking, onViewDetails, downloadInvoice }) {
@@ -9,6 +10,11 @@ export default function BookingsEnhanced({ mockBookings, onCancelBooking, onModi
     const [cancelReason, setCancelReason] = useState('')
     const [showModifyModal, setShowModifyModal] = useState(false)
     const [modificationDetails, setModificationDetails] = useState({})
+    const navigate = useNavigate()
+
+    const handleViewAllFeedback = () => {
+        navigate('/feedback')
+    }
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -140,6 +146,18 @@ export default function BookingsEnhanced({ mockBookings, onCancelBooking, onModi
                                 <option value="status">Status</option>
                                 <option value="amount">Amount</option>
                             </select>
+                        </div>
+                        {/* View All Feedback Button at the flex end */}
+                        <div className="ml-auto">
+                            <div><h1>Customer Feedback</h1>
+                                <p>View and manage customer feedback for your bookings</p>
+                                <button
+                                    onClick={handleViewAllFeedback}
+                                    className="mt-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                >
+                                    View All Feedback
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

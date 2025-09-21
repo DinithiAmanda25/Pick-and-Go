@@ -14,6 +14,8 @@ import VehicleOwnerDashboard from './Pages/Vehicle-owner/VehicleOwnerDashboard.j
 import DriverDashboard from './Pages/Driver/DriverDashboard.jsx'
 import DriverOnboarding from './Pages/Driver/DriverOnboarding.jsx'
 import BusinessOwnerDashboard from './Pages/Business-owner/BusinessOwnerDashboard.jsx'
+import FeedbackPage from './Pages/Client/FeedbackPage'
+import FeedbackDisplayAdmin from './Components/Common/FeedbackDisplayAdmin'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import './index.css'
 import {
@@ -22,6 +24,8 @@ import {
 } from "react-router-dom";
 import ErrorBoundary from './Components/ErrorBoundary'
 import NotFound from './Components/NotFound'
+
+
 
 const router = createBrowserRouter([
   {
@@ -42,6 +46,8 @@ const router = createBrowserRouter([
       { path: '/driver-dashboard', element: <DriverDashboard /> },
       { path: '/driver-onboarding', element: <DriverOnboarding /> },
       { path: '/business-owner-dashboard', element: <BusinessOwnerDashboard /> },
+      { path: '/feedback', element: <FeedbackPage /> },
+      { path: '/admin-feedback', element: <FeedbackDisplayAdmin /> },
       { path: '*', element: <NotFound /> },
     ],
   },

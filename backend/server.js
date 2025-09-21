@@ -12,12 +12,24 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Debug middleware to log requests
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log('Request Body:', req.body);
+  }
+  next();
+});
 
 // Import Routes
 const mainAuthRoutes = require('./routes/MainAuthRoute');
 const uploadRoutes = require('./routes/UploadRoute');
 const vehicleRoutes = require('./routes/VehicleRoute');
 const businessAgreementRoutes = require('./routes/BusinessAgreementRoute');
+const feedbackRoutes = require('./routes/FeedbackRoute');
+const ratingRoutes = require('./routes/RatingRoute');
 
 // Root Route
 app.get("/", (req, res) => {
@@ -30,6 +42,8 @@ app.use('/auth', mainAuthRoutes); // Legacy route support
 app.use('/api/upload', uploadRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/business-agreement', businessAgreementRoutes);
+app.use('/api/feedback', feedbackRoutes);
+app.use('/api/rating', ratingRoutes);
 
 // MongoDB Connection & Server Start
 const PORT = process.env.PORT || 9000;

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import AdminSidebar from '../../Components/Admin/Sidebar'
 import AdminHeader from '../../Components/Admin/Header'
 import AdminOverview from './AdminOverview'
+import FeedbackDisplayAdmin from '../../Components/Common/FeedbackDisplayAdmin'
 
 const AdminDashboard = () => {
   const location = useLocation()
@@ -87,6 +88,13 @@ const AdminDashboard = () => {
                 <div>
                   <h2 className="text-2xl font-bold mb-6">Reports & Analytics</h2>
                   {/* Reports component will go here */}
+                </div>
+              )}
+
+              {/* Feedback Management */}
+              {activeTab === 'feedback' && (
+                <div>
+                  <FeedbackDisplayAdmin />
                 </div>
               )}
 

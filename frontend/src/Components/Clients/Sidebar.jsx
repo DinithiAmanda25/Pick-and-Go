@@ -54,7 +54,7 @@ function ClientSidebar() {
       )
     },
     {
-      name: 'Ratings & Reviews',
+      name: 'Feedback & Ratings',
       path: '/client-dashboard?tab=ratings',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

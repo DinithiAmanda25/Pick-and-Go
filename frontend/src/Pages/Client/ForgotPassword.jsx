@@ -37,8 +37,8 @@ function ForgotPassword() {
       return emailRegex.test(value)
     } else if (method === 'mobile') {
       // Mobile number validation - supports international format
-      const cleanedValue = value.replace(/[\s\-\(\)]/g, '')
-      const mobileRegex = /^[\+]?[1-9][\d]{7,14}$/
+      const cleanedValue = value.replace(/[\s\-()]/g, '')
+      const mobileRegex = /^[+]?[1-9][\d]{7,14}$/
       return mobileRegex.test(cleanedValue)
     }
     return false
