@@ -163,12 +163,12 @@ function BusinessOwnerDashboard() {
       },
       {
         id: 2,
-        customer: 'Bob Wilson',
+        customer: 'Nimal Perera',
         vehicle: 'Honda Accord',
         driver: 'Emily Davis',
-        startDate: '2024-01-21',
-        endDate: '2024-01-23',
-        amount: 95,
+        startDate: '2026-03-05',
+        endDate: '2026-03-10',
+        amount: 28500,
         status: 'Active',
         mileage: 180,
         rating: null
