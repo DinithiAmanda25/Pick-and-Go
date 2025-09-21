@@ -42,7 +42,6 @@ const { getAllDrivers } = require('./controllers/DriverController');
 const { getAllClients } = require('./controllers/ClientController');
 const { getAllVehicleOwners } = require('./controllers/VehicleOwnerController');
 const { getAvailableVehicles } = require('./controllers/VehicleController');
-const { debugDatabase, debugGetAllDrivers } = require('./controllers/DebugController');
 
 
 
