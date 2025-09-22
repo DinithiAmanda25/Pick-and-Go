@@ -1,8 +1,8 @@
 const { Admin } = require('../models/AdminModel');
-const { uploadToCloudinary } = require('../middleware/cloudinaryUpload');
+const { uploadToCloudinary } = require('../middleware/cloudinaryUpload'); // Import Cloudinary upload middleware
 
 // Admin Login
-const adminLogin = async (req, res) => {
+const adminLogin = async (req, res) => { // Admin login function
     try {
         console.log('Admin login attempt received');
         console.log('Request body:', req.body);
@@ -26,8 +26,8 @@ const adminLogin = async (req, res) => {
         });
 
         if (!admin) {
-            return res.status(401).json({
-                success: false,
+            return res.status(401).json({ // Unauthorized
+                success: false, 
                 message: 'Invalid credentials'
             });
         }
@@ -69,7 +69,7 @@ const adminLogin = async (req, res) => {
 // Get Admin Profile
 const getAdminProfile = async (req, res) => {
     try {
-        const { userId } = req.params;
+        const { userId } = req.params; // Get userId from request parameters
 
         const admin = await Admin.findById(userId).select('-password');
         if (!admin) {
@@ -138,7 +138,7 @@ const updateAdminProfile = async (req, res) => {
                 updatedAt: new Date()
             },
             { new: true }
-        ).select('-password');
+        ).select('-password'); // Exclude password from response
 
         res.status(200).json({
             success: true,

@@ -14,7 +14,7 @@ console.log('✅ Successfully imported models:', {
 });
 
 module.exports = {
-    testConnection: (req, res) => {
+    testConnection: (req, res) => { // Simple test endpoint
         res.json({ success: true, message: 'AuthController is working!' });
     }
 };

@@ -60,7 +60,7 @@ reviewSchema.index({ rating: 1 });
 
 // Virtual for formatted creation date
 reviewSchema.virtual('createdAtFormatted').get(function () {
-    return this.createdAt.toLocaleDateString();
+    return this.createdAt.toLocaleDateString(); // Format as needed
 });
 
 // Method to calculate rating breakdown for a vehicle owner

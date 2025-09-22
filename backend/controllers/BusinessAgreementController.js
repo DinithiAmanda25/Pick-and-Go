@@ -24,7 +24,7 @@ const getActiveAgreement = async (req, res) => {
 const getAgreementHistory = async (req, res) => {
     try {
         const agreements = await BusinessAgreement.find()
-            .sort({ version: -1 })
+            .sort({ version: -1 }) // Sort by version descending
             .limit(10);
 
         res.status(200).json({
@@ -163,7 +163,7 @@ const resetToDefault = async (req, res) => {
         // This will create a new default agreement of the specified type
         const defaultAgreement = await BusinessAgreement.getActiveAgreement(agreementType);
 
-        res.status(200).json({
+        res.status(200).json({ // Return the new default agreement
             success: true,
             message: `${agreementType} agreement reset to default successfully`,
             agreement: defaultAgreement

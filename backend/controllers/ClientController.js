@@ -101,7 +101,7 @@ const clientLogin = async (req, res) => {
             lastName: client.lastName,
             email: client.email,
             phone: client.phone,
-            dateOfBirth: client.dateOfBirth ? client.dateOfBirth.toISOString().split('T')[0] : '',
+            dateOfBirth: client.dateOfBirth ? client.dateOfBirth.toISOString().split('T')[0] : '',// Format as YYYY-MM-DD
             address: client.address,
             preferences: client.preferences,
             profileImage: client.profileImage,

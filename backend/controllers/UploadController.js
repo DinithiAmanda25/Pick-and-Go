@@ -67,7 +67,7 @@ const uploadMultipleFiles = async (req, res) => {
     }
 
     // Wait for all uploads to complete
-    const results = await Promise.all(uploadPromises);
+    const results = await Promise.all(uploadPromises);  // Wait for all uploads to complete
     
     const uploadedFiles = results.map((result, index) => ({
       url: result.secure_url,

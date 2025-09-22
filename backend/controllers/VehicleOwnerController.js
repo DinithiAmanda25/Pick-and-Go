@@ -37,7 +37,7 @@ const registerVehicleOwner = async (req, res) => {
         await vehicleOwner.save();
 
         // Return vehicle owner data (excluding password)
-        const vehicleOwnerData = vehicleOwner.toObject();
+        const vehicleOwnerData = vehicleOwner.toObject(); // Convert to plain object
         delete vehicleOwnerData.password;
 
         res.status(201).json({
@@ -385,7 +385,7 @@ const uploadVehicleOwnerDocument = async (req, res) => {
         const uploadResult = await uploadToCloudinary(
             req.file.buffer,
             fileName,
-            `pick-and-go/${documentType}s`
+            `pick-and-go/${documentType}s` // e.g., pick-and-go/licenses
         );
 
         // Create new document record

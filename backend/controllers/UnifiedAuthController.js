@@ -5,7 +5,7 @@ const { Client } = require('../models/ClientModel');
 const { VehicleOwner } = require('../models/VehicleOwnerModel');
 
 // Helper function to find user by email and role
-const findUserByEmail = async (email, role = null) => {
+const findUserByEmail = async (email, role = null) => { // role can be 'driver', 'client', 'vehicle_owner', 'admin', 'business_owner' or null
     try {
         // Use the appropriate model based on role
         if (role === 'driver') {
