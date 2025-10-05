@@ -15,12 +15,17 @@ const {
     getPendingVehicles,
     approveDriver,
     approveVehicle,
-    getApprovalStatistics
+    getApprovalStatistics,
+    // Admin endpoints
+    getAllBusinessOwners
 } = require('../controllers/BusinessOwnerController');
 
 // Business Owner Authentication Routes
 router.post('/register', registerBusinessOwner);
 router.post('/login', businessOwnerLogin);
+
+// Admin endpoint - must be placed before routes with parameters to avoid conflicts
+router.get('/all', getAllBusinessOwners);
 
 // Business Owner Profile Routes (for legacy compatibility /auth/profile/business-owner/...)
 router.get('/:userId', getBusinessOwnerProfile);

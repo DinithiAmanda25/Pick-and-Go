@@ -33,13 +33,89 @@ function Registration() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  
+  const [validationErrors, setValidationErrors] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: ''
+  })
+
   const { registerClient, registerVehicleOwner } = useAuth()
   const navigate = useNavigate()
 
+  const validateField = (name, value) => {
+    let errors = { ...validationErrors }
+
+    switch (name) {
+      case 'firstName':
+        errors.firstName = !value.trim() ? 'First name is required' : ''
+        break
+
+      case 'lastName':
+        errors.lastName = !value.trim() ? 'Last name is required' : ''
+        break
+
+      case 'email':
+        if (!value.trim()) {
+          errors.email = 'Email is required'
+        } else if (!/\S+@\S+\.\S+/.test(value)) {
+          errors.email = 'Email format is invalid'
+        } else {
+          errors.email = ''
+        }
+        break
+
+      case 'phone':
+        if (!value.trim()) {
+          errors.phone = 'Phone number is required'
+        } else if (!/^\d{10}$/.test(value.replace(/[^0-9]/g, ''))) {
+          errors.phone = 'Phone number should have 10 digits'
+        } else {
+          errors.phone = ''
+        }
+        break
+
+      case 'password':
+        if (!value) {
+          errors.password = 'Password is required'
+        } else if (value.length < 8) {
+          errors.password = 'Password must be at least 8 characters'
+        } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
+          errors.password = 'Password must include uppercase, lowercase, and numbers'
+        } else {
+          errors.password = ''
+        }
+
+        // Also check confirm password match if it has a value
+        if (formData.confirmPassword && formData.confirmPassword !== value) {
+          errors.confirmPassword = 'Passwords do not match'
+        } else if (formData.confirmPassword) {
+          errors.confirmPassword = ''
+        }
+        break
+
+      case 'confirmPassword':
+        if (!value) {
+          errors.confirmPassword = 'Confirm password is required'
+        } else if (value !== formData.password) {
+          errors.confirmPassword = 'Passwords do not match'
+        } else {
+          errors.confirmPassword = ''
+        }
+        break
+
+      default:
+        break
+    }
+
+    setValidationErrors(errors)
+  }
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
-    
+
     if (name.includes('.')) {
       // Handle nested objects
       const [parent, child] = name.split('.')
@@ -75,8 +151,13 @@ function Registration() {
         ...formData,
         [name]: type === 'checkbox' ? checked : value
       })
+
+      // Validate the field if it's one we're tracking
+      if (['firstName', 'lastName', 'email', 'phone', 'password', 'confirmPassword'].includes(name)) {
+        validateField(name, value)
+      }
     }
-    
+
     // Clear error when user starts typing
     if (error) setError('')
   }
@@ -93,29 +174,39 @@ function Registration() {
   const validateStep = () => {
     switch (currentStep) {
       case 1:
-        if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
-          setError('Please fill in all required fields')
+        // Validate each field individually to show specific errors
+        validateField('firstName', formData.firstName)
+        validateField('lastName', formData.lastName)
+        validateField('email', formData.email)
+        validateField('phone', formData.phone)
+
+        // Check if any validation errors exist
+        if (validationErrors.firstName || validationErrors.lastName ||
+          validationErrors.email || validationErrors.phone ||
+          !formData.firstName || !formData.lastName ||
+          !formData.email || !formData.phone) {
+          setError('Please correct all errors before proceeding')
           return false
         }
         break
+
       case 2:
-        if (!formData.password || !formData.confirmPassword) {
-          setError('Please fill in all password fields')
+        // Validate password fields
+        validateField('password', formData.password)
+        validateField('confirmPassword', formData.confirmPassword)
+
+        if (validationErrors.password || validationErrors.confirmPassword ||
+          !formData.password || !formData.confirmPassword) {
+          setError('Please correct all password errors before proceeding')
           return false
         }
-        if (formData.password !== formData.confirmPassword) {
-          setError('Passwords do not match')
-          return false
-        }
-        if (formData.password.length < 8) {
-          setError('Password must be at least 8 characters long')
-          return false
-        }
+
         if (formData.userType === 'client' && !formData.dateOfBirth) {
           setError('Please provide your date of birth')
           return false
         }
         break
+
       case 3:
         if (!formData.terms) {
           setError('Please accept the terms and conditions')
@@ -142,15 +233,15 @@ function Registration() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     if (!validateStep()) return
-    
+
     setIsLoading(true)
     setError('')
 
     try {
       let response
-      
+
       if (formData.userType === 'client') {
         response = await registerClient({
           firstName: formData.firstName,
@@ -172,7 +263,7 @@ function Registration() {
           address: formData.address
         })
       }
-      
+
       if (response.success) {
         alert(`Registration successful! Welcome, ${formData.firstName}!`)
         navigate('/login')
@@ -274,21 +365,18 @@ function Registration() {
 
           {/* Progress indicator */}
           <div className="flex items-center justify-center space-x-4 mb-8">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
-            }`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
+              }`}>
               1
             </div>
             <div className={`w-8 h-1 ${currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
-            }`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
+              }`}>
               2
             </div>
             <div className={`w-8 h-1 ${currentStep >= 3 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
-            }`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
+              }`}>
               3
             </div>
           </div>
@@ -303,11 +391,10 @@ function Registration() {
                 <button
                   type="button"
                   onClick={() => handleUserTypeChange('client')}
-                  className={`p-4 border-2 rounded-lg flex items-start space-x-3 transition-all ${
-                    formData.userType === 'client'
+                  className={`p-4 border-2 rounded-lg flex items-start space-x-3 transition-all ${formData.userType === 'client'
                       ? 'border-blue-500 bg-blue-50 text-blue-700'
                       : 'border-gray-200 hover:border-gray-300 text-gray-600'
-                  }`}
+                    }`}
                 >
                   <svg className="w-6 h-6 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -320,11 +407,10 @@ function Registration() {
                 <button
                   type="button"
                   onClick={() => handleUserTypeChange('vehicle_owner')}
-                  className={`p-4 border-2 rounded-lg flex items-start space-x-3 transition-all ${
-                    formData.userType === 'vehicle_owner'
+                  className={`p-4 border-2 rounded-lg flex items-start space-x-3 transition-all ${formData.userType === 'vehicle_owner'
                       ? 'border-blue-500 bg-blue-50 text-blue-700'
                       : 'border-gray-200 hover:border-gray-300 text-gray-600'
-                  }`}
+                    }`}
                 >
                   <svg className="w-6 h-6 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -366,9 +452,13 @@ function Registration() {
                       required
                       value={formData.firstName}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      onBlur={(e) => validateField('firstName', e.target.value)}
+                      className={`w-full px-3 py-2 border ${validationErrors.firstName ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                       placeholder="John"
                     />
+                    {validationErrors.firstName && (
+                      <p className="mt-1 text-sm text-red-600">{validationErrors.firstName}</p>
+                    )}
                   </div>
                   <div>
                     <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
@@ -381,9 +471,13 @@ function Registration() {
                       required
                       value={formData.lastName}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      onBlur={(e) => validateField('lastName', e.target.value)}
+                      className={`w-full px-3 py-2 border ${validationErrors.lastName ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                       placeholder="Doe"
                     />
+                    {validationErrors.lastName && (
+                      <p className="mt-1 text-sm text-red-600">{validationErrors.lastName}</p>
+                    )}
                   </div>
                 </div>
 
@@ -398,9 +492,13 @@ function Registration() {
                     required
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    onBlur={(e) => validateField('email', e.target.value)}
+                    className={`w-full px-3 py-2 border ${validationErrors.email ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                     placeholder="john.doe@example.com"
                   />
+                  {validationErrors.email && (
+                    <p className="mt-1 text-sm text-red-600">{validationErrors.email}</p>
+                  )}
                 </div>
 
                 <div>
@@ -414,9 +512,13 @@ function Registration() {
                     required
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    onBlur={(e) => validateField('phone', e.target.value)}
+                    className={`w-full px-3 py-2 border ${validationErrors.phone ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                     placeholder="+1 (555) 123-4567"
                   />
+                  {validationErrors.phone && (
+                    <p className="mt-1 text-sm text-red-600">{validationErrors.phone}</p>
+                  )}
                 </div>
               </div>
             )}
@@ -453,9 +555,13 @@ function Registration() {
                       required
                       value={formData.password}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      onBlur={(e) => validateField('password', e.target.value)}
+                      className={`w-full px-3 py-2 pr-10 border ${validationErrors.password ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                       placeholder="Choose a strong password"
                     />
+                    {validationErrors.password && (
+                      <p className="mt-1 text-sm text-red-600">{validationErrors.password}</p>
+                    )}
                     <button
                       type="button"
                       className="absolute inset-y-0 right-0 pr-3 flex items-center"
@@ -487,9 +593,13 @@ function Registration() {
                       required
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      onBlur={(e) => validateField('confirmPassword', e.target.value)}
+                      className={`w-full px-3 py-2 pr-10 border ${validationErrors.confirmPassword ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                       placeholder="Confirm your password"
                     />
+                    {validationErrors.confirmPassword && (
+                      <p className="mt-1 text-sm text-red-600">{validationErrors.confirmPassword}</p>
+                    )}
                     <button
                       type="button"
                       className="absolute inset-y-0 right-0 pr-3 flex items-center"
@@ -624,7 +734,7 @@ function Registration() {
                   Previous
                 </button>
               )}
-              
+
               {currentStep < 3 ? (
                 <button
                   type="button"

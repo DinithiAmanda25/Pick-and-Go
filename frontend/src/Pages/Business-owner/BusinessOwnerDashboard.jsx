@@ -153,7 +153,7 @@ function BusinessOwnerDashboard() {
     bookings: [
       {
         id: 1,
-        customer: 'Alice Johnson',
+        customer: 'Isuru Perera',
         vehicle: 'Toyota Camry',
         driver: 'John Smith',
         startDate: '2024-01-20',

@@ -11,3 +11,14 @@ export const HTTP = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+// Add a request interceptor for debugging
+HTTP.interceptors.request.use(
+  (config) => {
+    console.log('Request URL:', config.baseURL + config.url);
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);

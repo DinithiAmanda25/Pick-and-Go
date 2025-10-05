@@ -9,7 +9,9 @@ const { registerClient } = require('../controllers/ClientController');
 const { registerVehicleOwner } = require('../controllers/VehicleOwnerController');
 const { registerBusinessOwner } = require('../controllers/BusinessOwnerController');
 const { registerDriver } = require('../controllers/DriverController');
-const { upload } = require('../middleware/cloudinaryUpload');
+
+// Import file upload middleware
+const { uploadDocuments } = require('../middleware/upload');
 
 // Import specific route handlers
 const adminRoutes = require('./AdminRoute');
@@ -20,6 +22,62 @@ const vehicleOwnerRoutes = require('./VehicleOwnerRoute');
 const forgotPasswordRoutes = require('./ForgotPasswordRoute');
 
 // Legacy frontend compatibility routes (old pattern: /auth/profile/actor-type/...)
+// Special case for "all-drivers" to prevent ObjectId cast error
+router.get('/admin/all-drivers', (req, res) => {
+    const { getAllDrivers } = require('../controllers/DriverController');
+    getAllDrivers(req, res);
+});
+
+// Special case for "all-vehicles" to prevent ObjectId cast error
+router.get('/admin/all-vehicles', (req, res) => {
+    const { Vehicle } = require('../models/VehicleModel');
+    const { VehicleOwner } = require('../models/VehicleOwnerModel');
+
+    // Handle the request with an async function
+    (async () => {
+        try {
+            // Get all vehicles
+            const vehicles = await Vehicle.find();
+
+            // For each vehicle, populate owner details if available
+            const enhancedVehicles = await Promise.all(vehicles.map(async (vehicle) => {
+                const vehicleObj = vehicle.toObject();
+
+                try {
+                    // Add type field for compatibility with frontend
+                    vehicleObj.type = vehicleObj.vehicleType;
+
+                    if (vehicle.ownerId) {
+                        const owner = await VehicleOwner.findById(vehicle.ownerId).select('fullName email');
+                        if (owner) {
+                            vehicleObj.ownerDetails = owner;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error finding vehicle owner:', err);
+                }
+
+                return vehicleObj;
+            }));
+
+            res.status(200).json({
+                success: true,
+                vehicles: enhancedVehicles,
+                count: enhancedVehicles.length
+            });
+        } catch (err) {
+            console.error('Error fetching vehicles:', err);
+            // Return empty array as fallback
+            res.status(200).json({
+                success: true,
+                vehicles: [],
+                count: 0,
+                message: 'Error fetching vehicles data'
+            });
+        }
+    })();
+});
+
 router.use('/profile/admin', adminRoutes);
 router.use('/profile/business-owner', businessOwnerRoutes);
 router.use('/profile/driver', driverRoutes);
@@ -43,13 +101,9 @@ router.get('/profile/:role/:userId', (req, res) => {
 router.post('/register/client', registerClient);
 router.post('/register/vehicle-owner', registerVehicleOwner);
 router.post('/register/business-owner', registerBusinessOwner);
-router.post('/register-driver', upload.fields([
-    { name: 'license', maxCount: 1 },
-    { name: 'identityCard', maxCount: 1 },
-    { name: 'insurance', maxCount: 1 },
-    { name: 'registration', maxCount: 1 },
-    { name: 'medicalCertificate', maxCount: 1 }
-]), registerDriver);
+
+// Use uploadDocuments middleware for driver registration
+router.post('/register-driver', uploadDocuments, registerDriver);
 
 // Actor-specific routes (new pattern: /auth/actor-type/...)
 router.use('/admin', adminRoutes);

@@ -12,6 +12,8 @@ class BusinessOwnerService {
         }
     }
 
+    //localhost:3001/api/auth/login/business-owner
+
     // Get Business Owner Profile
     async getProfile(userId) {
         try {
@@ -121,7 +123,7 @@ class BusinessOwnerService {
             if (!userId) {
                 throw { success: false, message: 'User not authenticated' };
             }
-            
+
             const response = await HTTP.get(`/business-owner/${userId}/pending-drivers`);
             return response.data;
         } catch (error) {
@@ -137,7 +139,7 @@ class BusinessOwnerService {
             if (!userId) {
                 throw { success: false, message: 'User not authenticated' };
             }
-            
+
             const response = await HTTP.get(`/business-owner/${userId}/pending-vehicles`);
             return response.data;
         } catch (error) {
@@ -153,7 +155,7 @@ class BusinessOwnerService {
             if (!userId) {
                 throw { success: false, message: 'User not authenticated' };
             }
-            
+
             const response = await HTTP.get(`/business-owner/${userId}/pending-applications`);
             return response.data;
         } catch (error) {
@@ -169,7 +171,7 @@ class BusinessOwnerService {
             if (!userId) {
                 throw { success: false, message: 'User not authenticated' };
             }
-            
+
             const response = await HTTP.get(`/business-owner/${userId}/approval-statistics`);
             return response.data;
         } catch (error) {
@@ -225,7 +227,7 @@ class BusinessOwnerService {
                 throw { success: false, message: 'User not authenticated' };
             }
 
-            const payload = { 
+            const payload = {
                 status,
                 ...vehicleData // This can include dailyRate, weeklyRate, monthlyRate, approvalNotes, rejectionReason
             };

@@ -21,6 +21,9 @@ const {
 router.post('/register', registerVehicleOwner);
 router.post('/login', vehicleOwnerLogin);
 
+// Admin function to get all vehicle owners - must be placed before routes with parameters
+router.get('/all', getAllVehicleOwners);
+
 // Vehicle Owner Profile Routes (for legacy compatibility /auth/profile/vehicle-owner/...)
 router.get('/:userId', getVehicleOwnerProfile);
 router.put('/:userId', updateVehicleOwnerProfile);
@@ -45,8 +48,7 @@ router.get('/profile/:userId/reviews', getVehicleOwnerReviews);
 router.post('/profile/:userId/reviews', addVehicleOwnerReview);
 router.delete('/profile/:userId', deleteVehicleOwnerProfile);
 
-// Admin function to get all vehicle owners
-router.get('/all', getAllVehicleOwners);
+// This route is now placed above to avoid conflicts with /:userId
 
 // Debug route to check vehicle owner data
 router.get('/debug/:userId', async (req, res) => {

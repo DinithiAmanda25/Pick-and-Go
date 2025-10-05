@@ -399,9 +399,9 @@ const getAllClients = async (req, res) => {
 
         res.status(200).json({
             success: true,
+            count: clients.length,
             clients: clients
         });
-
     } catch (error) {
         console.error('Get all clients error:', error);
         res.status(500).json({
