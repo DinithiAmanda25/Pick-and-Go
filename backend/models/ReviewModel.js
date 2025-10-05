@@ -53,6 +53,8 @@ const reviewSchema = new mongoose.Schema({
     }
 });
 
+
+
 // Indexes for better query performance
 reviewSchema.index({ vehicleOwnerId: 1, createdAt: -1 });
 reviewSchema.index({ clientId: 1 });
