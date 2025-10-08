@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import businessOwnerService from '../../Services/business-owner-service.js';
 
 function PendingVehicleApprovals() {
@@ -9,10 +9,93 @@ function PendingVehicleApprovals() {
     const [selectedVehicleForReject, setSelectedVehicleForReject] = useState(null);
     const [rejectionReason, setRejectionReason] = useState('');
     const [processingAction, setProcessingAction] = useState(null);
+    const textareaRef = useRef(null);
+    const [cursorPosition, setCursorPosition] = useState(0);
+    
+    // Intelligent text handler that prevents RTL issues
+    const handleKeyPress = (e) => {
+        e.preventDefault(); // Prevent default browser behavior
+        
+        const key = e.key;
+        const currentText = rejectionReason;
+        const currentPos = cursorPosition;
+        
+        if (key === 'Backspace') {
+            if (currentPos > 0) {
+                const newText = currentText.slice(0, currentPos - 1) + currentText.slice(currentPos);
+                setRejectionReason(newText);
+                setCursorPosition(currentPos - 1);
+            }
+        } else if (key === 'Delete') {
+            if (currentPos < currentText.length) {
+                const newText = currentText.slice(0, currentPos) + currentText.slice(currentPos + 1);
+                setRejectionReason(newText);
+            }
+        } else if (key === 'ArrowLeft') {
+            setCursorPosition(Math.max(0, currentPos - 1));
+        } else if (key === 'ArrowRight') {
+            setCursorPosition(Math.min(currentText.length, currentPos + 1));
+        } else if (key === 'Home') {
+            setCursorPosition(0);
+        } else if (key === 'End') {
+            setCursorPosition(currentText.length);
+        } else if (key.length === 1 && currentText.length < 500) {
+            // Regular character input
+            const newText = currentText.slice(0, currentPos) + key + currentText.slice(currentPos);
+            setRejectionReason(newText);
+            setCursorPosition(currentPos + 1);
+        }
+    };
+    
+    // Handle paste events
+    const handlePaste = (e) => {
+        e.preventDefault();
+        const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+        const currentText = rejectionReason;
+        const currentPos = cursorPosition;
+        
+        if (pastedText && currentText.length + pastedText.length <= 500) {
+            const newText = currentText.slice(0, currentPos) + pastedText + currentText.slice(currentPos);
+            setRejectionReason(newText);
+            setCursorPosition(currentPos + pastedText.length);
+        }
+    };
+    
+    // Handle clicks to set cursor position
+    const handleClick = (e) => {
+        const textArea = e.target;
+        const pos = textArea.selectionStart;
+        setCursorPosition(pos);
+    };
 
     useEffect(() => {
         loadPendingVehicles();
     }, []);
+
+    // Auto-focus when reject modal opens
+    useEffect(() => {
+        if (showRejectModal && textareaRef.current) {
+            const focusElement = () => {
+                if (textareaRef.current) {
+                    textareaRef.current.focus();
+                    setCursorPosition(0);
+                }
+            };
+            
+            // Multiple focus attempts with different timings
+            setTimeout(focusElement, 10);
+            setTimeout(focusElement, 100);
+            setTimeout(focusElement, 200);
+            setTimeout(focusElement, 500);
+        }
+    }, [showRejectModal]);
+    
+    // Update cursor position in textarea
+    useEffect(() => {
+        if (textareaRef.current) {
+            textareaRef.current.setSelectionRange(cursorPosition, cursorPosition);
+        }
+    }, [cursorPosition, rejectionReason]);
 
     const loadPendingVehicles = async () => {
         try {
@@ -56,6 +139,26 @@ function PendingVehicleApprovals() {
         setSelectedVehicleForReject(vehicleId);
         setShowRejectModal(true);
         setRejectionReason('');
+        
+        // Multiple attempts to ensure focus works
+        setTimeout(() => {
+            if (textareaRef.current) {
+                textareaRef.current.focus();
+                textareaRef.current.click();
+            }
+        }, 50);
+        
+        setTimeout(() => {
+            if (textareaRef.current) {
+                textareaRef.current.focus();
+            }
+        }, 150);
+        
+        setTimeout(() => {
+            if (textareaRef.current) {
+                textareaRef.current.focus();
+            }
+        }, 300);
     };
 
     const submitRejection = async () => {
@@ -111,14 +214,47 @@ function PendingVehicleApprovals() {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Reason for Rejection *
                         </label>
-                        <textarea
-                            value={rejectionReason}
-                            onChange={(e) => setRejectionReason(e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
-                            rows="4"
-                            placeholder="Please provide a clear reason for rejecting this vehicle application..."
-                            maxLength="500"
-                        />
+                        <div className="relative">
+                            {/* Add CSS for blinking cursor */}
+                            <style dangerouslySetInnerHTML={{
+                                __html: `
+                                @keyframes blink {
+                                    0%, 50% { opacity: 1; }
+                                    51%, 100% { opacity: 0; }
+                                }
+                                .blink-cursor {
+                                    animation: blink 1s infinite;
+                                }
+                                `
+                            }} />
+                            
+                            <textarea
+                                ref={textareaRef}
+                                value={rejectionReason}
+                                readOnly
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
+                                rows="4"
+                                placeholder="Please provide a clear reason for rejecting this vehicle application..."
+                                autoFocus
+                                dir="ltr"
+                                lang="en"
+                                onKeyDown={handleKeyPress}
+                                onPaste={handlePaste}
+                                onClick={handleClick}
+                                onMouseEnter={(e) => e.target.focus()}
+                                onTouchStart={(e) => e.target.focus()}
+                                style={{
+                                    direction: 'ltr',
+                                    textAlign: 'left',
+                                    unicodeBidi: 'bidi-override',
+                                    writingMode: 'horizontal-tb',
+                                    fontFamily: 'Courier New, monospace',
+                                    fontSize: '14px',
+                                    lineHeight: '1.5',
+                                    caretColor: 'transparent' // Hide default cursor
+                                }}
+                            />
+                        </div>
                         <div className="text-right text-xs text-gray-500 mt-1">
                             {rejectionReason.length}/500 characters
                         </div>
@@ -172,6 +308,7 @@ function PendingVehicleApprovals() {
             </div>
         </div>
     );
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">

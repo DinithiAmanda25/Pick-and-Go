@@ -119,20 +119,10 @@ function BusinessOwnerProfile({ profile }) {
                             </svg>
                             Business Name
                         </label>
-                        {editMode ? (
-                            <input
-                                type="text"
-                                name="businessName"
-                                value={formData.businessName}
-                                onChange={handleInputChange}
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-400 transition-all duration-200"
-                                placeholder="Enter business name"
-                            />
-                        ) : (
-                            <div className="bg-gray-50 px-4 py-3 rounded-xl">
-                                <p className="text-gray-900 font-medium">{profile.businessName || 'Not provided'}</p>
-                            </div>
-                        )}
+                        <div className="bg-purple-50 px-4 py-3 rounded-xl border-2 border-purple-100">
+                            <p className="text-gray-900 font-medium">{profile.businessName || 'Not provided'}</p>
+                            <p className="text-xs text-purple-600 mt-1">Business name cannot be changed</p>
+                        </div>
                     </div>
 
                     {/* Owner Name */}
@@ -229,20 +219,10 @@ function BusinessOwnerProfile({ profile }) {
                             </svg>
                             Business Type
                         </label>
-                        {editMode ? (
-                            <input
-                                type="text"
-                                name="businessType"
-                                value={formData.businessType}
-                                onChange={handleInputChange}
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-400 transition-all duration-200"
-                                placeholder="e.g., Transportation, Rental Services"
-                            />
-                        ) : (
-                            <div className="bg-gray-50 px-4 py-3 rounded-xl">
-                                <p className="text-gray-900 font-medium">{profile.businessType || 'Not provided'}</p>
-                            </div>
-                        )}
+                        <div className="bg-purple-50 px-4 py-3 rounded-xl border-2 border-purple-100">
+                            <p className="text-gray-900 font-medium">{profile.businessType || 'Not provided'}</p>
+                            <p className="text-xs text-purple-600 mt-1">Business type cannot be changed</p>
+                        </div>
                     </div>
 
                     {/* Business License */}
