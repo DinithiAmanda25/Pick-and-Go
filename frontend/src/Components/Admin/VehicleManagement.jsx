@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import adminService from '../../Services/admin-service';
 import { motion } from 'framer-motion';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { toast } from 'react-toastify';
 
 const VehicleManagement = () => {
@@ -147,81 +145,6 @@ const VehicleManagement = () => {
 
     const handleRefresh = () => {
         fetchVehicles();
-    };
-
-    // Generate CSV Report
-    const generateCSVReport = () => {
-        const tableData = filteredVehicles.map(vehicle => [
-            vehicle.licensePlate,
-            vehicle.model,
-            vehicle.type,
-            vehicle.ownerName,
-            vehicle.status,
-            vehicle.year,
-            vehicle.color,
-            vehicle.createdAt
-        ]);
-
-        const tableHeader = ['License Plate', 'Model', 'Type', 'Owner', 'Status', 'Year', 'Color', 'Registration Date'];
-
-        const csvContent = [
-            tableHeader.join(','),
-            ...tableData.map(row => row.join(','))
-        ].join('\\n');
-
-        const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csvContent);
-        const link = document.createElement('a');
-        link.setAttribute('href', encodedUri);
-        link.setAttribute('download', `vehicle_report_${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
-
-    // Generate PDF Report
-    const generatePDFReport = () => {
-        const doc = new jsPDF();
-        const tableColumns = [
-            { header: 'License Plate', dataKey: 'licensePlate' },
-            { header: 'Model', dataKey: 'model' },
-            { header: 'Type', dataKey: 'type' },
-            { header: 'Owner', dataKey: 'owner' },
-            { header: 'Status', dataKey: 'status' },
-            { header: 'Year', dataKey: 'year' }
-        ];
-
-        const tableData = filteredVehicles.map(vehicle => ({
-            licensePlate: vehicle.licensePlate,
-            model: vehicle.model,
-            type: vehicle.type,
-            owner: vehicle.ownerName,
-            status: vehicle.status,
-            year: vehicle.year
-        }));
-
-        // Add title
-        const title = `Vehicle Management Report - ${new Date().toLocaleDateString()}`;
-        doc.setFontSize(18);
-        doc.text(title, 14, 22);
-
-        // Add stats
-        const statText = `Total Vehicles: ${stats.total} | Approved: ${stats.approved} | Pending: ${stats.pending} | Rejected: ${stats.rejected}`;
-        doc.setFontSize(12);
-        const yPos = 35;
-        doc.text(statText, 14, yPos);
-
-        // Add table
-        autoTable(doc, {
-            startY: yPos + 10,
-            columns: tableColumns.map(col => ({ header: col.header, dataKey: col.dataKey })),
-            body: tableData,
-            theme: 'striped',
-            headStyles: { fillColor: [200, 0, 0] }, // Red header
-            margin: { top: 45 }
-        });
-
-        // Save PDF
-        doc.save(`vehicle_report_${new Date().toISOString().split('T')[0]}.pdf`);
     };
 
     // Vehicle Details Modal Component
@@ -371,24 +294,6 @@ const VehicleManagement = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
                             Refresh
-                        </button>
-                        <button
-                            onClick={generatePDFReport}
-                            className="flex items-center px-3 py-1 text-sm bg-red-600 text-white hover:bg-red-700 rounded transition-colors"
-                        >
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                            </svg>
-                            PDF Report
-                        </button>
-                        <button
-                            onClick={generateCSVReport}
-                            className="flex items-center px-3 py-1 text-sm bg-green-600 text-white hover:bg-green-700 rounded transition-colors"
-                        >
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                            </svg>
-                            CSV Report
                         </button>
                     </div>
                 </div>

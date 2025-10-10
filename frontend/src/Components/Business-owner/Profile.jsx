@@ -8,22 +8,71 @@ function BusinessOwnerProfile({ profile }) {
     const [formData, setFormData] = useState(profile)
     const [loading, setLoading] = useState(false)
     const [message, setMessage] = useState('')
+    const [validationErrors, setValidationErrors] = useState({})
     const { logout, getCurrentUserId, getSessionData, refreshUser } = useAuth()
     const navigate = useNavigate()
 
     const userId = getCurrentUserId()
     const sessionData = getSessionData()
 
+    // Validation function for contact number
+    const validateContactNumber = (contactNumber) => {
+        if (!contactNumber) return null
+        
+        // Remove all spaces, hyphens, and parentheses for validation
+        const cleanNumber = contactNumber.replace(/[\s\-\(\)]/g, '')
+        
+        // Check if it contains exactly 10 digits (no + allowed)
+        const phoneRegex = /^[0-9]{10}$/
+        
+        if (!phoneRegex.test(cleanNumber)) {
+            return 'Contact number must be exactly 10 digits'
+        }
+        
+        return null
+    }
+
     const handleInputChange = (e) => {
+        const { name, value } = e.target
+        
+        // Clear previous validation error for this field
+        if (validationErrors[name]) {
+            setValidationErrors({
+                ...validationErrors,
+                [name]: null
+            })
+        }
+        
+        // Special handling for contact number validation
+        if (name === 'contactNumber') {
+            const error = validateContactNumber(value)
+            if (error) {
+                setValidationErrors({
+                    ...validationErrors,
+                    contactNumber: error
+                })
+            }
+        }
+        
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value
+            [name]: value
         })
     }
 
     const handleSave = async () => {
         setLoading(true)
         setMessage('')
+        setValidationErrors({})
+
+        // Validate contact number before saving
+        const contactError = validateContactNumber(formData.contactNumber)
+        if (contactError) {
+            setValidationErrors({ contactNumber: contactError })
+            setMessage('Please fix validation errors before saving')
+            setLoading(false)
+            return
+        }
 
         try {
             console.log('Saving profile with userId:', userId)
@@ -196,17 +245,35 @@ function BusinessOwnerProfile({ profile }) {
                             Contact Number
                         </label>
                         {editMode ? (
-                            <input
-                                type="text"
-                                name="contactNumber"
-                                value={formData.contactNumber}
-                                onChange={handleInputChange}
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-400 transition-all duration-200"
-                                placeholder="Enter contact number"
-                            />
+                            <div>
+                                <input
+                                    type="tel"
+                                    name="contactNumber"
+                                    value={formData.contactNumber}
+                                    onChange={handleInputChange}
+                                    className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 transition-all duration-200 ${
+                                        validationErrors.contactNumber 
+                                            ? 'border-red-300 focus:ring-red-100 focus:border-red-400' 
+                                            : 'border-gray-200 focus:ring-purple-100 focus:border-purple-400'
+                                    }`}
+                                    placeholder="e.g., 0771234567"
+                                    maxLength="12"
+                                />
+                                {validationErrors.contactNumber && (
+                                    <p className="mt-1 text-sm text-red-600 flex items-center">
+                                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {validationErrors.contactNumber}
+                                    </p>
+                                )}
+                                <p className="mt-1 text-xs text-gray-500">
+                                    Enter exactly 10 digits (spaces and hyphens allowed for formatting)
+                                </p>
+                            </div>
                         ) : (
                             <div className="bg-gray-50 px-4 py-3 rounded-xl">
-                                <p className="text-gray-900 font-medium">{profile.contactNumber}</p>
+                                <p className="text-gray-900 font-medium">{profile.contactNumber || 'Not provided'}</p>
                             </div>
                         )}
                     </div>

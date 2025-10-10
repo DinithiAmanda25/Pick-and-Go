@@ -17,21 +17,21 @@ function DriverSidebar() {
 
   const menuItems = [
     {
-      name: 'Profile',
-      path: '/driver-dashboard?tab=profile',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
-      )
-    },
-    {
       name: 'Overview',
       path: '/driver-dashboard?tab=overview',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v3H8V5z" />
+        </svg>
+      )
+    },
+    {
+      name: 'Profile',
+      path: '/driver-dashboard?tab=profile',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
         </svg>
       )
     },
@@ -60,15 +60,6 @@ function DriverSidebar() {
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
-    },
-    {
-      name: 'Availability',
-      path: '/driver-dashboard?tab=availability',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       )
     },
@@ -114,10 +105,6 @@ function DriverSidebar() {
             isActive = currentTab === 'history'
           } else if (item.path === '/driver-dashboard?tab=earnings') {
             isActive = currentTab === 'earnings'
-          } else if (item.path === '/driver-dashboard?tab=availability') {
-            isActive = currentTab === 'availability'
-          } else if (item.path === '/driver-dashboard?tab=vehicle') {
-            isActive = currentTab === 'vehicle'
           } else if (item.path === '/driver-dashboard?tab=profile') {
             isActive = currentTab === 'profile'
           } else if (item.path === '/driver-dashboard?tab=settings') {

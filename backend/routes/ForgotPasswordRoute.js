@@ -2,9 +2,11 @@ const express = require('express');
 const router = express.Router();
 const {
     sendPasswordResetOTP,
+    sendPasswordResetOTPSMS,
     verifyPasswordResetOTP,
     resetPassword,
-    resendPasswordResetOTP
+    resendPasswordResetOTP,
+    resendPasswordResetOTPSMS
 } = require('../controllers/ForgotPasswordController');
 
 // @route   POST /api/auth/forgot-password/send-otp
@@ -26,5 +28,15 @@ router.post('/reset', resetPassword);
 // @desc    Resend OTP for password reset
 // @access  Public
 router.post('/resend-otp', resendPasswordResetOTP);
+
+// @route   POST /api/auth/forgot-password/send-otp-sms
+// @desc    Send OTP via SMS for password reset
+// @access  Public
+router.post('/send-otp-sms', sendPasswordResetOTPSMS);
+
+// @route   POST /api/auth/forgot-password/resend-otp-sms
+// @desc    Resend OTP via SMS for password reset
+// @access  Public
+router.post('/resend-otp-sms', resendPasswordResetOTPSMS);
 
 module.exports = router;

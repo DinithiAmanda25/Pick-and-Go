@@ -6,7 +6,9 @@ import forgotPasswordService from '../../Services/forgot-password-service.js'
 function ForgotPassword() {
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({
-    identifier: '', // Email only (removed mobile support)
+    method: 'email', // 'email' or 'sms'
+    email: '',
+    phone: '',
     otp: '',
     newPassword: '',
     confirmPassword: '',
@@ -34,9 +36,13 @@ function ForgotPassword() {
     return () => clearInterval(interval)
   }, [otpTimer])
 
-  const validateInput = (value) => {
-    // Only validate email now (removed mobile support)
-    return forgotPasswordService.validateEmail(value)
+  const validateInput = (value, method) => {
+    if (method === 'email') {
+      return forgotPasswordService.validateEmail(value)
+    } else if (method === 'sms') {
+      return forgotPasswordService.validatePhone(value)
+    }
+    return false
   }
 
   const handleInputChange = (e) => {
@@ -50,10 +56,12 @@ function ForgotPassword() {
     if (validationError) setValidationError('')
     if (successMessage) setSuccessMessage('')
 
-    // Real-time validation for email field
-    if (name === 'identifier' && value.trim()) {
-      if (!validateInput(value)) {
-        setValidationError('Please enter a valid email address')
+    // Real-time validation for email/phone field
+    if ((name === 'email' || name === 'phone') && value.trim()) {
+      const method = name === 'email' ? 'email' : 'sms'
+      if (!validateInput(value, method)) {
+        const fieldName = method === 'email' ? 'email address' : 'phone number'
+        setValidationError(`Please enter a valid ${fieldName}`)
       } else {
         setValidationError('')
       }
@@ -68,14 +76,17 @@ function ForgotPassword() {
   const handleSendOTP = async (e) => {
     e.preventDefault()
     
-    if (!formData.identifier) {
-      setValidationError('Please enter your email address')
+    const currentValue = formData.method === 'email' ? formData.email : formData.phone
+    const fieldName = formData.method === 'email' ? 'email address' : 'phone number'
+    
+    if (!currentValue) {
+      setValidationError(`Please enter your ${fieldName}`)
       return
     }
 
-    // Validate email format
-    if (!validateInput(formData.identifier)) {
-      setValidationError('Please enter a valid email address')
+    // Validate input format
+    if (!validateInput(currentValue, formData.method)) {
+      setValidationError(`Please enter a valid ${fieldName}`)
       return
     }
 
@@ -83,7 +94,12 @@ function ForgotPassword() {
     setValidationError('')
 
     try {
-      const result = await forgotPasswordService.sendOTP(formData.identifier)
+      let result
+      if (formData.method === 'email') {
+        result = await forgotPasswordService.sendOTP(formData.email)
+      } else {
+        result = await forgotPasswordService.sendOTPSMS(formData.phone)
+      }
       
       if (result.success) {
         setFormData(prev => ({ ...prev, otpKey: result.data.otpKey }))
@@ -118,7 +134,8 @@ function ForgotPassword() {
 
     try {
       const result = await forgotPasswordService.verifyOTP(
-        formData.identifier, 
+        formData.method === 'email' ? formData.email : null,
+        formData.method === 'sms' ? formData.phone : null,
         formData.otp, 
         formData.otpKey
       )
@@ -161,7 +178,8 @@ function ForgotPassword() {
 
     try {
       const result = await forgotPasswordService.resetPassword(
-        formData.identifier,
+        formData.method === 'email' ? formData.email : null,
+        formData.method === 'sms' ? formData.phone : null,
         formData.newPassword,
         formData.otpKey
       )
@@ -192,7 +210,12 @@ function ForgotPassword() {
     setValidationError('')
 
     try {
-      const result = await forgotPasswordService.resendOTP(formData.identifier, formData.otpKey)
+      let result
+      if (formData.method === 'email') {
+        result = await forgotPasswordService.resendOTP(formData.email, formData.otpKey)
+      } else {
+        result = await forgotPasswordService.resendOTPSMS(formData.phone, formData.otpKey)
+      }
       
       if (result.success) {
         setOtpTimer(600) // Reset timer to 10 minutes
@@ -387,7 +410,7 @@ function ForgotPassword() {
 
               <button
                 type="submit"
-                disabled={isLoading || validationError || !formData.identifier.trim()}
+                disabled={isLoading || validationError || (formData.method === 'email' ? !formData.email.trim() : !formData.phone.trim())}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
                 {isLoading ? (

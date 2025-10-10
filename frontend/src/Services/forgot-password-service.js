@@ -1,10 +1,10 @@
 // Forgot Password API Service
 class ForgotPasswordService {
     constructor() {
-        this.baseURL = 'http://localhost:3001/api/auth/forgot-password';
+        this.baseURL = 'http://localhost:9000/api/auth/forgot-password';
     }
 
-    // Send OTP for password reset
+    // Send OTP for password reset via email
     async sendOTP(email) {
         try {
             const response = await fetch(`${this.baseURL}/send-otp`, {
@@ -36,15 +36,51 @@ class ForgotPasswordService {
         }
     }
 
-    // Verify OTP
-    async verifyOTP(email, otp, otpKey) {
+    // Send OTP for password reset via SMS
+    async sendOTPSMS(phone) {
         try {
+            const response = await fetch(`${this.baseURL}/send-otp-sms`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ phone })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to send OTP');
+            }
+
+            return {
+                success: true,
+                data: data.data,
+                message: data.message
+            };
+
+        } catch (error) {
+            console.error('Send SMS OTP error:', error);
+            return {
+                success: false,
+                message: error.message || 'Failed to send OTP. Please try again.'
+            };
+        }
+    }
+
+    // Verify OTP (for both email and SMS)
+    async verifyOTP(email, phone, otp, otpKey) {
+        try {
+            const requestBody = { otp, otpKey };
+            if (email) requestBody.email = email;
+            if (phone) requestBody.phone = phone;
+
             const response = await fetch(`${this.baseURL}/verify-otp`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ email, otp, otpKey })
+                body: JSON.stringify(requestBody)
             });
 
             const data = await response.json();
@@ -68,15 +104,19 @@ class ForgotPasswordService {
         }
     }
 
-    // Reset password
-    async resetPassword(email, newPassword, otpKey) {
+    // Reset password (for both email and SMS)
+    async resetPassword(email, phone, newPassword, otpKey) {
         try {
+            const requestBody = { newPassword, otpKey };
+            if (email) requestBody.email = email;
+            if (phone) requestBody.phone = phone;
+
             const response = await fetch(`${this.baseURL}/reset`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ email, newPassword, otpKey })
+                body: JSON.stringify(requestBody)
             });
 
             const data = await response.json();
@@ -131,10 +171,55 @@ class ForgotPasswordService {
         }
     }
 
+    // Resend OTP via SMS
+    async resendOTPSMS(phone, otpKey) {
+        try {
+            const response = await fetch(`${this.baseURL}/resend-otp-sms`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ phone, otpKey })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to resend OTP');
+            }
+
+            return {
+                success: true,
+                data: data.data,
+                message: data.message
+            };
+
+        } catch (error) {
+            console.error('Resend SMS OTP error:', error);
+            return {
+                success: false,
+                message: error.message || 'Failed to resend OTP. Please try again.'
+            };
+        }
+    }
+
     // Validate email format
     validateEmail(email) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
+    }
+
+    // Validate phone number format
+    validatePhone(phone) {
+        // Remove all non-digit characters for validation
+        const cleaned = phone.replace(/[^0-9]/g, '');
+        
+        // Check for exactly 10 digits (Sri Lankan format)
+        if (cleaned.length === 10) {
+            return /^[0-9]{10}$/.test(cleaned);
+        }
+        
+        return false;
     }
 
     // Validate password strength

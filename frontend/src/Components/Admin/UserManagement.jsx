@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import adminService from '../../Services/admin-service';
 import { motion } from 'framer-motion';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 
 const UserManagement = () => {
     // State for all user types
@@ -469,173 +467,6 @@ const UserManagement = () => {
 
     // Render user type badge
 
-    // Generate and download reports
-    const generateCSVReport = () => {
-        try {
-            // Define CSV headers
-            const headers = ['Name', 'Email', 'Phone', 'User Type', 'Status', 'Joined Date'];
-
-            // Create CSV content
-            let csvContent = headers.join(',') + '\n';
-
-            // Add user data rows
-            filteredUsers.forEach(user => {
-                const rowData = [
-                    `"${(user.name || '').replace(/"/g, '""')}"`,  // Handle quotes in names and null values
-                    `"${(user.email || '').replace(/"/g, '""')}"`,
-                    `"${(user.phone || '').replace(/"/g, '""')}"`,
-                    `"${getUserTypeName(user.type)}"`,
-                    `"${user.status ? user.status.charAt(0).toUpperCase() + user.status.slice(1) : 'Unknown'}"`,
-                    `"${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}"`
-                ];
-
-                csvContent += rowData.join(',') + '\n';
-            });
-
-            // Create a blob and download the file
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-
-            // Set filename with timestamp and user type
-            const timestamp = new Date().toISOString().split('T')[0];
-            const userTypeForFileName = userType === 'all' ? 'all-users' : userType;
-            const fileName = `pick-and-go_${userTypeForFileName}_${timestamp}.csv`;
-
-            link.href = url;
-            link.setAttribute('download', fileName);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            console.log('CSV report generated successfully');
-        } catch (error) {
-            console.error('Error generating CSV report:', error);
-            alert('Failed to generate CSV report. Please try again.');
-        }
-    };
-
-    const generatePDFReport = () => {
-        try {
-            // Create PDF document
-            const doc = new jsPDF();
-
-            // Add title
-            const userTypeTitle = {
-                'all': 'All Users',
-                'drivers': 'Drivers',
-                'clients': 'Clients',
-                'vehicleOwners': 'Vehicle Owners',
-                'businessOwners': 'Business Owners'
-            }[userType] || 'Users';
-
-            const title = `Pick-and-Go ${userTypeTitle} Report`;
-
-            // Add logo and title
-            doc.setFontSize(18);
-            doc.setTextColor(220, 38, 38); // Red color
-            doc.text(title, 105, 15, { align: 'center' });
-
-            // Add timestamp
-            doc.setFontSize(10);
-            doc.setTextColor(100, 100, 100); // Gray color
-            doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, 22, { align: 'center' });
-
-            // Add statistics section
-            doc.setFontSize(12);
-            doc.setTextColor(0, 0, 0);
-            doc.text('User Statistics:', 14, 30);
-
-            doc.setFontSize(10);
-            let yPos = 35;
-
-            doc.text(`Total Users: ${stats.total || 0}`, 20, yPos);
-            yPos += 5;
-
-            if (userType === 'all') {
-                doc.text(`Drivers: ${stats.drivers || 0}`, 20, yPos);
-                yPos += 5;
-                doc.text(`Clients: ${stats.clients || 0}`, 20, yPos);
-                yPos += 5;
-                doc.text(`Vehicle Owners: ${stats.vehicleOwners || 0}`, 20, yPos);
-                yPos += 5;
-                doc.text(`Business Owners: ${stats.businessOwners || 0}`, 20, yPos);
-                yPos += 5;
-            }
-
-            doc.text(`Active: ${stats.active || 0}`, 20, yPos);
-            yPos += 5;
-            doc.text(`Pending: ${stats.pending || 0}`, 20, yPos);
-            yPos += 5;
-            doc.text(`Inactive: ${stats.inactive || 0}`, 20, yPos);
-
-            // Add user table
-            const tableColumns = [
-                { header: 'Name', dataKey: 'name' },
-                { header: 'Email', dataKey: 'email' },
-                { header: 'Phone', dataKey: 'phone' },
-                userType === 'all' ? { header: 'Type', dataKey: 'type' } : null,
-                { header: 'Status', dataKey: 'status' },
-                { header: 'Joined', dataKey: 'joined' }
-            ].filter(Boolean); // Remove null entries
-
-            const tableData = filteredUsers.map(user => {
-                const row = {
-                    name: user.name || 'N/A',
-                    email: user.email || 'N/A',
-                    phone: user.phone || 'N/A',
-                    status: user.status ? (user.status.charAt(0).toUpperCase() + user.status.slice(1)) : 'Unknown',
-                    joined: user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'
-                };
-
-                if (userType === 'all') {
-                    row.type = getUserTypeName(user.type);
-                }
-
-                return row;
-            });
-
-            // Generate the table
-            autoTable(doc, {
-                startY: yPos + 10,
-                columns: tableColumns.map(col => ({
-                    header: col.header,
-                    dataKey: col.dataKey
-                })),
-                body: tableData,
-                theme: 'striped',
-                headStyles: {
-                    fillColor: [220, 38, 38],
-                    textColor: [255, 255, 255],
-                    fontStyle: 'bold'
-                },
-                margin: { top: 30 },
-                didDrawPage: (data) => {
-                    // Add page number at the bottom
-                    const pageCount = doc.internal.getNumberOfPages();
-                    doc.setFontSize(8);
-                    doc.text(
-                        `Page ${doc.internal.getCurrentPageInfo().pageNumber} of ${pageCount}`,
-                        data.settings.margin.left,
-                        doc.internal.pageSize.height - 10
-                    );
-                }
-            });
-
-            // Set filename with timestamp and user type
-            const timestamp = new Date().toISOString().split('T')[0];
-            const userTypeForFileName = userType === 'all' ? 'all-users' : userType;
-            const fileName = `pick-and-go_${userTypeForFileName}_${timestamp}.pdf`;
-
-            // Save the PDF
-            doc.save(fileName);
-            console.log('PDF report generated successfully');
-        } catch (error) {
-            console.error('Error generating PDF report:', error);
-            alert('Failed to generate PDF report. Please try again.');
-        }
-    };
-
     // Helper function to get user type name
     const getUserTypeName = (type) => {
         return {
@@ -962,31 +793,7 @@ const UserManagement = () => {
                             />
                         </div>
 
-                        {/* Report generation buttons */}
-                        <div className="flex items-center space-x-2">
-                            <button
-                                onClick={generateCSVReport}
-                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
-                                disabled={loading || filteredUsers.length === 0}
-                                title="Export data to CSV file"
-                            >
-                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                </svg>
-                                CSV
-                            </button>
-                            <button
-                                onClick={generatePDFReport}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-                                disabled={loading || filteredUsers.length === 0}
-                                title="Export data to PDF file"
-                            >
-                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                </svg>
-                                PDF
-                            </button>
-                        </div>
+
                     </div>
                 </div>
             </div>

@@ -6,7 +6,7 @@ function DriverOverview({ driver, stats }) {
             {/* Welcome Section */}
             <div className="bg-white rounded-lg shadow-sm p-6">
                 <h2 className="text-2xl font-bold text-orange-900 mb-2">
-                    Welcome back, {driver?.name || 'Driver'}!
+                    Welcome back, {driver?.fullName || 'Driver'}!
                 </h2>
                 <p className="text-gray-600">Here's your driving activity overview</p>
             </div>
@@ -70,57 +70,7 @@ function DriverOverview({ driver, stats }) {
                 </div>
             </div>
 
-            {/* Recent Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Trips</h3>
-                    <div className="space-y-4">
-                        {/* Mock recent trips - we'll use static data for now */}
-                        {[
-                            { id: 1, pickup: 'Downtown Mall', dropoff: 'Airport', fare: 28.50, time: '2 hours ago' },
-                            { id: 2, pickup: 'Hotel Plaza', dropoff: 'City Center', fare: 18.75, time: '4 hours ago' },
-                            { id: 3, pickup: 'Central Station', dropoff: 'Business District', fare: 22.50, time: '6 hours ago' }
-                        ].map((trip) => (
-                            <div key={trip.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
-                                <div>
-                                    <p className="font-medium text-gray-900">{trip.pickup} → {trip.dropoff}</p>
-                                    <p className="text-sm text-gray-600">{trip.time}</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="font-medium text-gray-900">${trip.fare}</p>
-                                    <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                                        Completed
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
 
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Vehicle Status</h3>
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <span className="text-gray-600">Vehicle</span>
-                            <span className="font-medium">Toyota Camry</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-gray-600">License Plate</span>
-                            <span className="font-medium">ABC-1234</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-gray-600">Status</span>
-                            <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                                Active
-                            </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-gray-600">Last Maintenance</span>
-                            <span className="font-medium">Nov 15, 2024</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     )
 }

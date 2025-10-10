@@ -4,6 +4,7 @@ const { VehicleOwner } = require('../models/VehicleOwnerModel');
 const { BusinessOwner } = require('../models/BusinessOwnerModel');
 const { Admin } = require('../models/AdminModel');
 const emailService = require('../services/emailService');
+const smsService = require('../services/smsService');
 const crypto = require('crypto');
 
 // Store OTPs temporarily (in production, use Redis or database)
@@ -22,6 +23,46 @@ const findUserByEmail = async (email) => {
     for (const { model, role } of models) {
         try {
             const user = await model.findOne({ email, isActive: true });
+            if (user) {
+                return { user, role, model };
+            }
+        } catch (error) {
+            console.error(`Error searching in ${role} model:`, error);
+        }
+    }
+    return null;
+};
+
+// Helper function to find user by phone number across all models
+const findUserByPhone = async (phone) => {
+    const models = [
+        { model: Client, role: 'client' },
+        { model: Driver, role: 'driver' },
+        { model: VehicleOwner, role: 'vehicle_owner' },
+        { model: BusinessOwner, role: 'business_owner' },
+        { model: Admin, role: 'admin' }
+    ];
+
+    // Normalize phone number for search
+    const normalizedPhone = phone.replace(/[^0-9]/g, '');
+    
+    for (const { model, role } of models) {
+        try {
+            // Search for phone in various formats
+            const user = await model.findOne({
+                $and: [
+                    { isActive: true },
+                    {
+                        $or: [
+                            { phone: phone },
+                            { phone: normalizedPhone },
+                            { phone: `0${normalizedPhone.substring(2)}` }, // Convert +94 to 0
+                            { phone: `+94${normalizedPhone.substring(1)}` }, // Convert 0 to +94
+                            { phone: new RegExp(normalizedPhone.replace(/^94/, '0'), 'i') }
+                        ]
+                    }
+                ]
+            });
             if (user) {
                 return { user, role, model };
             }
@@ -81,7 +122,8 @@ const sendPasswordResetOTP = async (req, res) => {
             userId: user._id,
             role,
             expiry: otpExpiry,
-            verified: false
+            verified: false,
+            method: 'email'
         });
 
         // Send OTP email
@@ -121,15 +163,99 @@ const sendPasswordResetOTP = async (req, res) => {
     }
 };
 
-// Verify OTP
-const verifyPasswordResetOTP = async (req, res) => {
+// Send OTP via SMS for password reset
+const sendPasswordResetOTPSMS = async (req, res) => {
     try {
-        const { email, otp, otpKey } = req.body;
+        const { phone } = req.body;
 
-        if (!email || !otp || !otpKey) {
+        if (!phone) {
             return res.status(400).json({
                 success: false,
-                message: 'Email, OTP, and OTP key are required'
+                message: 'Phone number is required'
+            });
+        }
+
+        // Validate phone number format
+        if (!smsService.validatePhoneNumber(phone)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please enter a valid phone number'
+            });
+        }
+
+        // Find user by phone number
+        const userResult = await findUserByPhone(phone);
+        if (!userResult) {
+            return res.status(404).json({
+                success: false,
+                message: 'No account found with this phone number'
+            });
+        }
+
+        const { user, role } = userResult;
+
+        // Generate OTP
+        const otp = generateOTP();
+        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+
+        // Store OTP temporarily
+        const otpKey = `${phone}_${Date.now()}`;
+        otpStore.set(otpKey, {
+            otp,
+            phone,
+            userId: user._id,
+            role,
+            expiry: otpExpiry,
+            verified: false,
+            method: 'sms'
+        });
+
+        // Send OTP SMS
+        const smsResult = await smsService.sendOTPSMS(phone, otp, user.fullName || user.name);
+
+        if (smsResult.success) {
+            // Clean up expired OTPs
+            const now = new Date();
+            for (const [key, value] of otpStore.entries()) {
+                if (value.expiry < now) {
+                    otpStore.delete(key);
+                }
+            }
+
+            res.status(200).json({
+                success: true,
+                message: 'OTP sent to your phone number',
+                data: {
+                    phone,
+                    otpKey,
+                    expiresIn: 10 // minutes
+                }
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                message: smsResult.message || 'Failed to send OTP. Please try again.'
+            });
+        }
+
+    } catch (error) {
+        console.error('Send SMS OTP error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error. Please try again later.'
+        });
+    }
+};
+
+// Verify OTP (for both email and SMS)
+const verifyPasswordResetOTP = async (req, res) => {
+    try {
+        const { email, phone, otp, otpKey } = req.body;
+
+        if ((!email && !phone) || !otp || !otpKey) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email or phone, OTP, and OTP key are required'
             });
         }
 
@@ -151,11 +277,15 @@ const verifyPasswordResetOTP = async (req, res) => {
             });
         }
 
-        // Verify OTP
-        if (otpRecord.otp !== otp || otpRecord.email !== email) {
+        // Verify OTP and contact method
+        const isValidOTP = otpRecord.otp === otp;
+        const isValidContact = (otpRecord.method === 'email' && otpRecord.email === email) ||
+                              (otpRecord.method === 'sms' && otpRecord.phone === phone);
+        
+        if (!isValidOTP || !isValidContact) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid OTP'
+                message: 'Invalid OTP or contact information'
             });
         }
 
@@ -184,12 +314,12 @@ const verifyPasswordResetOTP = async (req, res) => {
 // Reset password
 const resetPassword = async (req, res) => {
     try {
-        const { email, newPassword, otpKey } = req.body;
+        const { email, phone, newPassword, otpKey } = req.body;
 
-        if (!email || !newPassword || !otpKey) {
+        if ((!email && !phone) || !newPassword || !otpKey) {
             return res.status(400).json({
                 success: false,
-                message: 'Email, new password, and OTP key are required'
+                message: 'Email or phone, new password, and OTP key are required'
             });
         }
 
@@ -228,7 +358,10 @@ const resetPassword = async (req, res) => {
         }
 
         // Find user and update password
-        const userResult = await findUserByEmail(email);
+        const userResult = otpRecord.method === 'email' 
+            ? await findUserByEmail(email) 
+            : await findUserByPhone(phone);
+            
         if (!userResult) {
             return res.status(404).json({
                 success: false,
@@ -247,8 +380,12 @@ const resetPassword = async (req, res) => {
         // Clean up OTP record
         otpStore.delete(otpKey);
 
-        // Send confirmation email
-        await emailService.sendPasswordResetConfirmation(email, user.fullName || user.name);
+        // Send confirmation based on method used
+        if (otpRecord.method === 'email') {
+            await emailService.sendPasswordResetConfirmation(email, user.fullName || user.name);
+        } else if (otpRecord.method === 'sms') {
+            await smsService.sendPasswordResetConfirmationSMS(phone, user.fullName || user.name);
+        }
 
         res.status(200).json({
             success: true,
@@ -335,6 +472,85 @@ const resendPasswordResetOTP = async (req, res) => {
     }
 };
 
+// Resend OTP via SMS
+const resendPasswordResetOTPSMS = async (req, res) => {
+    try {
+        const { phone, otpKey } = req.body;
+
+        if (!phone || !otpKey) {
+            return res.status(400).json({
+                success: false,
+                message: 'Phone number and OTP key are required'
+            });
+        }
+
+        // Find existing OTP record
+        const otpRecord = otpStore.get(otpKey);
+        if (!otpRecord || otpRecord.phone !== phone) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid OTP session'
+            });
+        }
+
+        // Check if we can resend (not too soon)
+        const timeSinceCreated = Date.now() - parseInt(otpKey.split('_')[1]);
+        if (timeSinceCreated < 60000) { // 1 minute cooldown
+            return res.status(429).json({
+                success: false,
+                message: 'Please wait at least 1 minute before requesting a new OTP'
+            });
+        }
+
+        // Find user by phone
+        const userResult = await findUserByPhone(phone);
+        if (!userResult) {
+            return res.status(404).json({
+                success: false,
+                message: 'No account found with this phone number'
+            });
+        }
+
+        const { user } = userResult;
+
+        // Generate new OTP
+        const newOtp = generateOTP();
+        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+        // Update existing record with new OTP
+        otpRecord.otp = newOtp;
+        otpRecord.expiry = otpExpiry;
+        otpStore.set(otpKey, otpRecord);
+
+        // Send new OTP SMS
+        const smsResult = await smsService.sendOTPSMS(phone, newOtp, user.fullName || user.name);
+
+        if (smsResult.success) {
+            res.status(200).json({
+                success: true,
+                message: 'New OTP sent to your phone number',
+                data: {
+                    phone,
+                    otpKey,
+                    expiresIn: 10 // minutes
+                }
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                message: smsResult.message || 'Failed to send OTP. Please try again.'
+            });
+        }
+
+    } catch (error) {
+        console.error('Resend SMS OTP error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error. Please try again later.'
+        });
+    }
+};
+
 // Clean up expired OTPs (should be called periodically)
 const cleanupExpiredOTPs = () => {
     const now = new Date();
@@ -357,8 +573,10 @@ setInterval(cleanupExpiredOTPs, 15 * 60 * 1000);
 
 module.exports = {
     sendPasswordResetOTP,
+    sendPasswordResetOTPSMS,
     verifyPasswordResetOTP,
     resetPassword,
     resendPasswordResetOTP,
+    resendPasswordResetOTPSMS,
     cleanupExpiredOTPs
 };

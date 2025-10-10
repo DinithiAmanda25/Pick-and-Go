@@ -1,8 +1,10 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../contexts/AuthContext'
 import logo from '../../Assets/2.png'
 
 function ClientHeader() {
+  const { user } = useAuth()
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4 w-full">
       <div className="flex justify-between items-center max-w-full">
@@ -38,13 +40,14 @@ function ClientHeader() {
 
           {/* Profile Dropdown */}
           <div className="flex items-center space-x-3">
-            <img
-              src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNkZGQiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIxMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iIGZpbGw9IiM5OTkiPlU8L3RleHQ+PC9zdmc+"
-              alt="Client Profile"
-              className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
-            />
+            <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+              {user?.firstName ? user.firstName[0] : ''}
+              {user?.lastName ? user.lastName[0] : ''}
+            </div>
             <div className="hidden md:block">
-              <p className="text-sm font-medium text-gray-900">John Doe</p>
+              <p className="text-sm font-medium text-gray-900">
+                {user?.firstName} {user?.lastName}
+              </p>
               <p className="text-xs text-gray-600">Premium Member</p>
             </div>
           </div>

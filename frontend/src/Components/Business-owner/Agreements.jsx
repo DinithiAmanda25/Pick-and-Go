@@ -298,7 +298,7 @@ function BusinessOwnerAgreements({ agreements }) {
 
                 {/* Enhanced Agreement Editor Modal */}
                 {isEditing && editingAgreement && (
-                    <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="fixed inset-0 bg-gradient-to-br from-gray-900/50 via-slate-900/50 to-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                         <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden border border-gray-300 relative">
                             {/* Decorative background elements */}
                             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-200 to-purple-200 rounded-full opacity-20 -translate-y-16 translate-x-16"></div>
@@ -482,32 +482,37 @@ function BusinessOwnerAgreements({ agreements }) {
                             </div>
 
                             {/* Modal Footer */}
-                            <div className="relative p-6 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 bg-gradient-to-r from-gray-50 via-white to-gray-50">
-                                <button
-                                    onClick={() => setIsEditing(false)}
-                                    className="px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-all duration-200 text-sm font-bold shadow-sm hover:shadow-md"
-                                >
-                                    Cancel Changes
-                                </button>
-                                <button
-                                    onClick={handleSaveAgreement}
-                                    disabled={loading}
-                                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 transition-all duration-200 text-sm font-bold flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-105"
-                                >
-                                    {loading ? (
-                                        <>
-                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                                            Saving Agreement...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                            Save Agreement
-                                        </>
-                                    )}
-                                </button>
+                            <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 rounded-b-3xl">
+                                <div className="flex flex-col sm:flex-row justify-end gap-4">
+                                    <button
+                                        onClick={() => setIsEditing(false)}
+                                        className="px-8 py-3 border-2 border-gray-300 rounded-xl text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-all duration-200 text-sm font-bold shadow-sm hover:shadow-md flex items-center justify-center"
+                                    >
+                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        Cancel Changes
+                                    </button>
+                                    <button
+                                        onClick={handleSaveAgreement}
+                                        disabled={loading}
+                                        className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 transition-all duration-200 text-sm font-bold flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-105"
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                                                Saving Agreement...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                Save Agreement
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

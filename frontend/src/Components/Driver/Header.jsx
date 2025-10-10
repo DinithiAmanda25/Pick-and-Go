@@ -1,8 +1,10 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../contexts/AuthContext'
 import logo from '../../Assets/2.png'
 
 function DriverHeader() {
+  const { user } = useAuth()
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
       <div className="flex justify-between items-center">
@@ -50,13 +52,13 @@ function DriverHeader() {
 
           {/* Profile Dropdown */}
           <div className="flex items-center space-x-3">
-            <img
-              src="/api/placeholder/40/40"
-              alt="Driver Profile"
-              className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
-            />
+            <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+              {user?.fullName ? user.fullName.split(' ').map(name => name[0]).join('').substring(0, 2) : 'D'}
+            </div>
             <div className="hidden md:block">
-              <p className="text-sm font-medium text-gray-900">John Smith</p>
+              <p className="text-sm font-medium text-gray-900">
+                {user?.fullName || 'Driver'}
+              </p>
               <p className="text-xs text-gray-600">Professional Driver</p>
             </div>
           </div>

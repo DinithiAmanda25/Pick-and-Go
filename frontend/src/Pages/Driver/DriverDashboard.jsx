@@ -6,7 +6,7 @@ import DriverOverview from '../../Components/Driver/Overview.jsx'
 import DriverTrips from '../../Components/Driver/Trips.jsx'
 import DriverHistory from '../../Components/Driver/History.jsx'
 import DriverEarnings from '../../Components/Driver/Earnings.jsx'
-import DriverAvailability from '../../Components/Driver/Availability.jsx'
+
 import DriverProfile from '../../Components/Driver/Profile.jsx'
 import DriverSettings from '../../Components/Driver/Settings.jsx'
 
@@ -19,7 +19,6 @@ function DriverDashboard() {
     { id: 'trips', label: 'Active Trips', component: DriverTrips },
     { id: 'history', label: 'Trip History', component: DriverHistory },
     { id: 'earnings', label: 'Earnings', component: DriverEarnings },
-    { id: 'availability', label: 'Availability', component: DriverAvailability },
     { id: 'profile', label: 'Profile', component: DriverProfile },
     { id: 'settings', label: 'Settings', component: DriverSettings },
   ]
@@ -122,26 +121,6 @@ function DriverDashboard() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <DriverHeader />
-
-        {/* Tab Navigation */}
-        <div className="bg-white border-b border-gray-200">
-          <div className="px-6">
-            <nav className="flex space-x-8 overflow-x-auto">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => handleTabClick(tab.id)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${activeTab === tab.id
-                    ? 'border-orange-500 text-orange-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto p-6">

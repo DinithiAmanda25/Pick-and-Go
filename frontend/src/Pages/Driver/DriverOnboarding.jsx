@@ -108,10 +108,21 @@ function DriverOnboarding() {
       case 'phone':
         if (!value.trim()) {
           newErrors.phone = 'Phone number is required'
-        } else if (!/^\d{10}$/.test(value.replace(/[^0-9]/g, ''))) {
-          newErrors.phone = 'Phone number should have 10 digits'
         } else {
-          newErrors.phone = ''
+          // Remove all non-digit characters for validation
+          const cleanPhone = value.replace(/[^0-9]/g, '')
+          
+          // Check for exactly 10 digits
+          if (cleanPhone.length === 10) {
+            // Valid 10-digit phone number
+            if (!/^[0-9]{10}$/.test(cleanPhone)) {
+              newErrors.phone = 'Phone number must contain only digits'
+            } else {
+              newErrors.phone = ''
+            }
+          } else {
+            newErrors.phone = 'Phone number must be exactly 10 digits'
+          }
         }
         break
 
@@ -133,7 +144,19 @@ function DriverOnboarding() {
         break
 
       case 'licenseNumber':
-        newErrors.licenseNumber = !value.trim() ? 'License number is required' : ''
+        if (!value.trim()) {
+          newErrors.licenseNumber = 'License number is required'
+        } else {
+          // Sri Lankan license number format: Letter followed by 7 digits (e.g., B1234567)
+          const licensePattern = /^[A-Z][0-9]{7}$/
+          const cleanLicense = value.trim().toUpperCase()
+          
+          if (!licensePattern.test(cleanLicense)) {
+            newErrors.licenseNumber = 'License number must be in format: 1 letter followed by 7 digits (e.g., B1234567)'
+          } else {
+            newErrors.licenseNumber = ''
+          }
+        }
         break
 
       case 'licenseExpiryDate':
@@ -603,9 +626,11 @@ function DriverOnboarding() {
                     onBlur={(e) => validateField('phone', e.target.value)}
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors.phone || validationErrors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
-                    placeholder="+94 71 234 5678"
+                    placeholder="1234567890 (10 digits only)"
                   />
-                  {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
+                  {(errors.phone || validationErrors.phone) && (
+                    <p className="mt-1 text-sm text-red-600">{errors.phone || validationErrors.phone}</p>
+                  )}
                 </div>
 
                 <div>
@@ -636,11 +661,15 @@ function DriverOnboarding() {
                     required
                     value={formData.licenseNumber}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors.licenseNumber ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    onBlur={(e) => validateField('licenseNumber', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${errors.licenseNumber || validationErrors.licenseNumber ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     placeholder="B1234567"
+                    style={{ textTransform: 'uppercase' }}
                   />
-                  {errors.licenseNumber && <p className="mt-1 text-sm text-red-600">{errors.licenseNumber}</p>}
+                  {(errors.licenseNumber || validationErrors.licenseNumber) && (
+                    <p className="mt-1 text-sm text-red-600">{errors.licenseNumber || validationErrors.licenseNumber}</p>
+                  )}
                 </div>
               </div>
             )}

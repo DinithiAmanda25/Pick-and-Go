@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import logo from '../../Assets/2.png'
 
 function AdminHeader() {
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -76,10 +76,13 @@ function AdminHeader() {
               whileHover={{ scale: 1.1 }}
               transition={{ duration: 0.2 }}
             >
-              A
+              {user?.firstName ? user.firstName[0] : 'A'}
+              {user?.lastName ? user.lastName[0] : ''}
             </motion.div>
             <div className="hidden md:block">
-              <p className="text-sm font-medium text-gray-900">Admin User</p>
+              <p className="text-sm font-medium text-gray-900">
+                {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username || 'Admin User'}
+              </p>
               <p className="text-xs text-gray-600">Administrator</p>
             </div>
           </motion.div>
