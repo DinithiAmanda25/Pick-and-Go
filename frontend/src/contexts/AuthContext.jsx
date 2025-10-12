@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import AuthService from '../Services/auth-service.js';
-import CustomerService from '../Services/customer-service.js';
-import VehicleOwnerService from '../Services/vehicle-owner-service.js';
-import DriverService from '../Services/driver-service.js';
+import authService from '../Services/Auth-service';
+import customerService from '../Services/customer-service';
+import vehicleOwnerService from '../Services/VehicleOwner-service';
+import driverService from '../Services/Driver-service';
 
 const AuthContext = createContext();
 
@@ -21,8 +21,8 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check if user is already logged in
-    const currentUser = AuthService.getCurrentUser();
-    const authStatus = AuthService.isAuthenticated();
+    const currentUser = authService.getCurrentUser();
+    const authStatus = authService.isAuthenticated();
 
     if (currentUser && authStatus) {
       setUser(currentUser);
@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const response = await AuthService.login(credentials);
+      const response = await authService.login(credentials);
 
       if (response.success) {
         setUser(response.user);
@@ -49,14 +49,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    AuthService.logout();
+    authService.logout();
     setUser(null);
     setIsAuthenticated(false);
   };
 
   const registerClient = async (userData) => {
     try {
-      return await CustomerService.registerCustomer(userData);
+      return await customerService.registerCustomer(userData);
     } catch (error) {
       throw error;
     }
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
 
   const registerVehicleOwner = async (userData) => {
     try {
-      return await VehicleOwnerService.registerVehicleOwner(userData);
+      return await vehicleOwnerService.registerVehicleOwner(userData);
     } catch (error) {
       throw error;
     }
@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }) => {
 
   const registerDriver = async (userData) => {
     try {
-      return await DriverService.registerDriver(userData);
+      return await driverService.registerDriver(userData);
     } catch (error) {
       throw error;
     }
@@ -80,11 +80,77 @@ export const AuthProvider = ({ children }) => {
 
   const refreshUser = () => {
     // Refresh user data from localStorage
-    const currentUser = AuthService.getCurrentUser();
+    const currentUser = authService.getCurrentUser();
     if (currentUser) {
       setUser(currentUser);
       console.log('AuthContext - User data refreshed from localStorage');
     }
+  };
+
+  // Add getToken function
+  const getToken = () => {
+    // Try multiple sources for the token
+    const token = localStorage.getItem('authToken') || 
+                  localStorage.getItem('token') ||
+                  localStorage.getItem('accessToken') ||
+                  sessionStorage.getItem('authToken') ||
+                  sessionStorage.getItem('token');
+    
+    // If no direct token found, check if we can construct one from session data
+    if (!token) {
+      const sessionData = localStorage.getItem('sessionData');
+      if (sessionData) {
+        try {
+          const parsedSession = JSON.parse(sessionData);
+          // Return sessionId as a fallback token if available
+          return parsedSession.sessionId || parsedSession.token || null;
+        } catch (error) {
+          console.warn('Error parsing session data:', error);
+        }
+      }
+    }
+    
+    return token;
+  };
+
+  // Add setToken function for storing tokens
+  const setToken = (token) => {
+    if (token) {
+      localStorage.setItem('authToken', token);
+    } else {
+      localStorage.removeItem('authToken');
+    }
+  };
+
+  // Add function to get authorization header
+  const getAuthHeader = () => {
+    const token = getToken();
+    const sessionData = localStorage.getItem('sessionData');
+    
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    if (user?.userId) {
+      headers['X-User-ID'] = user.userId;
+    }
+
+    if (sessionData) {
+      try {
+        const parsedSession = JSON.parse(sessionData);
+        if (parsedSession.sessionId) {
+          headers['X-Session-ID'] = parsedSession.sessionId;
+        }
+      } catch (error) {
+        console.warn('Error parsing session data for headers:', error);
+      }
+    }
+
+    return headers;
   };
 
   const value = {
@@ -98,18 +164,23 @@ export const AuthProvider = ({ children }) => {
     registerVehicleOwner,
     registerDriver,
 
+    // Token management functions
+    getToken,
+    setToken,
+    getAuthHeader,
+
     // Session management functions
-    getCurrentUserId: () => AuthService.getCurrentUserId(),
-    getSessionData: () => AuthService.getSessionData(),
-    getSessionId: () => AuthService.getSessionId(),
+    getCurrentUserId: () => authService.getCurrentUserId(),
+    getSessionData: () => authService.getSessionData(),
+    getSessionId: () => authService.getSessionId(),
 
     // Navigation and role functions
-    getDashboardRoute: AuthService.getDashboardRoute,
-    hasRole: AuthService.hasRole,
-    isAdminOrBusinessOwner: AuthService.isAdminOrBusinessOwner,
+    getDashboardRoute: authService.getDashboardRoute,
+    hasRole: authService.hasRole,
+    isAdminOrBusinessOwner: authService.isAdminOrBusinessOwner,
 
     // Utility functions
-    clearCorruptedData: () => AuthService.clearCorruptedData()
+    clearCorruptedData: () => authService.clearCorruptedData()
   };
 
   return (

@@ -1,3 +1,0 @@
-# Pick-and-Go
-
-Start

@@ -4,6 +4,8 @@ import { motion } from 'framer-motion'
 import AdminSidebar from '../../Components/Admin/Sidebar'
 import AdminHeader from '../../Components/Admin/Header'
 import AdminOverview from './AdminOverview'
+import AdminBookingManagement from '../../Components/Admin/AdminBookingManagement'
+import AdminDriverSchedule from '../../Components/Admin/AdminDriverSchedule'
 
 const AdminDashboard = () => {
   const location = useLocation()
@@ -65,35 +67,44 @@ const AdminDashboard = () => {
               {activeTab === 'users' && (
                 <div>
                   <h2 className="text-2xl font-bold mb-6">User Management</h2>
-                  {/* User management component will go here */}
+                  <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md">
+                    User management component is under development.
+                  </div>
                 </div>
               )}
 
               {activeTab === 'vehicles' && (
                 <div>
                   <h2 className="text-2xl font-bold mb-6">Vehicle Management</h2>
-                  {/* Vehicle management component will go here */}
+                  <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md">
+                    Vehicle management component is under development.
+                  </div>
                 </div>
               )}
 
               {activeTab === 'bookings' && (
-                <div>
-                  <h2 className="text-2xl font-bold mb-6">Booking Management</h2>
-                  {/* Booking management component will go here */}
-                </div>
+                <AdminBookingManagement />
+              )}
+
+              {activeTab === 'driver-schedule' && (
+                <AdminDriverSchedule />
               )}
 
               {activeTab === 'reports' && (
                 <div>
                   <h2 className="text-2xl font-bold mb-6">Reports & Analytics</h2>
-                  {/* Reports component will go here */}
+                  <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md">
+                    Reports and analytics component is under development.
+                  </div>
                 </div>
               )}
 
               {activeTab === 'settings' && (
                 <div>
                   <h2 className="text-2xl font-bold mb-6">System Settings</h2>
-                  {/* Settings component will go here */}
+                  <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md">
+                    System settings component is under development.
+                  </div>
                 </div>
               )}
             </div>

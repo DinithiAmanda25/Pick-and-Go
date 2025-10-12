@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import VehicleOwnerService from '../../Services/vehicle-owner-service.js'
+import vehicleOwnerService from '../../Services/VehicleOwner-service'
 import VehicleOwnerSidebar from '../../Components/Vehicle-owner/Sidebar'
 import VehicleOwnerHeader from '../../Components/Vehicle-owner/Header'
 import VehicleOwnerOverview from '../../Components/Vehicle-owner/Overview'
@@ -35,7 +35,7 @@ function VehicleOwnerDashboard() {
 
           // Use the VehicleOwner service to fetch profile
           try {
-            const response = await VehicleOwnerService.getProfile(userId);
+            const response = await vehicleOwnerService.getProfile(userId);
             console.log('Profile service response:', response);
 
             if (response.success && response.user) {

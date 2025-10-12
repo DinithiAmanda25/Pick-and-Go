@@ -7,9 +7,13 @@ const {
     updateAdminProfile,
     changeAdminPassword
 } = require('../controllers/AdminController');
-
+const {
+generateReport
+} = require('../controllers/BookingController');
 // Import driver functions for admin use
 const { approveDriver, getPendingDrivers, getAllDrivers } = require('../controllers/DriverController');
+const { getAllBookingsAdmin, getBookingStats, searchBookings } = require('../controllers/BookingController');
+router.get('/generate', generateReport);
 
 // Admin Authentication Routes
 router.post('/login', adminLogin);
@@ -28,5 +32,8 @@ router.put('/profile/:userId/change-password', changeAdminPassword);
 router.put('/approve-driver/:driverId', approveDriver);
 router.get('/pending-drivers', getPendingDrivers);
 router.get('/all-drivers', getAllDrivers);
+router.get('/admin/all', getAllBookingsAdmin);
+router.get('/admin/stats', getBookingStats);
+router.get('/admin/search', searchBookings);
 
 module.exports = router;

@@ -8,7 +8,7 @@ const { login, getProfile } = require('../controllers/UnifiedAuthController');
 const { registerClient } = require('../controllers/ClientController');
 const { registerVehicleOwner } = require('../controllers/VehicleOwnerController');
 const { registerBusinessOwner } = require('../controllers/BusinessOwnerController');
-const { registerDriver } = require('../controllers/DriverController');
+const { registerDriver, getAllDrivers, getPendingDrivers, approveDriver } = require('../controllers/DriverController');
 const { upload } = require('../middleware/cloudinaryUpload');
 
 // Import specific route handlers
@@ -17,7 +17,6 @@ const businessOwnerRoutes = require('./BusinessOwnerRoute');
 const driverRoutes = require('./DriverRoute');
 const clientRoutes = require('./ClientRoute');
 const vehicleOwnerRoutes = require('./VehicleOwnerRoute');
-const forgotPasswordRoutes = require('./ForgotPasswordRoute');
 
 // Legacy frontend compatibility routes (old pattern: /auth/profile/actor-type/...)
 router.use('/profile/admin', adminRoutes);
@@ -25,9 +24,6 @@ router.use('/profile/business-owner', businessOwnerRoutes);
 router.use('/profile/driver', driverRoutes);
 router.use('/profile/client', clientRoutes);
 router.use('/profile/vehicle-owner', vehicleOwnerRoutes);
-
-// Forgot Password Routes
-router.use('/forgot-password', forgotPasswordRoutes);
 
 // Universal Authentication Routes
 router.post('/login', login);
@@ -50,6 +46,11 @@ router.post('/register-driver', upload.fields([
     { name: 'registration', maxCount: 1 },
     { name: 'medicalCertificate', maxCount: 1 }
 ]), registerDriver);
+
+// Driver-specific routes for admin functionality
+router.get('/drivers/all', getAllDrivers);
+router.get('/drivers/pending', getPendingDrivers);
+router.put('/drivers/approve/:driverId', approveDriver);
 
 // Actor-specific routes (new pattern: /auth/actor-type/...)
 router.use('/admin', adminRoutes);
