@@ -8,7 +8,6 @@ const {
     updateBusinessOwnerProfile,
     uploadBusinessOwnerProfileImage,
     changeBusinessOwnerPassword,
-    deleteBusinessOwnerProfile
     deleteBusinessOwnerProfile,
     // Pending Applications Management
     getPendingApplications,
