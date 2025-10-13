@@ -67,21 +67,11 @@ const AdminDashboard = () => {
               )}
 
               {activeTab === 'users' && (
-                <div>
-                  <h2 className="text-2xl font-bold mb-6">User Management</h2>
-                  <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md">
-                    User management component is under development.
-                  </div>
-                </div>
+                <UserManagement />
               )}
 
               {activeTab === 'vehicles' && (
-                <div>
-                  <h2 className="text-2xl font-bold mb-6">Vehicle Management</h2>
-                  <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md">
-                    Vehicle management component is under development.
-                  </div>
-                </div>
+                <VehicleManagement />
               )}
 
               {activeTab === 'bookings' && (
