@@ -8,8 +8,9 @@ const {
     changeAdminPassword
 } = require('../controllers/AdminController');
 
-// Import driver functions for admin use (view only)
-const { getAllDrivers, getPendingDrivers } = require('../controllers/DriverController');
+// Import driver functions for admin use 
+const { getAllDrivers, getPendingDrivers, approveDriver } = require('../controllers/DriverController');
+const { getAllBookingsAdmin, getBookingStats, searchBookings, generateReport } = require('../controllers/BookingController');
 
 // Admin Authentication Routes
 router.post('/login', adminLogin);
@@ -34,6 +35,9 @@ router.put('/profile/:userId/change-password', changeAdminPassword);
 // Removed approval functionality
 router.get('/pending-drivers', getPendingDrivers);
 router.get('/all-drivers', getAllDrivers);
+router.get('/admin/all', getAllBookingsAdmin);
+router.get('/admin/stats', getBookingStats);
+router.get('/admin/search', searchBookings);
 
 // Admin Vehicle Management Routes (view only)
 router.get('/all-vehicles', (req, res) => {

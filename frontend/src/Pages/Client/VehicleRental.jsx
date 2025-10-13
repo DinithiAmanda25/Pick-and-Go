@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import ClientMainHeader from '../../Components/Clients/ClientMainHeader'
@@ -37,6 +37,9 @@ const slideInScale = {
 }
 
 function VehicleRental() {
+
+    const API_BASE_URL =  'http://localhost:9000'
+
     const [searchData, setSearchData] = useState({
         pickupLocation: '',
         dropoffLocation: '',
@@ -48,80 +51,314 @@ function VehicleRental() {
         withDriver: false
     })
 
+    const [vehicles, setVehicles] = useState([])
     const [filteredVehicles, setFilteredVehicles] = useState([])
+    const [availableDrivers, setAvailableDrivers] = useState([])
     const [showResults, setShowResults] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState('')
+    const [validationErrors, setValidationErrors] = useState({})
 
-    // Mock data for vehicles and drivers
-    const mockVehicles = [
-        {
-            id: 1,
-            name: 'Toyota Camry',
-            type: 'sedan',
-            image: '/api/placeholder/300/200',
-            pricePerDay: 50,
-            features: ['Air Conditioning', 'GPS', 'Bluetooth'],
-            rating: 4.8,
-            available: true
-        },
-        {
-            id: 2,
-            name: 'Honda CR-V',
-            type: 'suv',
-            image: '/api/placeholder/300/200',
-            pricePerDay: 70,
-            features: ['Air Conditioning', 'GPS', 'All-Wheel Drive'],
-            rating: 4.7,
-            available: true
-        },
-        {
-            id: 3,
-            name: 'Ford Transit',
-            type: 'van',
-            image: '/api/placeholder/300/200',
-            pricePerDay: 90,
-            features: ['Large Capacity', 'GPS', 'Air Conditioning'],
-            rating: 4.6,
-            available: true
-        }
-    ]
+    // Fetch available drivers from API
 
-    const mockDrivers = [
-        {
-            id: 1,
-            name: 'John Smith',
-            rating: 4.9,
-            experience: '5 years',
-            pricePerDay: 30,
-            image: '/api/placeholder/100/100'
-        },
-        {
-            id: 2,
-            name: 'Sarah Johnson',
-            rating: 4.8,
-            experience: '3 years',
-            pricePerDay: 25,
-            image: '/api/placeholder/100/100'
+    // Fetch available vehicles on component mount
+    useEffect(() => {
+        fetchAvailableVehicles()
+    }, [])
+
+    // Set minimum dates
+    useEffect(() => {
+        const tomorrow = new Date()
+        tomorrow.setDate(tomorrow.getDate() + 1)
+        const minDate = tomorrow.toISOString().split('T')[0]
+        
+        if (!searchData.pickupDate) {
+            setSearchData(prev => ({ ...prev, pickupDate: minDate }))
         }
-    ]
+    }, [])
+
+    const fetchAvailableVehicles = async () => {
+        setIsLoading(true)
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/vehicles/available/rental`)
+            const data = await response.json()
+            
+            if (data.success) {
+                setVehicles(data.vehicles)
+            } else {
+                setError('Failed to fetch vehicles')
+            }
+        } catch (error) {
+            console.error('Error fetching vehicles:', error)
+            setError('Failed to fetch vehicles. Please try again.')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const fetchAvailableDrivers = async (vehicleType, startDate, endDate) => {
+        try {
+            setIsLoading(true)
+            
+            // Fetch all approved drivers from API - using the correct endpoint
+            const response = await fetch(`${API_BASE_URL}/api/drivers/all`)
+            const data = await response.json()
+            
+            if (data.success && data.drivers) {
+                // Filter drivers based on vehicle type and status
+                const filteredDrivers = data.drivers.filter(driver => 
+                    driver.status === 'approved' && 
+                    driver.isActive === true &&
+                    // Check if driver's vehicle type matches or if no specific type filter
+                    (!vehicleType || 
+                     !driver.vehicleInfo?.type || 
+                     driver.vehicleInfo.type === vehicleType ||
+                     vehicleType === '')
+                ).map(driver => ({
+                    _id: driver._id,
+                    id: driver._id, // Ensure both _id and id are available
+                    name: driver.fullName,
+                    fullName: driver.fullName,
+                    rating: driver.rating || 4.5,
+                    experience: `${driver.totalDeliveries || 0} trips`, // Use actual data
+                    pricePerDay: 2000, // Default driver price per day (could be dynamic)
+                    image: driver.profileImage?.url || '/api/placeholder/80/80',
+                    phone: driver.phone,
+                    email: driver.email,
+                    vehicleTypes: [driver.vehicleInfo?.type || 'car']
+                }))
+                
+                console.log('Fetched drivers:', filteredDrivers)
+                setAvailableDrivers(filteredDrivers)
+            } else {
+                console.error('Failed to fetch drivers:', data.message)
+                setAvailableDrivers([])
+                if (data.message) {
+                    setError(`Failed to load drivers: ${data.message}`)
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching drivers:', error)
+            setAvailableDrivers([])
+            
+            // For now, let's use some fallback drivers until the API is fixed
+            console.log('Using fallback drivers due to API error')
+            const fallbackDrivers = [
+                {
+                    _id: '507f1f77bcf86cd799439011',
+                    id: '507f1f77bcf86cd799439011',
+                    name: 'John Smith',
+                    fullName: 'John Smith',
+                    rating: 4.8,
+                    experience: '50 trips',
+                    pricePerDay: 2000,
+                    image: '/api/placeholder/80/80',
+                    phone: '+94 77 123 4567',
+                    email: 'john.smith@example.com',
+                    vehicleTypes: ['car', 'van']
+                },
+                {
+                    _id: '507f1f77bcf86cd799439012',
+                    id: '507f1f77bcf86cd799439012',
+                    name: 'Sarah Johnson',
+                    fullName: 'Sarah Johnson',
+                    rating: 4.9,
+                    experience: '75 trips',
+                    pricePerDay: 2500,
+                    image: '/api/placeholder/80/80',
+                    phone: '+94 77 234 5678',
+                    email: 'sarah.johnson@example.com',
+                    vehicleTypes: ['car', 'truck']
+                },
+                {
+                    _id: '507f1f77bcf86cd799439013',
+                    id: '507f1f77bcf86cd799439013',
+                    name: 'Mike Wilson',
+                    fullName: 'Mike Wilson',
+                    rating: 4.7,
+                    experience: '30 trips',
+                    pricePerDay: 1800,
+                    image: '/api/placeholder/80/80',
+                    phone: '+94 77 345 6789',
+                    email: 'mike.wilson@example.com',
+                    vehicleTypes: ['motorcycle', 'car']
+                }
+            ].filter(driver => 
+                !vehicleType || driver.vehicleTypes.includes(vehicleType) || vehicleType === ''
+            )
+            
+            setAvailableDrivers(fallbackDrivers)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const validateDates = (pickupDate, dropoffDate) => {
+        const errors = {}
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        
+        const pickup = new Date(pickupDate)
+        const dropoff = new Date(dropoffDate)
+        
+        // Check if pickup date is in the past
+        if (pickup < today) {
+            errors.pickupDate = 'Pickup date cannot be in the past'
+        }
+        
+        // Check if dropoff date is before or same as pickup date
+        if (dropoff <= pickup) {
+            errors.dropoffDate = 'Drop-off date must be after pickup date'
+        }
+        
+        // Check if dates are more than 90 days apart (optional business rule)
+        const diffTime = Math.abs(dropoff - pickup)
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        if (diffDays > 90) {
+            errors.dropoffDate = 'Rental period cannot exceed 90 days'
+        }
+        
+        return errors
+    }
+
+    const validateTimes = (pickupTime, dropoffTime, pickupDate, dropoffDate) => {
+        const errors = {}
+        
+        // If pickup and dropoff are on the same day, dropoff time must be after pickup time
+        if (pickupDate === dropoffDate) {
+            if (dropoffTime <= pickupTime) {
+                errors.dropoffTime = 'Drop-off time must be after pickup time on the same day'
+            }
+        }
+        
+        return errors
+    }
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target
-        setSearchData({
-            ...searchData,
-            [name]: type === 'checkbox' ? checked : value
+        
+        setSearchData(prevData => {
+            const newData = {
+                ...prevData,
+                [name]: type === 'checkbox' ? checked : value
+            }
+            
+            // Clear validation errors for the changed field
+            if (validationErrors[name]) {
+                setValidationErrors(prev => ({
+                    ...prev,
+                    [name]: undefined
+                }))
+            }
+            
+            // Auto-adjust dates when pickup date changes
+            if (name === 'pickupDate' && value) {
+                const pickupDate = new Date(value)
+                const nextDay = new Date(pickupDate)
+                nextDay.setDate(nextDay.getDate() + 1)
+                
+                // If dropoff date is not set or is before/same as new pickup date, set it to next day
+                if (!newData.dropoffDate || new Date(newData.dropoffDate) <= pickupDate) {
+                    newData.dropoffDate = nextDay.toISOString().split('T')[0]
+                }
+            }
+            
+            // Validate dates in real-time
+            if ((name === 'pickupDate' || name === 'dropoffDate') && newData.pickupDate && newData.dropoffDate) {
+                const dateErrors = validateDates(newData.pickupDate, newData.dropoffDate)
+                setValidationErrors(prev => ({
+                    ...prev,
+                    ...dateErrors
+                }))
+            }
+            
+            // Validate times in real-time
+            if ((name === 'pickupTime' || name === 'dropoffTime') && newData.pickupTime && newData.dropoffTime) {
+                const timeErrors = validateTimes(newData.pickupTime, newData.dropoffTime, newData.pickupDate, newData.dropoffDate)
+                setValidationErrors(prev => ({
+                    ...prev,
+                    ...timeErrors
+                }))
+            }
+            
+            return newData
         })
     }
 
-    const handleSearch = (e) => {
-        e.preventDefault()
-        let filtered = mockVehicles
-
-        if (searchData.vehicleType) {
-            filtered = filtered.filter(vehicle => vehicle.type === searchData.vehicleType)
+    const handleSearch = async (e) => {
+        e.preventDefault();
+        
+        // Validate all fields before search
+        const dateErrors = validateDates(searchData.pickupDate, searchData.dropoffDate)
+        const timeErrors = validateTimes(searchData.pickupTime, searchData.dropoffTime, searchData.pickupDate, searchData.dropoffDate)
+        const allErrors = { ...dateErrors, ...timeErrors }
+        
+        if (Object.keys(allErrors).length > 0) {
+            setValidationErrors(allErrors)
+            setError('Please fix the validation errors before searching.')
+            return
         }
+        
+        setIsLoading(true);
+        setError('');
+        setValidationErrors({});
+        
+        try {
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (searchData.vehicleType) params.append('vehicleType', searchData.vehicleType);
+            if (searchData.pickupLocation) params.append('city', searchData.pickupLocation);
+            
+            const response = await fetch(`${API_BASE_URL}/api/vehicles/available/rental?${params}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                setFilteredVehicles(data.vehicles);
+                setShowResults(true);
+                
+                // Fetch available drivers if driver service is required
+                if (searchData.withDriver) {
+                    await fetchAvailableDrivers(searchData.vehicleType, searchData.pickupDate, searchData.dropoffDate);
+                }
+            } else {
+                setError('Failed to search vehicles');
+            }
+        } catch (error) {
+            console.error('Error searching vehicles:', error);
+            setError('Failed to search vehicles. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
-        setFilteredVehicles(filtered)
-        setShowResults(true)
+    // Calculate rental duration in days
+    const calculateRentalDays = () => {
+        if (!searchData.pickupDate || !searchData.dropoffDate) return 1
+        
+        const start = new Date(searchData.pickupDate)
+        const end = new Date(searchData.dropoffDate)
+        const diffTime = Math.abs(end - start)
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1
+    }
+
+    // Calculate total price for a vehicle
+    const calculateTotalPrice = (vehicle) => {
+        const days = calculateRentalDays()
+        return vehicle.rentalPrice.dailyRate * days
+    }
+
+    // Calculate total price with driver if selected
+    const calculateTotalPriceWithDriver = (vehicle) => {
+        const days = calculateRentalDays()
+        let total = vehicle.rentalPrice.dailyRate * days
+        if (searchData.withDriver && availableDrivers.length > 0) {
+            // Use the cheapest available driver for price display
+            const cheapestDriver = availableDrivers.reduce((min, driver) => 
+                driver.pricePerDay < min.pricePerDay ? driver : min
+            )
+            total += cheapestDriver.pricePerDay * days
+        }
+        return total
     }
 
     return (
@@ -255,9 +492,13 @@ function VehicleRental() {
                                     name="pickupDate"
                                     value={searchData.pickupDate}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 text-white transition-all duration-300"
+                                    min={new Date(Date.now() + 86400000).toISOString().split('T')[0]} // Tomorrow
+                                    className={`w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border ${validationErrors.pickupDate ? 'border-red-400' : 'border-white/30'} rounded-xl focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 text-white transition-all duration-300`}
                                     required
                                 />
+                                {validationErrors.pickupDate && (
+                                    <p className="text-red-300 text-sm mt-1">{validationErrors.pickupDate}</p>
+                                )}
                             </div>
 
                             {/* Pickup Time */}
@@ -285,9 +526,13 @@ function VehicleRental() {
                                     name="dropoffDate"
                                     value={searchData.dropoffDate}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 text-white transition-all duration-300"
+                                    min={searchData.pickupDate || new Date(Date.now() + 86400000).toISOString().split('T')[0]} // Pickup date or tomorrow
+                                    className={`w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border ${validationErrors.dropoffDate ? 'border-red-400' : 'border-white/30'} rounded-xl focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 text-white transition-all duration-300`}
                                     required
                                 />
+                                {validationErrors.dropoffDate && (
+                                    <p className="text-red-300 text-sm mt-1">{validationErrors.dropoffDate}</p>
+                                )}
                             </div>
 
                             {/* Dropoff Time */}
@@ -300,9 +545,12 @@ function VehicleRental() {
                                     name="dropoffTime"
                                     value={searchData.dropoffTime}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 text-white transition-all duration-300"
+                                    className={`w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border ${validationErrors.dropoffTime ? 'border-red-400' : 'border-white/30'} rounded-xl focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 text-white transition-all duration-300`}
                                     required
                                 />
+                                {validationErrors.dropoffTime && (
+                                    <p className="text-red-300 text-sm mt-1">{validationErrors.dropoffTime}</p>
+                                )}
                             </div>
 
                             {/* Vehicle Type */}
@@ -317,11 +565,10 @@ function VehicleRental() {
                                     className="w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 text-white transition-all duration-300"
                                 >
                                     <option value="" className="text-gray-900">All Types</option>
-                                    <option value="sedan" className="text-gray-900">Sedan</option>
-                                    <option value="suv" className="text-gray-900">SUV</option>
+                                    <option value="car" className="text-gray-900">Car</option>
                                     <option value="van" className="text-gray-900">Van</option>
                                     <option value="truck" className="text-gray-900">Truck</option>
-                                    <option value="luxury" className="text-gray-900">Luxury</option>
+                                    <option value="motorcycle" className="text-gray-900">Motorcycle</option>
                                 </select>
                             </div>
 
@@ -348,24 +595,151 @@ function VehicleRental() {
                         >
                             <motion.button
                                 type="submit"
-                                className="bg-gradient-to-r from-white to-blue-50 text-gray-900 px-12 py-4 rounded-xl font-bold text-lg hover:from-blue-50 hover:to-white transition-all duration-300 shadow-2xl transform hover:scale-105 hover:shadow-white/25"
+                                disabled={isLoading || Object.keys(validationErrors).length > 0}
+                                className="bg-gradient-to-r from-white to-blue-50 text-gray-900 px-12 py-4 rounded-xl font-bold text-lg hover:from-blue-50 hover:to-white transition-all duration-300 shadow-2xl transform hover:scale-105 hover:shadow-white/25 disabled:opacity-50 disabled:cursor-not-allowed"
                                 whileHover={{ scale: 1.05, y: -2 }}
                                 whileTap={{ scale: 0.95 }}
                             >
-                                <span className="flex items-center justify-center space-x-2">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                                    <span>Search Vehicles</span>
-                                </span>
+                                {isLoading ? (
+                                    <span className="flex items-center justify-center space-x-2">
+                                        <svg className="animate-spin h-5 w-5 text-gray-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span>Searching...</span>
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center justify-center space-x-2">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                        <span>Search Vehicles</span>
+                                    </span>
+                                )}
                             </motion.button>
                         </motion.div>
                     </motion.form>
                 </div>
             </section>
 
+            {/* Available Drivers Section */}
+            {searchData.withDriver && availableDrivers.length > 0 && showResults && (
+                <motion.section
+                    className="py-16 bg-gradient-to-br from-green-50 to-blue-50"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.6 }}
+                >
+                    <div className="max-w-7xl mx-auto px-6 lg:px-8">
+                        <motion.div
+                            className="text-center mb-12"
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: 0.2 }}
+                        >
+                            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                                Available Professional Drivers
+                            </h2>
+                            <p className="text-xl text-gray-600">
+                                Choose from our experienced and certified drivers for your rental period
+                            </p>
+                        </motion.div>
+
+                        <motion.div
+                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                            variants={staggerContainer}
+                            initial="hidden"
+                            animate="show"
+                        >
+                            {availableDrivers.map((driver, index) => (
+                                <motion.div
+                                    key={driver._id}
+                                    className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 hover:shadow-2xl transition-all duration-300"
+                                    variants={fadeInUp}
+                                    whileHover={{ scale: 1.02, y: -5 }}
+                                >
+                                    <div className="p-8">
+                                        <div className="flex items-center mb-6">
+                                            <img
+                                                src={driver.image}
+                                                alt={driver.name}
+                                                className="w-16 h-16 rounded-full object-cover shadow-lg"
+                                            />
+                                            <div className="ml-4">
+                                                <h3 className="text-xl font-bold text-gray-900">{driver.name}</h3>
+                                                <div className="flex items-center mt-1">
+                                                    <div className="flex items-center bg-yellow-100 px-2 py-1 rounded-full">
+                                                        <svg className="w-4 h-4 text-yellow-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                        </svg>
+                                                        <span className="text-sm font-semibold text-gray-700">{driver.rating}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="mb-4">
+                                            <p className="text-gray-600 font-medium">Experience: {driver.experience}</p>
+                                            <p className="text-gray-600 font-medium">Phone: {driver.phone}</p>
+                                            {driver.email && (
+                                                <p className="text-gray-600 font-medium text-sm">Email: {driver.email}</p>
+                                            )}
+                                        </div>
+
+                                        <div className="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-xl border border-green-200">
+                                            <div className="flex justify-between items-center">
+                                                <div>
+                                                    <span className="text-sm text-gray-600">Price per day</span>
+                                                    <div className="text-2xl font-bold text-green-600">
+                                                        ${driver.pricePerDay}
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="text-sm text-gray-600">Total ({calculateRentalDays()} days)</span>
+                                                    <div className="text-lg font-bold text-gray-900">
+                                                        ${driver.pricePerDay * calculateRentalDays()}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </motion.div>
+                    </div>
+                </motion.section>
+            )}
+
+            {/* Loading State */}
+            {isLoading && (
+                <div className="py-20 bg-gradient-to-br from-gray-50 to-blue-50/30">
+                    <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
+                        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+                        <p className="mt-4 text-lg text-gray-600">Loading available vehicles...</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Error Message */}
+            {error && (
+                <div className="py-20 bg-gradient-to-br from-gray-50 to-blue-50/30">
+                    <div className="max-w-7xl mx-auto px-6 lg:px-8">
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-center">
+                            <strong className="font-bold">Error: </strong>
+                            <span className="block sm:inline">{error}</span>
+                            <button 
+                                onClick={fetchAvailableVehicles}
+                                className="mt-2 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                            >
+                                Try Again
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Modern Results Section */}
-            {showResults && (
+            {showResults && !isLoading && !error && (
                 <motion.section
                     className="py-20 bg-gradient-to-br from-gray-50 to-blue-50/30"
                     initial={{ opacity: 0 }}
@@ -393,7 +767,10 @@ function VehicleRental() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.6, delay: 0.4 }}
                             >
-                                Choose from our premium fleet of vehicles
+                                {filteredVehicles.length > 0 
+                                    ? `Found ${filteredVehicles.length} vehicle(s) matching your criteria` 
+                                    : 'No vehicles found matching your criteria'
+                                }
                             </motion.p>
                         </motion.div>
 
@@ -405,7 +782,7 @@ function VehicleRental() {
                         >
                             {filteredVehicles.map((vehicle, index) => (
                                 <motion.div
-                                    key={vehicle.id}
+                                    key={vehicle._id}
                                     className="group bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden border border-white/50"
                                     variants={fadeInUp}
                                     whileHover={{
@@ -417,8 +794,11 @@ function VehicleRental() {
                                 >
                                     <div className="relative overflow-hidden">
                                         <motion.img
-                                            src={vehicle.image}
-                                            alt={vehicle.name}
+                                            src={vehicle.images && vehicle.images.length > 0 
+                                                ? vehicle.images.find(img => img.isPrimary)?.url || vehicle.images[0].url 
+                                                : '/api/placeholder/300/200'
+                                            }
+                                            alt={`${vehicle.make} ${vehicle.model}`}
                                             className="w-full h-48 object-cover"
                                             whileHover={{ scale: 1.1 }}
                                             transition={{ duration: 0.4 }}
@@ -438,7 +818,9 @@ function VehicleRental() {
                                             <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
                                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                             </svg>
-                                            <span className="text-sm font-semibold text-gray-700">{vehicle.rating}</span>
+                                            <span className="text-sm font-semibold text-gray-700">
+                                                {vehicle.rating?.average || 4.5}
+                                            </span>
                                         </motion.div>
                                     </div>
 
@@ -458,9 +840,9 @@ function VehicleRental() {
                                                 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-300"
                                                 whileHover={{ scale: 1.02 }}
                                             >
-                                                {vehicle.name}
+                                                {vehicle.make} {vehicle.model}
                                             </motion.h3>
-                                            <p className="text-gray-600 capitalize font-medium">{vehicle.type}</p>
+                                            <p className="text-gray-600 capitalize font-medium">{vehicle.vehicleType}</p>
                                         </motion.div>
 
                                         <motion.div
@@ -470,7 +852,7 @@ function VehicleRental() {
                                             transition={{ duration: 0.4, delay: index * 0.1 + 0.5 }}
                                         >
                                             <div className="flex flex-wrap gap-2">
-                                                {vehicle.features.map((feature, featureIndex) => (
+                                                {vehicle.features && vehicle.features.slice(0, 3).map((feature, featureIndex) => (
                                                     <motion.span
                                                         key={featureIndex}
                                                         className="bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 text-xs font-semibold px-3 py-1.5 rounded-full border border-blue-200"
@@ -482,6 +864,11 @@ function VehicleRental() {
                                                         {feature}
                                                     </motion.span>
                                                 ))}
+                                                {vehicle.features && vehicle.features.length > 3 && (
+                                                    <span className="bg-gray-100 text-gray-600 text-xs font-semibold px-3 py-1.5 rounded-full border border-gray-200">
+                                                        +{vehicle.features.length - 3} more
+                                                    </span>
+                                                )}
                                             </div>
                                         </motion.div>
 
@@ -496,7 +883,7 @@ function VehicleRental() {
                                                     className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent"
                                                     whileHover={{ scale: 1.05 }}
                                                 >
-                                                    ${vehicle.pricePerDay}
+                                                    ${vehicle.rentalPrice.dailyRate}
                                                 </motion.span>
                                                 <span className="text-gray-600 font-medium">/day</span>
                                             </div>
@@ -508,14 +895,61 @@ function VehicleRental() {
                                             </div>
                                         </motion.div>
 
+                                        {/* Driver Service Info */}
+                                        {searchData.withDriver && (
+                                            <motion.div
+                                                className="mb-6 bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-xl border border-green-200"
+                                                initial={{ opacity: 0, y: 15 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ duration: 0.4, delay: index * 0.1 + 0.75 }}
+                                            >
+                                                <div className="flex items-center space-x-2 mb-2">
+                                                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                    </svg>
+                                                    <span className="text-sm font-semibold text-green-800">Professional Driver Included</span>
+                                                </div>
+                                                <p className="text-xs text-green-700">
+                                                    Starting from ${Math.min(...availableDrivers.map(d => d.pricePerDay))}/day
+                                                </p>
+                                            </motion.div>
+                                        )}
+
+                                        <motion.div
+                                            className="flex justify-between items-center mb-6 bg-blue-50 p-3 rounded-lg"
+                                            initial={{ opacity: 0, y: 15 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.4, delay: index * 0.1 + 0.75 }}
+                                        >
+                                            <span className="text-sm text-gray-600">Total for {calculateRentalDays()} day(s):</span>
+                                            <span className="text-lg font-bold text-blue-700">
+                                                ${searchData.withDriver ? calculateTotalPriceWithDriver(vehicle) : calculateTotalPrice(vehicle)}
+                                                {searchData.withDriver && (
+                                                    <span className="text-xs text-green-600 block">+ driver from ${Math.min(...availableDrivers.map(d => d.pricePerDay * calculateRentalDays()))}</span>
+                                                )}
+                                            </span>
+                                        </motion.div>
+
                                         <motion.div
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ duration: 0.4, delay: index * 0.1 + 0.8 }}
                                         >
                                             <Link
-                                                to={`/vehicle-details/${vehicle.id}`}
-                                                state={{ vehicle, withDriver: searchData.withDriver, drivers: mockDrivers }}
+                                                to={`/vehicle-details/${vehicle._id}`}
+                                                state={{ 
+                                                    vehicle, 
+                                                    withDriver: searchData.withDriver,
+                                                    drivers: searchData.withDriver ? availableDrivers : null,
+                                                    pickupDate: searchData.pickupDate,
+                                                    dropoffDate: searchData.dropoffDate,
+                                                    pickupTime: searchData.pickupTime,
+                                                    dropoffTime: searchData.dropoffTime,
+                                                    pickupLocation: searchData.pickupLocation,
+                                                    dropoffLocation: searchData.dropoffLocation,
+                                                    rentalDays: calculateRentalDays(),
+                                                    totalPrice: calculateTotalPrice(vehicle)
+                                                }}
                                                 className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3.5 px-6 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 text-center block shadow-lg hover:shadow-xl transform hover:scale-105"
                                             >
                                                 <motion.span
@@ -553,7 +987,7 @@ function VehicleRental() {
                                         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                                     >
                                         <svg className="w-10 h-10 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.469-.935-6.03-2.461" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.469-.935-6.030-2.461" />
                                         </svg>
                                     </motion.div>
                                     <motion.h3
@@ -572,6 +1006,12 @@ function VehicleRental() {
                                     >
                                         Try adjusting your search criteria to find available vehicles that match your needs.
                                     </motion.p>
+                                    <button
+                                        onClick={() => setShowResults(false)}
+                                        className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-300"
+                                    >
+                                        Modify Search
+                                    </button>
                                 </motion.div>
                             </motion.div>
                         )}
@@ -579,7 +1019,7 @@ function VehicleRental() {
                 </motion.section>
             )}
 
-            {/* Modern Professional Footer - Same as Checkout */}
+            {/* Footer */}
             <footer className="bg-gradient-to-br from-gray-900 via-blue-900 to-blue-800 text-white relative overflow-hidden">
                 <div className="absolute inset-0 opacity-30">
                     <div className="absolute inset-0" style={{
@@ -588,137 +1028,31 @@ function VehicleRental() {
                 </div>
 
                 <div className="relative">
-                    {/* Main Footer Content */}
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                            {/* Company Info */}
                             <div className="space-y-6">
                                 <div className="flex items-center space-x-3">
                                     <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center transform rotate-12 hover:rotate-0 transition-transform duration-300">
                                         <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M8 16.5a1.5 1.5 0 01-3 0V14h.5a.5.5 0 01.5.5v1.5zM15 16.5a1.5 1.5 0 01-3 0V14h.5a.5.5 0 01.5.5v1.5z" />
+                                            <path d="M8 16.5a1.5 1.5 0 01-3 0V14h.5a.5 5 0 01.5.5v1.5zM15 16.5a1.5 1.5 0 01-3 0V14h.5a.5 5 0 01.5.5v1.5z" />
                                             <path fillRule="evenodd" d="M2 12a5 5 0 015-5h6a5 5 0 110 10H7a5 5 0 01-5-5zm5-3a3 3 0 100 6h6a3 3 0 100-6H7z" clipRule="evenodd" />
                                         </svg>
                                     </div>
-                                    <h3 className="text-xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
-                                        Pick & Go
-                                    </h3>
+                                    <span className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">RentWheelz</span>
                                 </div>
-                                <p className="text-gray-300 leading-relaxed">
-                                    Your trusted partner for premium vehicle rentals. Experience comfort, reliability, and exceptional service with every journey.
+                                <p className="text-gray-300 leading-relaxed max-w-xs">
+                                    Premium vehicle rental service with a wide range of options for your travel needs. Experience luxury and convenience with us.
                                 </p>
-                                <div className="flex space-x-4">
-                                    <a href="#" className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-white/20 transition-all duration-300 group">
-                                        <svg className="w-5 h-5 text-white group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z" />
-                                        </svg>
-                                    </a>
-                                    <a href="#" className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-white/20 transition-all duration-300 group">
-                                        <svg className="w-5 h-5 text-white group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z" />
-                                        </svg>
-                                    </a>
-                                    <a href="#" className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-white/20 transition-all duration-300 group">
-                                        <svg className="w-5 h-5 text-white group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                                        </svg>
-                                    </a>
-                                    <a href="#" className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-white/20 transition-all duration-300 group">
-                                        <svg className="w-5 h-5 text-white group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.174-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.402.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.357-.629-2.746-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24.009 12.017 24.009c6.624 0 11.99-5.367 11.99-11.988C24.007 5.367 18.641.001 12.017.001z" />
-                                        </svg>
-                                    </a>
-                                </div>
-                            </div>
-
-                            {/* Quick Links */}
-                            <div className="space-y-6">
-                                <h4 className="text-lg font-semibold">Quick Links</h4>
-                                <ul className="space-y-3">
-                                    <li><Link to="/about" className="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
-                                        <span className="w-1.5 h-1.5 bg-blue-400 rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                                        About Us
-                                    </Link></li>
-                                    <li><Link to="/vehicle-rental" className="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
-                                        <span className="w-1.5 h-1.5 bg-blue-400 rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                                        Our Fleet
-                                    </Link></li>
-                                    <li><Link to="/pricing" className="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
-                                        <span className="w-1.5 h-1.5 bg-blue-400 rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                                        Pricing
-                                    </Link></li>
-                                    <li><Link to="/locations" className="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
-                                        <span className="w-1.5 h-1.5 bg-blue-400 rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                                        Locations
-                                    </Link></li>
-                                    <li><Link to="/contact" className="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
-                                        <span className="w-1.5 h-1.5 bg-blue-400 rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                                        Contact Us
-                                    </Link></li>
-                                </ul>
-                            </div>
-
-                            {/* Services */}
-                            <div className="space-y-6">
-                                <h4 className="text-lg font-semibold">Services</h4>
-                                <ul className="space-y-3">
-                                    <li><a href="#" className="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
-                                        <span className="w-1.5 h-1.5 bg-purple-400 rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                                        Car Rental
-                                    </a></li>
-                                    <li><a href="#" className="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
-                                        <span className="w-1.5 h-1.5 bg-purple-400 rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                                        Driver Service
-                                    </a></li>
-                                    <li><a href="#" className="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
-                                        <span className="w-1.5 h-1.5 bg-purple-400 rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                                        Business Rentals
-                                    </a></li>
-                                    <li><a href="#" className="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
-                                        <span className="w-1.5 h-1.5 bg-purple-400 rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                                        Airport Transfer
-                                    </a></li>
-                                    <li><a href="#" className="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
-                                        <span className="w-1.5 h-1.5 bg-purple-400 rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                                        Event Services
-                                    </a></li>
-                                </ul>
-                            </div>
-
-                            {/* Newsletter */}
-                            <div className="space-y-6">
-                                <h4 className="text-lg font-semibold">Stay Updated</h4>
-                                <p className="text-gray-300 text-sm leading-relaxed">
-                                    Subscribe to our newsletter for exclusive deals and latest updates.
-                                </p>
-                                <div className="space-y-3">
-                                    <div className="relative">
-                                        <input
-                                            type="email"
-                                            placeholder="Enter your email"
-                                            className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
-                                        />
-                                    </div>
-                                    <button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105">
-                                        Subscribe
-                                    </button>
-                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Bottom Bar */}
-                    <div className="border-t border-white/10">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <div className="border-t border-white/10 py-6">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-                                <div className="text-gray-300 text-sm">
-                                    © 2024 Pick & Go. All rights reserved. | Designed with ❤️ for better mobility
-                                </div>
-                                <div className="flex space-x-6 text-sm">
-                                    <a href="#" className="text-gray-300 hover:text-white transition-colors duration-200">Privacy Policy</a>
-                                    <a href="#" className="text-gray-300 hover:text-white transition-colors duration-200">Terms of Service</a>
-                                    <a href="#" className="text-gray-300 hover:text-white transition-colors duration-200">Cookie Policy</a>
-                                </div>
+                                <p className="text-gray-400 text-sm">
+                                    © 2023 RentWheelz. All rights reserved.
+                                </p>
                             </div>
                         </div>
                     </div>

@@ -1,9 +1,5 @@
 const { BusinessOwner } = require('../models/BusinessOwnerModel');
-const { Driver } = require('../models/DriverModel');
-const { Vehicle } = require('../models/VehicleModel');
 const { uploadToCloudinary } = require('../middleware/cloudinaryUpload');
-const emailService = require('../services/emailService');
-const bcrypt = require('bcrypt');
 
 // Register Business Owner
 const registerBusinessOwner = async (req, res) => {
@@ -817,5 +813,6 @@ module.exports = {
     approveVehicle,
     getApprovalStatistics,
     // Admin endpoints
-    getAllBusinessOwners
+    getAllBusinessOwners,
+    deleteBusinessOwnerProfile
 };

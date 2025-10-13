@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import uploadService from '../../Services/upload-service.js';
+import uploadService from '../../Services/upload-service';
 
 const FileUpload = ({
   onUploadSuccess,

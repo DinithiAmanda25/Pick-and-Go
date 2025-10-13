@@ -16,8 +16,7 @@ import BusinessOwnerAgreements from '../../Components/Business-owner/Agreements'
 import BusinessOwnerFeedback from '../../Components/Business-owner/Feedback'
 import BusinessOwnerAnalytics from '../../Components/Business-owner/Analytics'
 import BusinessOwnerProfile from '../../Components/Business-owner/Profile'
-import PendingDriverApplications from '../../Components/Business-owner/PendingDriverApplications'
-import PendingApplications from '../../Components/Business-owner/PendingApplications'
+import PendingVehicleApprovals from '../../Components/Business-owner/PendingVehicleApprovals'
 
 function BusinessOwnerDashboard() {
   const location = useLocation()
@@ -29,10 +28,6 @@ function BusinessOwnerDashboard() {
   const userId = getCurrentUserId()
   const sessionData = getSessionData()
 
-  // Debug logging
-  console.log('BusinessOwnerDashboard - User:', user)
-  console.log('BusinessOwnerDashboard - UserID:', userId)
-  console.log('BusinessOwnerDashboard - SessionData:', sessionData)
 
   // Check if user is authenticated and is a business owner
   if (!user || user.role !== 'business_owner') {
@@ -79,6 +74,68 @@ function BusinessOwnerDashboard() {
       totalUsers: 156,
       completedBookings: 892,
       averageRating: 4.7
+    },
+    pendingApplications: {
+      drivers: [
+        {
+          id: 1,
+          fullName: 'Michael Johnson',
+          email: 'michael@example.com',
+          phone: '+94771234567',
+          licenseNumber: 'DL123456',
+          experience: '5 years',
+          appliedDate: '2024-01-18',
+          status: 'pending'
+        },
+        {
+          id: 2,
+          fullName: 'Sarah Williams',
+          email: 'sarah@example.com',
+          phone: '+94771234568',
+          licenseNumber: 'DL789012',
+          experience: '3 years',
+          appliedDate: '2024-01-17',
+          status: 'pending'
+        }
+      ],
+      vehicles: [
+        {
+          id: 1,
+          make: 'Honda',
+          model: 'Civic',
+          year: 2022,
+          licensePlate: 'CAR-456',
+          ownerName: 'John Doe',
+          ownerEmail: 'john@example.com',
+          appliedDate: '2024-01-19',
+          status: 'pending'
+        },
+        {
+          id: 2,
+          make: 'Nissan',
+          model: 'Altima',
+          year: 2023,
+          licensePlate: 'CAR-789',
+          ownerName: 'Jane Smith',
+          ownerEmail: 'jane@example.com',
+          appliedDate: '2024-01-16',
+          status: 'pending'
+        },
+        {
+          id: 3,
+          make: 'Toyota',
+          model: 'Corolla',
+          year: 2021,
+          licensePlate: 'CAR-321',
+          ownerName: 'Bob Brown',
+          ownerEmail: 'bob@example.com',
+          appliedDate: '2024-01-15',
+          status: 'pending'
+        }
+      ],
+      getTotalCount() {
+        return this.drivers.length + this.vehicles.length;
+      }
     },
     fleet: [
       {
@@ -451,14 +508,12 @@ function BusinessOwnerDashboard() {
         return <BusinessOwnerPackages packages={mockData.packages} />
       case 'bookings':
         return <BusinessOwnerBookings bookings={mockData.bookings} />
+      case 'pending-applications':
+        return <PendingVehicleApprovals pendingApplications={mockData.pendingApplications} />
       case 'revenue':
         return <BusinessOwnerRevenue payments={mockData.payments} revenue={mockData.profile.monthlyRevenue} />
       case 'drivers':
         return <BusinessOwnerDrivers drivers={mockData.drivers} />
-      case 'pending-applications':
-        return <PendingApplications />
-      case 'pending-drivers':
-        return <PendingDriverApplications />
       case 'users':
         return <BusinessOwnerUsers users={mockData.users} />
       case 'agreements':
@@ -495,7 +550,7 @@ function BusinessOwnerDashboard() {
     <div className="flex min-h-screen bg-gray-50">
       <BusinessOwnerSidebar />
       <div className="flex-1 ml-64">
-        <BusinessOwnerHeader />
+        <BusinessOwnerHeader pendingApplicationsCount={mockData.pendingApplications.getTotalCount()} />
         <main className="p-6">
           {renderTabContent()}
         </main>
