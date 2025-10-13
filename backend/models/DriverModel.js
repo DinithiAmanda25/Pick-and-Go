@@ -113,23 +113,6 @@ const driverSchema = new mongoose.Schema({
         enum: ['pending', 'approved', 'rejected', 'suspended'],
         default: 'pending'
     },
-    approvalDetails: {
-        approvedBy: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'BusinessOwner'
-        },
-        approvedAt: {
-            type: Date
-        },
-        rejectionReason: {
-            type: String,
-            trim: true
-        },
-        approvalNotes: {
-            type: String,
-            trim: true
-        }
-    },
     rating: {
         type: Number,
         default: 0,

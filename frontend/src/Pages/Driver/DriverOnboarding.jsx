@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import AuthService from '../../Services/auth-service.js'
-import DriverService from '../../Services/driver-service.js'
+import authService from '../../Services/Auth-service'
+import driverService from '../../Services/Driver-service'
 import logo from '../../Assets/2.png'
 
 function DriverOnboarding() {
@@ -403,7 +403,7 @@ function DriverOnboarding() {
       }
 
       // Use the DriverService for registration
-      const data = await DriverService.registerDriver(formDataToSend)
+      const data = await driverService.registerDriver(formDataToSend)
 
       if (data.success) {
         alert('Your driver application has been submitted successfully! You will receive login credentials via email once your application is approved.')

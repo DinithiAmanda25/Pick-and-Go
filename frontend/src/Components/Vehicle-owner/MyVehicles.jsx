@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import vehicleService from '../../Services/vehicle-service.js';
+import vehicleService from '../../Services/Vehicle-service';
 import MaintenanceScheduler from './MaintenanceScheduler';
 import AddVehicleModal from './AddVehicleModal';
 
@@ -444,58 +444,13 @@ function MyVehicles() {
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-gray-600">Registration:</span>
-                                                <span className={`font-medium ${selectedVehicle.documents?.registration?.url ? "text-green-600" : "text-red-600"}`}>
-                                                    {selectedVehicle.documents?.registration?.url ? "✅ Uploaded" : "❌ Missing"}
-                                                </span>
+                                                <span className="font-medium">{selectedVehicle.registrationNumber || 'N/A'}</span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-gray-600">Insurance:</span>
-                                                <span className={`font-medium ${selectedVehicle.documents?.insurance?.url ? "text-green-600" : "text-red-600"}`}>
-                                                    {selectedVehicle.documents?.insurance?.url ? "✅ Uploaded" : "❌ Missing"}
-                                                </span>
+                                                <span className="font-medium">{selectedVehicle.insuranceStatus || 'N/A'}</span>
                                             </div>
                                         </div>
-                                        
-                                        {/* Document Links */}
-                                        {(selectedVehicle.documents?.registration?.url || 
-                                          selectedVehicle.documents?.insurance?.url || 
-                                          selectedVehicle.documents?.emissionTest?.url) && (
-                                            <div className="mt-3 pt-2 border-t border-gray-200">
-                                                <h5 className="text-sm font-medium text-gray-700 mb-2">View Documents:</h5>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {selectedVehicle.documents?.registration?.url && (
-                                                        <a 
-                                                            href={selectedVehicle.documents.registration.url} 
-                                                            target="_blank" 
-                                                            rel="noopener noreferrer"
-                                                            className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200"
-                                                        >
-                                                            📄 Registration
-                                                        </a>
-                                                    )}
-                                                    {selectedVehicle.documents?.insurance?.url && (
-                                                        <a 
-                                                            href={selectedVehicle.documents.insurance.url} 
-                                                            target="_blank" 
-                                                            rel="noopener noreferrer"
-                                                            className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200"
-                                                        >
-                                                            🛡️ Insurance
-                                                        </a>
-                                                    )}
-                                                    {selectedVehicle.documents?.emissionTest?.url && (
-                                                        <a 
-                                                            href={selectedVehicle.documents.emissionTest.url} 
-                                                            target="_blank" 
-                                                            rel="noopener noreferrer"
-                                                            className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded hover:bg-purple-200"
-                                                        >
-                                                            🔍 Inspection
-                                                        </a>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
                                     <div>
                                         <h4 className="font-medium text-gray-900 mb-2">Listing Details</h4>

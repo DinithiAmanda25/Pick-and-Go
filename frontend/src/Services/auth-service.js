@@ -1,4 +1,4 @@
-import { HTTP } from './http-common-service';
+import { HTTP } from './httpCommon-service';
 
 // Universal Authentication Service
 // This service handles only universal authentication functions (login, logout, session management)
@@ -18,6 +18,7 @@ class AuthService {
 
       if (response.data.success) {
         const userData = response.data.user;
+        const token = response.data.token;
 
         // Store user data in both localStorage (persistent) and sessionStorage (session-only)
         const sessionData = {
@@ -35,6 +36,11 @@ class AuthService {
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('userRole', userData.role);
         localStorage.setItem('userId', userData.id);
+        
+        // Store the JWT token
+        if (token) {
+          localStorage.setItem('authToken', token);
+        }
 
         // sessionStorage for additional session-specific data
         sessionStorage.setItem('userSession', JSON.stringify({
@@ -60,6 +66,7 @@ class AuthService {
     localStorage.removeItem('userRole');
     localStorage.removeItem('userId');
     localStorage.removeItem('token');
+    localStorage.removeItem('authToken');
     sessionStorage.removeItem('userSession');
 
     console.log('User logged out successfully');

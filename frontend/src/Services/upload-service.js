@@ -1,4 +1,4 @@
-import { HTTP } from './http-common-service';
+import httpCommon from './httpCommon-service';
 
 class UploadService {
   // Upload single file
@@ -9,7 +9,7 @@ class UploadService {
     formData.append('folder', folder);
 
     try {
-      const response = await HTTP.post('/upload/single', formData, {
+      const response = await httpCommon.post('/upload/single', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -23,17 +23,17 @@ class UploadService {
   // Upload multiple files
   uploadMultipleFiles = async (files, category = 'general', folder = 'pick-and-go') => {
     const formData = new FormData();
-
+    
     // Append each file
     Array.from(files).forEach((file) => {
       formData.append('files', file);
     });
-
+    
     formData.append('category', category);
     formData.append('folder', folder);
 
     try {
-      const response = await HTTP.post('/upload/multiple', formData, {
+      const response = await httpCommon.post('/upload/multiple', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -52,7 +52,7 @@ class UploadService {
     formData.append('userType', userType);
 
     try {
-      const response = await HTTP.post('/upload/profile', formData, {
+      const response = await httpCommon.post('/upload/profile', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -72,7 +72,7 @@ class UploadService {
     formData.append('documentType', documentType);
 
     try {
-      const response = await HTTP.post('/upload/document', formData, {
+      const response = await httpCommon.post('/upload/document', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -86,7 +86,7 @@ class UploadService {
   // Delete file
   deleteFile = async (publicId) => {
     try {
-      const response = await HTTP.delete(`/upload/${encodeURIComponent(publicId)}`);
+      const response = await httpCommon.delete(`/upload/${encodeURIComponent(publicId)}`);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'File deletion failed');

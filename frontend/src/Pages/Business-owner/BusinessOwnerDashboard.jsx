@@ -16,8 +16,6 @@ import BusinessOwnerAgreements from '../../Components/Business-owner/Agreements'
 import BusinessOwnerFeedback from '../../Components/Business-owner/Feedback'
 import BusinessOwnerAnalytics from '../../Components/Business-owner/Analytics'
 import BusinessOwnerProfile from '../../Components/Business-owner/Profile'
-import PendingDriverApplications from '../../Components/Business-owner/PendingDriverApplications'
-import PendingApplications from '../../Components/Business-owner/PendingApplications'
 
 function BusinessOwnerDashboard() {
   const location = useLocation()
@@ -29,10 +27,6 @@ function BusinessOwnerDashboard() {
   const userId = getCurrentUserId()
   const sessionData = getSessionData()
 
-  // Debug logging
-  console.log('BusinessOwnerDashboard - User:', user)
-  console.log('BusinessOwnerDashboard - UserID:', userId)
-  console.log('BusinessOwnerDashboard - SessionData:', sessionData)
 
   // Check if user is authenticated and is a business owner
   if (!user || user.role !== 'business_owner') {
@@ -455,10 +449,6 @@ function BusinessOwnerDashboard() {
         return <BusinessOwnerRevenue payments={mockData.payments} revenue={mockData.profile.monthlyRevenue} />
       case 'drivers':
         return <BusinessOwnerDrivers drivers={mockData.drivers} />
-      case 'pending-applications':
-        return <PendingApplications />
-      case 'pending-drivers':
-        return <PendingDriverApplications />
       case 'users':
         return <BusinessOwnerUsers users={mockData.users} />
       case 'agreements':

@@ -246,8 +246,8 @@ const vehicleSchema = new mongoose.Schema({
                 trim: true
             },
             uploadedAt: {
-                type: Date
-                // Removed default: Date.now - should only be set when actually uploaded
+                type: Date,
+                default: Date.now
             }
         },
         registration: {
@@ -264,8 +264,8 @@ const vehicleSchema = new mongoose.Schema({
                 trim: true
             },
             uploadedAt: {
-                type: Date
-                // Removed default: Date.now - should only be set when actually uploaded
+                type: Date,
+                default: Date.now
             }
         },
         emissionTest: {
@@ -282,8 +282,8 @@ const vehicleSchema = new mongoose.Schema({
                 trim: true
             },
             uploadedAt: {
-                type: Date
-                // Removed default: Date.now - should only be set when actually uploaded
+                type: Date,
+                default: Date.now
             }
         }
     },

@@ -18,8 +18,6 @@ const {
     getAvailableVehicles
 } = require('../controllers/VehicleController');
 
-const { cleanupVehicleDocuments } = require('../controllers/CleanupController');
-
 // Vehicle Owner Routes
 router.post('/owner/:ownerId/add', addVehicle);
 router.get('/owner/:ownerId', getVehiclesByOwner);
@@ -41,8 +39,5 @@ router.put('/:vehicleId/reject/:businessOwnerId', rejectVehicle);
 
 // Public Routes
 router.get('/available/rental', getAvailableVehicles);
-
-// Cleanup Route (for development/maintenance)
-router.post('/cleanup/documents', cleanupVehicleDocuments);
 
 module.exports = router;
