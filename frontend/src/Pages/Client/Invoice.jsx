@@ -3,6 +3,7 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import ClientMainHeader from '../../Components/Clients/ClientMainHeader'
 
 function Invoice() {
+<<<<<<< Updated upstream
     const { id } = useParams()
     const location = useLocation()
     const bookingData = location.state
@@ -10,6 +11,372 @@ function Invoice() {
     const handleDownloadInvoice = () => {
         // Mock download functionality
         alert('Invoice downloaded successfully!')
+=======
+    const { id } = useParams();
+    const location = useLocation();
+    const [booking, setBooking] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [downloading, setDownloading] = useState(false);
+
+    useEffect(() => {
+        const fetchBookingDetails = async () => {
+            try {
+                // If we have booking data passed via state, use it
+                if (location.state?.booking) {
+                    setBooking(location.state.booking);
+                    setLoading(false);
+                    return;
+                }
+                
+                // Otherwise fetch from API using the ID
+                if (id) {
+                    const response = await getBookingDetails(id);
+                    if (response.success) {
+                        setBooking(response.booking);
+                    } else {
+                        setError(response.message || 'Failed to fetch booking details');
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch booking details:', error);
+                setError('Failed to load invoice. Please try again.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchBookingDetails();
+    }, [id, location]);
+
+    const handleDownloadInvoice = async () => {
+        setDownloading(true);
+        try {
+            // Check if html2pdf is already loaded
+            if (window.html2pdf) {
+                generatePDF();
+                return;
+            }
+
+            // Load html2pdf library dynamically
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+            script.crossOrigin = 'anonymous';
+            document.head.appendChild(script);
+            
+            script.onload = () => {
+                generatePDF();
+            };
+
+            script.onerror = () => {
+                setDownloading(false);
+                // Fallback: Use browser's print to PDF
+                const useFallback = window.confirm(
+                    'Failed to load PDF generator. Would you like to use the browser\'s print to PDF feature instead?'
+                );
+                if (useFallback) {
+                    // Trigger print dialog with PDF option
+                    window.print();
+                }
+            };
+        } catch (error) {
+            console.error('Download error:', error);
+            setDownloading(false);
+            alert('Failed to download receipt. Please try again.');
+        }
+    };
+
+    const generatePDF = () => {
+        // Get the invoice content
+        let invoiceElement = document.querySelector('.invoice-content');
+        if (!invoiceElement) {
+            setDownloading(false);
+            alert('Invoice content not found');
+            return;
+        }
+
+        // Create a clean copy for PDF generation to avoid styling issues
+        const cleanElement = invoiceElement.cloneNode(true);
+        
+        // Remove problematic elements and fix styles
+        cleanElement.style.fontFamily = 'Arial, sans-serif';
+        cleanElement.style.color = '#000000';
+        cleanElement.style.backgroundColor = '#ffffff';
+        
+        // Remove any SVG elements that might cause issues
+        const svgElements = cleanElement.querySelectorAll('svg');
+        svgElements.forEach(svg => {
+            // Replace with simple text or remove
+            svg.parentNode.removeChild(svg);
+        });
+
+        // Fix any problematic CSS classes
+        const allElements = cleanElement.querySelectorAll('*');
+        allElements.forEach(el => {
+            // Remove Tailwind classes that might cause issues
+            el.className = el.className.replace(/text-\w+-\d+/g, '').replace(/bg-\w+-\d+/g, '').replace(/border-\w+-\d+/g, '');
+            
+            // Set safe inline styles
+            if (el.tagName === 'H1' || el.tagName === 'H2') {
+                el.style.color = '#2563eb';
+                el.style.fontWeight = 'bold';
+            } else if (el.tagName === 'P') {
+                el.style.color = '#374151';
+            }
+        });
+
+        // Temporarily add to document
+        cleanElement.style.position = 'absolute';
+        cleanElement.style.left = '-9999px';
+        cleanElement.style.top = '0';
+        document.body.appendChild(cleanElement);
+
+        // Configure PDF options with simplified settings to avoid issues
+        const options = {
+            margin: [0.5, 0.5, 0.5, 0.5],
+            filename: `receipt-${booking.bookingReference}.pdf`,
+            image: { type: 'jpeg', quality: 0.95 },
+            html2canvas: { 
+                scale: 1, // Use scale 1 to avoid rendering issues
+                useCORS: true,
+                letterRendering: true,
+                backgroundColor: '#ffffff',
+                allowTaint: false,
+                foreignObjectRendering: false,
+                logging: false, // Disable logging to reduce console errors
+                removeContainer: true
+            },
+            jsPDF: { 
+                unit: 'in', 
+                format: 'letter', 
+                orientation: 'portrait' 
+            },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        };
+
+        // Generate and download PDF
+        window.html2pdf()
+            .set(options)
+            .from(cleanElement)
+            .save()
+            .then(() => {
+                // Clean up the temporary element
+                document.body.removeChild(cleanElement);
+                setDownloading(false);
+                
+                // Show success message
+                const notification = document.createElement('div');
+                notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                notification.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="w-5 h-5 mr-2 text-lg">✓</span>
+                        Receipt downloaded successfully!
+                    </div>
+                `;
+                document.body.appendChild(notification);
+                
+                // Remove notification after 3 seconds
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            })
+            .catch((error) => {
+                console.error('PDF generation failed:', error);
+                // Clean up the temporary element
+                if (document.body.contains(cleanElement)) {
+                    document.body.removeChild(cleanElement);
+                }
+                setDownloading(false);
+                
+                // Try fallback method
+                const useFallback = window.confirm(
+                    'PDF generation failed. Would you like to try the browser\'s print to PDF instead?'
+                );
+                if (useFallback) {
+                    window.print();
+                } else {
+                    // Try creating a simple HTML version
+                    generateSimpleHTMLPDF();
+                }
+            });
+    };
+
+    const generateSimpleHTMLPDF = () => {
+        // Create a very simple HTML version for PDF generation
+        const simpleHTML = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>Receipt - ${booking.bookingReference}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+                    .header { text-align: center; margin-bottom: 30px; }
+                    .company-name { font-size: 24px; font-weight: bold; color: #2563eb; }
+                    .invoice-title { font-size: 20px; margin-top: 10px; }
+                    .section { margin: 20px 0; }
+                    .section h3 { color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 5px; }
+                    .info-row { margin: 8px 0; }
+                    .label { font-weight: bold; display: inline-block; width: 150px; }
+                    .total { font-size: 18px; font-weight: bold; color: #2563eb; margin-top: 20px; }
+                    .footer { margin-top: 40px; text-align: center; color: #666; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div class="company-name">Pick & Go</div>
+                    <div>Vehicle Rental Services</div>
+                    <div>123 Main Street, City, State 12345</div>
+                    <div>Phone: (555) 123-4567 | Email: info@pickandgo.com</div>
+                    <div class="invoice-title">RECEIPT</div>
+                </div>
+
+                <div class="section">
+                    <h3>Invoice Information</h3>
+                    <div class="info-row"><span class="label">Invoice #:</span> ${booking.bookingReference}</div>
+                    <div class="info-row"><span class="label">Date:</span> ${new Date(booking.createdAt).toLocaleDateString()}</div>
+                    <div class="info-row"><span class="label">Status:</span> ${booking.status.toUpperCase()}</div>
+                </div>
+
+                <div class="section">
+                    <h3>Customer Information</h3>
+                    <div class="info-row"><span class="label">Name:</span> ${booking.clientId?.firstName} ${booking.clientId?.lastName}</div>
+                    <div class="info-row"><span class="label">Email:</span> ${booking.clientId?.email}</div>
+                    <div class="info-row"><span class="label">Phone:</span> ${booking.clientId?.phone}</div>
+                </div>
+
+                <div class="section">
+                    <h3>Vehicle Details</h3>
+                    <div class="info-row"><span class="label">Vehicle:</span> ${booking.vehicleId?.make} ${booking.vehicleId?.model} (${booking.vehicleId?.year})</div>
+                    <div class="info-row"><span class="label">License Plate:</span> ${booking.vehicleId?.licensePlate}</div>
+                    <div class="info-row"><span class="label">Color:</span> ${booking.vehicleId?.color}</div>
+                </div>
+
+                <div class="section">
+                    <h3>Rental Period</h3>
+                    <div class="info-row"><span class="label">Start Date:</span> ${new Date(booking.rentalPeriod.startDate).toLocaleDateString()}</div>
+                    <div class="info-row"><span class="label">End Date:</span> ${new Date(booking.rentalPeriod.endDate).toLocaleDateString()}</div>
+                    <div class="info-row"><span class="label">Duration:</span> ${rentalDays} day(s)</div>
+                </div>
+
+                <div class="section">
+                    <h3>Locations</h3>
+                    <div class="info-row"><span class="label">Pickup:</span> ${booking.pickupLocation?.address}, ${booking.pickupLocation?.city}</div>
+                    <div class="info-row"><span class="label">Dropoff:</span> ${booking.dropoffLocation?.address}, ${booking.dropoffLocation?.city}</div>
+                </div>
+
+                <div class="section">
+                    <h3>Payment Information</h3>
+                    <div class="info-row"><span class="label">Payment Method:</span> ${booking.payment?.method || 'N/A'}</div>
+                    <div class="info-row"><span class="label">Payment Status:</span> ${booking.payment?.status || 'N/A'}</div>
+                    <div class="info-row"><span class="label">Transaction ID:</span> ${booking.payment?.transactionId || 'N/A'}</div>
+                    <div class="total">Total Amount: LKR ${booking.payment?.paidAmount || booking.pricing?.totalAmount || 0}</div>
+                </div>
+
+                <div class="footer">
+                    <p>Thank you for choosing Pick & Go!</p>
+                    <p>For support, contact: info@pickandgo.com</p>
+                </div>
+            </body>
+            </html>
+        `;
+
+        // Create a new window with the simple HTML
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(simpleHTML);
+        printWindow.document.close();
+        printWindow.focus();
+        
+        // Wait for content to load, then print
+        setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+        }, 500);
+    };
+
+    const handleDownloadTextReceipt = () => {
+        // Calculate rental days if not already calculated
+        const startDate = new Date(booking.rentalPeriod.startDate);
+        const endDate = new Date(booking.rentalPeriod.endDate);
+        const calculatedRentalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+        
+        // Generate a simple text receipt as fallback
+        const receiptText = `
+PICK & GO - VEHICLE RENTAL RECEIPT
+=====================================
+
+Invoice #: ${booking.bookingReference}
+Date: ${new Date(booking.createdAt).toLocaleDateString()}
+Status: ${booking.status.toUpperCase()}
+
+CUSTOMER INFORMATION:
+--------------------
+Name: ${booking.clientId?.firstName} ${booking.clientId?.lastName}
+Email: ${booking.clientId?.email}
+Phone: ${booking.clientId?.phone}
+
+VEHICLE DETAILS:
+----------------
+Vehicle: ${booking.vehicleId?.make} ${booking.vehicleId?.model} (${booking.vehicleId?.year})
+License Plate: ${booking.vehicleId?.licensePlate}
+Color: ${booking.vehicleId?.color}
+
+RENTAL PERIOD:
+--------------
+Start Date: ${new Date(booking.rentalPeriod.startDate).toLocaleDateString()}
+End Date: ${new Date(booking.rentalPeriod.endDate).toLocaleDateString()}
+Duration: ${calculatedRentalDays} day(s)
+
+PICKUP & DROPOFF:
+-----------------
+Pickup: ${booking.pickupLocation?.address}, ${booking.pickupLocation?.city}
+Dropoff: ${booking.dropoffLocation?.address}, ${booking.dropoffLocation?.city}
+
+PRICING BREAKDOWN:
+------------------
+Base Rate: LKR ${booking.pricing?.baseRate || 0}
+Duration: ${calculatedRentalDays} days
+Subtotal: LKR ${booking.pricing?.subtotal || 0}
+Additional Services: LKR ${booking.pricing?.additionalServices || 0}
+Taxes: LKR ${booking.pricing?.taxes || 0}
+TOTAL: LKR ${booking.payment?.paidAmount || booking.pricing?.totalAmount || 0}
+
+PAYMENT INFORMATION:
+-------------------
+Payment Method: ${booking.payment?.method || 'N/A'}
+Payment Status: ${booking.payment?.status || 'N/A'}
+Transaction ID: ${booking.payment?.transactionId || 'N/A'}
+
+Thank you for choosing Pick & Go!
+For support, contact: info@pickandgo.com
+        `.trim();
+
+        // Create and download text file
+        const blob = new Blob([receiptText], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `receipt-${booking.bookingReference}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    };
+
+    const handlePrint = () => {
+        window.print();
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading invoice...</p>
+                </div>
+            </div>
+        );
+>>>>>>> Stashed changes
     }
 
     const handlePrint = () => {
@@ -58,21 +425,64 @@ function Invoice() {
                                 </svg>
                                 Print
                             </button>
+                            
+                            {/* Download Dropdown */}
+                            <div className="relative">
                             <button
+                                    disabled={downloading}
+                                    className={`px-6 py-2 rounded-lg flex items-center shadow-lg transition-all duration-200 ${
+                                        downloading 
+                                            ? 'bg-gray-400 cursor-not-allowed' 
+                                            : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 hover:shadow-xl'
+                                    } text-white`}
                                 onClick={handleDownloadInvoice}
-                                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded-lg hover:from-blue-700 hover:to-blue-800 flex items-center shadow-lg hover:shadow-xl transition-all duration-200"
-                            >
+                                >
+                                    {downloading ? (
+                                        <>
+                                            <svg className="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Generating...
+                                        </>
+                                    ) : (
+                                        <>
                                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
-                                Download
+                                            Download PDF
+                                        </>
+                                    )}
+                                </button>
+                                
+                                {/* Alternative download options */}
+                                <div className="mt-2 space-y-1">
+                                    <button
+                                        onClick={handleDownloadTextReceipt}
+                                        className="text-xs text-blue-600 hover:text-blue-800 underline block"
+                                        title="Download as text file"
+                                    >
+                                        Download as text
+                                    </button>
+                                    <button
+                                        onClick={generateSimpleHTMLPDF}
+                                        className="text-xs text-blue-600 hover:text-blue-800 underline block"
+                                        title="Simple HTML version for printing"
+                                    >
+                                        Simple print version
                             </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Invoice */}
-                <div className="bg-white rounded-xl shadow-lg p-8">
+                <div className="invoice-content bg-white rounded-xl shadow-lg p-8" style={{
+                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                    lineHeight: '1.6',
+                    color: '#374151'
+                }}>
                     {/* Invoice Header */}
                     <div className="flex justify-between items-start mb-8">
                         <div>

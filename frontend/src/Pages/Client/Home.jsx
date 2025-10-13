@@ -2,6 +2,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import ClientMainHeader from '../../Components/Clients/ClientMainHeader'
+import PackageSlider from '../../Components/Home/PackageSlider'
 
 // Animation variants for different sections
 const fadeInUp = {
@@ -398,6 +399,9 @@ function Home() {
           </motion.div>
         </div>
       </section>
+
+      {/* Package Slider Section */}
+      <PackageSlider />
 
       {/* How It Works Section */}
       <section className="py-20 bg-white">
