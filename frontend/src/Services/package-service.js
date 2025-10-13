@@ -25,14 +25,14 @@ class PackageService {
   async createPackage(packageData) {
     try {
       console.log('Creating package with data:', packageData);
-      
+
       const response = await api.post('/packages/create', packageData);
-      
+
       console.log('Package created successfully:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error creating package:', error);
-      
+
       if (error.response) {
         throw new Error(error.response.data.message || 'Failed to create package');
       } else if (error.request) {
@@ -93,7 +93,7 @@ class PackageService {
       return mockPackages;
     } catch (error) {
       console.error('Error fetching packages:', error);
-      
+
       if (error.response) {
         throw new Error(error.response.data.message || 'Failed to fetch packages');
       } else if (error.request) {
@@ -111,7 +111,7 @@ class PackageService {
       return response.data;
     } catch (error) {
       console.error('Error fetching package:', error);
-      
+
       if (error.response) {
         throw new Error(error.response.data.message || 'Failed to fetch package');
       } else if (error.request) {
@@ -126,14 +126,14 @@ class PackageService {
   async updatePackage(packageId, packageData) {
     try {
       console.log('Updating package with data:', packageData);
-      
+
       const response = await api.put(`/packages/${packageId}`, packageData);
-      
+
       console.log('Package updated successfully:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error updating package:', error);
-      
+
       if (error.response) {
         throw new Error(error.response.data.message || 'Failed to update package');
       } else if (error.request) {
@@ -148,14 +148,14 @@ class PackageService {
   async deletePackage(packageId) {
     try {
       console.log('Deleting package:', packageId);
-      
+
       const response = await api.delete(`/packages/${packageId}`);
-      
+
       console.log('Package deleted successfully:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error deleting package:', error);
-      
+
       if (error.response) {
         throw new Error(error.response.data.message || 'Failed to delete package');
       } else if (error.request) {
@@ -173,7 +173,7 @@ class PackageService {
       return response.data;
     } catch (error) {
       console.error('Error toggling package status:', error);
-      
+
       if (error.response) {
         throw new Error(error.response.data.message || 'Failed to toggle package status');
       } else if (error.request) {
@@ -191,7 +191,7 @@ class PackageService {
       return response.data;
     } catch (error) {
       console.error('Error fetching available vehicles:', error);
-      
+
       if (error.response) {
         throw new Error(error.response.data.message || 'Failed to fetch available vehicles');
       } else if (error.request) {
@@ -209,7 +209,7 @@ class PackageService {
       return response.data;
     } catch (error) {
       console.error('Error fetching available vehicles:', error);
-      
+
       if (error.response) {
         throw new Error(error.response.data.message || 'Failed to fetch available vehicles');
       } else if (error.request) {

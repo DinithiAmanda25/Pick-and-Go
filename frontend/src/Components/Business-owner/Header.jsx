@@ -49,12 +49,11 @@ function BusinessOwnerHeader({ pendingApplicationsCount = 0 }) {
                 <div className="flex items-center space-x-4">
                     {/* Pending Applications Count */}
                     <div className="flex items-center space-x-4">
-                        <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                            pendingApplicationsCount > 0 
-                            ? 'bg-yellow-100 text-yellow-800 cursor-pointer hover:bg-yellow-200' 
-                            : 'bg-green-100 text-green-800'
-                        }`}>
-                            {pendingApplicationsCount > 0 
+                        <div className={`px-3 py-1 rounded-full text-sm font-medium ${pendingApplicationsCount > 0
+                                ? 'bg-yellow-100 text-yellow-800 cursor-pointer hover:bg-yellow-200'
+                                : 'bg-green-100 text-green-800'
+                            }`}>
+                            {pendingApplicationsCount > 0
                                 ? `${pendingApplicationsCount} Pending Application${pendingApplicationsCount !== 1 ? 's' : ''}`
                                 : 'No Pending Applications'
                             }

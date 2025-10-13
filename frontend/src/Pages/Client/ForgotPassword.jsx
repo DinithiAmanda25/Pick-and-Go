@@ -87,8 +87,8 @@ function ForgotPassword() {
 
     try {
       // Mock API call - replace with actual service
-      const result = { 
-        success: true, 
+      const result = {
+        success: true,
         message: 'OTP sent successfully',
         data: { otpKey: 'mock-otp-key-' + Date.now() }
       }
@@ -191,8 +191,8 @@ function ForgotPassword() {
 
     try {
       // Mock API call - replace with actual service
-      const result = { 
-        success: true, 
+      const result = {
+        success: true,
         message: 'OTP resent successfully'
       }
 
@@ -336,8 +336,8 @@ function ForgotPassword() {
                       setValidationError('')
                     }}
                     className={`p-3 border-2 rounded-lg flex items-center justify-center space-x-2 transition-all ${formData.contactMethod === 'email'
-                        ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-600'
                       }`}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -352,8 +352,8 @@ function ForgotPassword() {
                       setValidationError('')
                     }}
                     className={`p-3 border-2 rounded-lg flex items-center justify-center space-x-2 transition-all ${formData.contactMethod === 'mobile'
-                        ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-600'
                       }`}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -388,8 +388,8 @@ function ForgotPassword() {
                     value={formData.identifier}
                     onChange={handleInputChange}
                     className={`block w-full pl-10 pr-3 py-3 border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${validationError
-                        ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                        : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                       }`}
                     placeholder={formData.contactMethod === 'email' ? 'Enter your email address' : 'Enter your mobile number (e.g., +1234567890)'}
                   />
