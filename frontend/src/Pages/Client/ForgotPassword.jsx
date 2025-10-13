@@ -87,8 +87,8 @@ function ForgotPassword() {
 
     try {
       // Mock API call - replace with actual service
-      const result = { 
-        success: true, 
+      const result = {
+        success: true,
         message: 'OTP sent successfully',
         data: { otpKey: 'mock-otp-key-' + Date.now() }
       }
@@ -120,7 +120,7 @@ function ForgotPassword() {
 
     try {
       // Mock API call - replace with actual service
-      const result = { 
+      const result = {
         success: formData.otp === '123456', // Mock OTP for testing
         message: formData.otp === '123456' ? 'OTP verified successfully' : 'Invalid OTP'
       }
@@ -160,7 +160,7 @@ function ForgotPassword() {
 
     try {
       // Mock API call - replace with actual service
-      const result = { 
+      const result = {
         success: true,
         message: 'Password reset successful'
       }
@@ -188,7 +188,7 @@ function ForgotPassword() {
     try {
       // Mock API call - replace with actual service
       const result = { success: true, message: 'OTP resent successfully' }
-      
+
       if (result.success) {
         setOtpTimer(600) // Reset timer to 10 minutes
         alert(`OTP resent to your ${formData.method === 'email' ? 'email address' : 'mobile number'}`)
