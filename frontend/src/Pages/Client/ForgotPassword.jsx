@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import logo from '../../Assets/2.png'
-import forgotPasswordService from '../../Services/forgot-password-service.js'
 
 function ForgotPassword() {
   const [currentStep, setCurrentStep] = useState(1)
@@ -11,16 +10,13 @@ function ForgotPassword() {
     phone: '',
     otp: '',
     newPassword: '',
-    confirmPassword: '',
-    otpKey: '' // Store OTP session key
+    confirmPassword: ''
   })
   const [isLoading, setIsLoading] = useState(false)
   const [otpTimer, setOtpTimer] = useState(0)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [validationError, setValidationError] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
-  const [passwordStrength, setPasswordStrength] = useState({ score: 0, text: 'Very Weak', color: 'red' })
   const navigate = useNavigate()
 
   // OTP Timer countdown
@@ -52,9 +48,10 @@ function ForgotPassword() {
       [name]: value
     })
 
-    // Clear messages when user starts typing
-    if (validationError) setValidationError('')
-    if (successMessage) setSuccessMessage('')
+    // Clear validation error when user starts typing
+    if (name === 'identifier' && validationError) {
+      setValidationError('')
+    }
 
     // Real-time validation for email/phone field
     if ((name === 'email' || name === 'phone') && value.trim()) {
@@ -66,19 +63,14 @@ function ForgotPassword() {
         setValidationError('')
       }
     }
-
-    // Real-time password strength checking
-    if (name === 'newPassword') {
-      setPasswordStrength(forgotPasswordService.getPasswordStrength(value))
-    }
   }
 
   const handleSendOTP = async (e) => {
     e.preventDefault()
-    
+
     const currentValue = formData.method === 'email' ? formData.email : formData.phone
     const fieldName = formData.method === 'email' ? 'email address' : 'phone number'
-    
+
     if (!currentValue) {
       setValidationError(`Please enter your ${fieldName}`)
       return
@@ -100,7 +92,7 @@ function ForgotPassword() {
       } else {
         result = await forgotPasswordService.sendOTPSMS(formData.phone)
       }
-      
+
       if (result.success) {
         setFormData(prev => ({ ...prev, otpKey: result.data.otpKey }))
         setCurrentStep(2)
@@ -113,19 +105,14 @@ function ForgotPassword() {
       setValidationError('Failed to send OTP. Please try again.')
     } finally {
       setIsLoading(false)
-    }
+      alert(`OTP sent to your ${formData.contactMethod === 'email' ? 'email address' : 'mobile number'}`)
+    }, 1500)
   }
 
   const handleVerifyOTP = async (e) => {
     e.preventDefault()
-    
     if (!formData.otp) {
-      setValidationError('Please enter the OTP')
-      return
-    }
-
-    if (formData.otp.length !== 6) {
-      setValidationError('OTP must be 6 digits')
+      alert('Please enter the OTP')
       return
     }
 
@@ -136,10 +123,10 @@ function ForgotPassword() {
       const result = await forgotPasswordService.verifyOTP(
         formData.method === 'email' ? formData.email : null,
         formData.method === 'sms' ? formData.phone : null,
-        formData.otp, 
+        formData.otp,
         formData.otpKey
       )
-      
+
       if (result.success) {
         setCurrentStep(3)
         setSuccessMessage('OTP verified successfully')
@@ -150,26 +137,23 @@ function ForgotPassword() {
       setValidationError('Failed to verify OTP. Please try again.')
     } finally {
       setIsLoading(false)
-    }
+    }, 1500)
   }
 
   const handleResetPassword = async (e) => {
     e.preventDefault()
-    
     if (!formData.newPassword || !formData.confirmPassword) {
-      setValidationError('Please fill in all password fields')
+      alert('Please fill in all password fields')
       return
     }
 
     if (formData.newPassword !== formData.confirmPassword) {
-      setValidationError('Passwords do not match')
+      alert('Passwords do not match')
       return
     }
 
-    // Validate password strength
-    const passwordValidation = forgotPasswordService.validatePassword(formData.newPassword)
-    if (!passwordValidation.isValid) {
-      setValidationError(passwordValidation.errors[0]) // Show first error
+    if (formData.newPassword.length < 8) {
+      alert('Password must be at least 8 characters long')
       return
     }
 
@@ -183,7 +167,7 @@ function ForgotPassword() {
         formData.newPassword,
         formData.otpKey
       )
-      
+
       if (result.success) {
         setSuccessMessage(result.message)
         // Navigate to login after a delay
@@ -197,15 +181,12 @@ function ForgotPassword() {
       setValidationError('Failed to reset password. Please try again.')
     } finally {
       setIsLoading(false)
-    }
+      alert('Password reset successful! Please login with your new password.')
+      navigate('/login')
+    }, 1500)
   }
 
-  const handleResendOTP = async () => {
-    if (!formData.otpKey) {
-      setValidationError('Please start the password reset process again')
-      return
-    }
-
+  const handleResendOTP = () => {
     setIsLoading(true)
     setValidationError('')
 
@@ -216,7 +197,7 @@ function ForgotPassword() {
       } else {
         result = await forgotPasswordService.resendOTPSMS(formData.phone, formData.otpKey)
       }
-      
+
       if (result.success) {
         setOtpTimer(600) // Reset timer to 10 minutes
         setSuccessMessage(result.message)
@@ -227,7 +208,8 @@ function ForgotPassword() {
       setValidationError('Failed to resend OTP. Please try again.')
     } finally {
       setIsLoading(false)
-    }
+      alert(`OTP resent to your ${formData.contactMethod === 'email' ? 'email address' : 'mobile number'}`)
+    }, 1000)
   }
 
   const formatTime = (seconds) => {
@@ -325,74 +307,94 @@ function ForgotPassword() {
 
           {/* Progress indicator */}
           <div className="flex items-center justify-center space-x-4 mb-8">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
-            }`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
+              }`}>
               1
             </div>
             <div className={`w-8 h-1 ${currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
-            }`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
+              }`}>
               2
             </div>
             <div className={`w-8 h-1 ${currentStep >= 3 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
-            }`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
+              }`}>
               3
             </div>
           </div>
 
-          {/* Step 1: Email Input */}
+          {/* Step 1: Contact Method Selection */}
           {currentStep === 1 && (
             <form onSubmit={handleSendOTP} className="space-y-6">
-              {/* Success/Error Messages */}
-              {successMessage && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              {/* Contact Method Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  How would you like to receive the OTP?
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData({ ...formData, contactMethod: 'email', identifier: '' })
+                      setValidationError('')
+                    }}
+                    className={`p-3 border-2 rounded-lg flex items-center justify-center space-x-2 transition-all ${formData.contactMethod === 'email'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                      }`}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
-                    <span className="text-green-800 text-sm font-medium">{successMessage}</span>
-                  </div>
-                </div>
-              )}
-
-              {validationError && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <svg className="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.99-.833-2.76 0L3.054 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    <span className="text-sm font-medium">Email</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData({ ...formData, contactMethod: 'mobile', identifier: '' })
+                      setValidationError('')
+                    }}
+                    className={`p-3 border-2 rounded-lg flex items-center justify-center space-x-2 transition-all ${formData.contactMethod === 'mobile'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                      }`}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
-                    <span className="text-red-800 text-sm font-medium">{validationError}</span>
-                  </div>
+                    <span className="text-sm font-medium">Mobile</span>
+                  </button>
                 </div>
-              )}
+              </div>
 
               <div>
                 <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
+                  {formData.contactMethod === 'email' ? 'Email Address' : 'Mobile Number'}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
+                    {formData.contactMethod === 'email' ? (
+                      <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    ) : (
+                      <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                    )}
                   </div>
                   <input
                     id="identifier"
                     name="identifier"
-                    type="email"
+                    type={formData.contactMethod === 'email' ? 'email' : 'tel'}
                     required
                     value={formData.identifier}
                     onChange={handleInputChange}
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
-                      validationError 
-                        ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                    className={`block w-full pl-10 pr-3 py-3 border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${validationError
+                        ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                         : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                    }`}
-                    placeholder="Enter your email address"
+                      }`}
+                    placeholder={formData.contactMethod === 'email' ? 'Enter your email address' : 'Enter your mobile number (e.g., +1234567890)'}
                   />
                 </div>
                 {validationError && (
@@ -404,7 +406,10 @@ function ForgotPassword() {
                   </p>
                 )}
                 <p className="mt-2 text-sm text-gray-500">
-                  We'll send you an OTP to verify your identity via email
+                  {formData.contactMethod === 'email'
+                    ? 'We\'ll send you an OTP to verify your identity via email'
+                    : 'We\'ll send you an OTP via SMS to verify your identity'
+                  }
                 </p>
               </div>
 
@@ -427,37 +432,23 @@ function ForgotPassword() {
           {/* Step 2: OTP Verification */}
           {currentStep === 2 && (
             <form onSubmit={handleVerifyOTP} className="space-y-6">
-              {/* Success/Error Messages */}
-              {successMessage && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className="text-green-800 text-sm font-medium">{successMessage}</span>
-                  </div>
-                </div>
-              )}
-
-              {validationError && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <svg className="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.99-.833-2.76 0L3.054 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                    <span className="text-red-800 text-sm font-medium">{validationError}</span>
-                  </div>
-                </div>
-              )}
-
               <div className="text-center mb-6">
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
+                  {formData.contactMethod === 'email' ? (
+                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                  )}
                 </div>
                 <p className="text-sm text-gray-600">
-                  We've sent a 6-digit OTP to your email address
+                  We've sent a 6-digit OTP to your <br />
+                  <span className="font-semibold text-gray-900">
+                    {formData.contactMethod === 'email' ? 'email address' : 'mobile number'}
+                  </span>
                   <br />
                   <span className="font-semibold text-blue-600">{formData.identifier}</span>
                 </p>
@@ -518,32 +509,6 @@ function ForgotPassword() {
           {/* Step 3: Reset Password */}
           {currentStep === 3 && (
             <form onSubmit={handleResetPassword} className="space-y-6">
-              {/* Success/Error Messages */}
-              {successMessage && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className="text-green-800 text-sm font-medium">{successMessage}</span>
-                  </div>
-                  <div className="mt-2 text-sm text-green-700">
-                    Redirecting to login page in 3 seconds...
-                  </div>
-                </div>
-              )}
-
-              {validationError && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <svg className="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.99-.833-2.76 0L3.054 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                    <span className="text-red-800 text-sm font-medium">{validationError}</span>
-                  </div>
-                </div>
-              )}
-
               <div className="text-center mb-6">
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -587,30 +552,6 @@ function ForgotPassword() {
                     )}
                   </button>
                 </div>
-                
-                {/* Password Strength Indicator */}
-                {formData.newPassword && (
-                  <div className="mt-2">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-600">Password Strength:</span>
-                      <span className={`text-xs font-medium text-${passwordStrength.color === 'red' ? 'red' : passwordStrength.color === 'orange' ? 'orange' : passwordStrength.color === 'yellow' ? 'yellow' : passwordStrength.color === 'lightgreen' ? 'green' : 'green'}-600`}>
-                        {passwordStrength.text}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full transition-all duration-300 ${
-                          passwordStrength.score < 2 ? 'bg-red-500' :
-                          passwordStrength.score < 3 ? 'bg-orange-500' :
-                          passwordStrength.score < 4 ? 'bg-yellow-500' :
-                          passwordStrength.score < 5 ? 'bg-green-400' :
-                          'bg-green-600'
-                        }`}
-                        style={{ width: `${(passwordStrength.score / 5) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                )}
               </div>
 
               <div>
@@ -625,11 +566,7 @@ function ForgotPassword() {
                     required
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className={`block w-full pr-10 px-3 py-3 border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
-                      formData.confirmPassword && formData.newPassword !== formData.confirmPassword
-                        ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                        : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                    }`}
+                    className="block w-full pr-10 px-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                     placeholder="Confirm new password"
                   />
                   <button
@@ -649,37 +586,21 @@ function ForgotPassword() {
                     )}
                   </button>
                 </div>
-                {formData.confirmPassword && formData.newPassword !== formData.confirmPassword && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Passwords do not match
-                  </p>
-                )}
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h4 className="text-sm font-medium text-blue-800 mb-2">Password Requirements:</h4>
                 <ul className="text-xs text-blue-700 space-y-1">
-                  <li className={`flex items-center ${formData.newPassword?.length >= 8 ? 'text-green-600' : ''}`}>
-                    {formData.newPassword?.length >= 8 ? '✓' : '•'} At least 8 characters long
-                  </li>
-                  <li className={`flex items-center ${/[A-Z]/.test(formData.newPassword) && /[a-z]/.test(formData.newPassword) ? 'text-green-600' : ''}`}>
-                    {/[A-Z]/.test(formData.newPassword) && /[a-z]/.test(formData.newPassword) ? '✓' : '•'} Mix of uppercase and lowercase letters
-                  </li>
-                  <li className={`flex items-center ${/\d/.test(formData.newPassword) ? 'text-green-600' : ''}`}>
-                    {/\d/.test(formData.newPassword) ? '✓' : '•'} At least one number
-                  </li>
-                  <li className={`flex items-center ${/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.newPassword) ? 'text-green-600' : ''}`}>
-                    {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.newPassword) ? '✓' : '•'} At least one special character
-                  </li>
+                  <li>• At least 8 characters long</li>
+                  <li>• Mix of uppercase and lowercase letters</li>
+                  <li>• At least one number</li>
+                  <li>• At least one special character</li>
                 </ul>
               </div>
 
               <button
                 type="submit"
-                disabled={isLoading || !formData.newPassword || !formData.confirmPassword || formData.newPassword !== formData.confirmPassword || passwordStrength.score < 4}
+                disabled={isLoading}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
                 {isLoading ? (

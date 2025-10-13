@@ -1,3 +1,4 @@
+const jwt = require('jsonwebtoken');
 const { Admin } = require('../models/AdminModel');
 const { BusinessOwner } = require('../models/BusinessOwnerModel');
 const { Driver } = require('../models/DriverModel');
@@ -179,10 +180,22 @@ const login = async (req, res) => {
                 break;
         }
 
+        // Generate JWT token
+        const token = jwt.sign(
+            { 
+                userId: user._id, 
+                email: user.email, 
+                role: role 
+            },
+            process.env.JWT_SECRET || 'your-secret-key',
+            { expiresIn: '24h' }
+        );
+
         res.status(200).json({
             success: true,
             message: 'Login successful',
             user: userData,
+            token: token,
             dashboardRoute: getDashboardRoute(role)
         });
 

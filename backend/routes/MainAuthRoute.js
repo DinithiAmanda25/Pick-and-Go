@@ -8,7 +8,7 @@ const { login, getProfile } = require('../controllers/UnifiedAuthController');
 const { registerClient } = require('../controllers/ClientController');
 const { registerVehicleOwner } = require('../controllers/VehicleOwnerController');
 const { registerBusinessOwner } = require('../controllers/BusinessOwnerController');
-const { registerDriver } = require('../controllers/DriverController');
+const { registerDriver, getAllDrivers, getPendingDrivers, approveDriver } = require('../controllers/DriverController');
 
 // Import file upload middleware
 const { uploadDocuments } = require('../middleware/upload');
@@ -19,7 +19,6 @@ const businessOwnerRoutes = require('./BusinessOwnerRoute');
 const driverRoutes = require('./DriverRoute');
 const clientRoutes = require('./ClientRoute');
 const vehicleOwnerRoutes = require('./VehicleOwnerRoute');
-const forgotPasswordRoutes = require('./ForgotPasswordRoute');
 
 // Legacy frontend compatibility routes (old pattern: /auth/profile/actor-type/...)
 // Special case for "all-drivers" to prevent ObjectId cast error
@@ -84,9 +83,6 @@ router.use('/profile/driver', driverRoutes);
 router.use('/profile/client', clientRoutes);
 router.use('/profile/vehicle-owner', vehicleOwnerRoutes);
 
-// Forgot Password Routes
-router.use('/forgot-password', forgotPasswordRoutes);
-
 // Universal Authentication Routes
 router.post('/login', login);
 router.get('/profile/:userId/:role', getProfile);
@@ -104,6 +100,11 @@ router.post('/register/business-owner', registerBusinessOwner);
 
 // Use uploadDocuments middleware for driver registration
 router.post('/register-driver', uploadDocuments, registerDriver);
+
+// Driver-specific routes for admin functionality
+router.get('/drivers/all', getAllDrivers);
+router.get('/drivers/pending', getPendingDrivers);
+router.put('/drivers/approve/:driverId', approveDriver);
 
 // Actor-specific routes (new pattern: /auth/actor-type/...)
 router.use('/admin', adminRoutes);

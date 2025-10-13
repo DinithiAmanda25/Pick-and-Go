@@ -1,9 +1,5 @@
 const { BusinessOwner } = require('../models/BusinessOwnerModel');
-const { Driver } = require('../models/DriverModel');
-const { Vehicle } = require('../models/VehicleModel');
 const { uploadToCloudinary } = require('../middleware/cloudinaryUpload');
-const emailService = require('../services/emailService');
-const bcrypt = require('bcrypt');
 
 // Register Business Owner
 const registerBusinessOwner = async (req, res) => {
@@ -774,26 +770,6 @@ const getApprovalStatistics = async (req, res) => {
 
     } catch (error) {
         console.error('Get approval statistics error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Server error. Please try again later.'
-        });
-    }
-};
-
-// Get All Business Owners
-const getAllBusinessOwners = async (req, res) => {
-    try {
-        // Find all business owners, exclude sensitive information like password
-        const businessOwners = await BusinessOwner.find({}).select('-password');
-
-        res.status(200).json({
-            success: true,
-            count: businessOwners.length,
-            businessOwners: businessOwners
-        });
-    } catch (error) {
-        console.error('Get all business owners error:', error);
         res.status(500).json({
             success: false,
             message: 'Server error. Please try again later.'

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import customerService from '../../Services/customer-service.js'
+import authService from '../../Services/Auth-service'
 import ClientSidebar from '../../Components/Clients/Sidebar'
 import ClientHeader from '../../Components/Clients/Header'
 import Overview from '../../Components/Clients/Overview'
@@ -11,6 +11,7 @@ import PaymentEnhanced from '../../Components/Clients/PaymentEnhanced'
 import FavoritesEnhanced from '../../Components/Clients/FavoritesEnhanced'
 import Support from '../../Components/Clients/Support'
 import RatingsFeedback from '../../Components/Clients/RatingsFeedback'
+import CardManagement from '../../Components/Clients/CardManagement'
 
 function ClientDashboard() {
   const location = useLocation()
@@ -63,7 +64,7 @@ function ClientDashboard() {
       }
 
       // Call the API to update client profile
-      const response = await customerService.updateProfile(userId, updatedData);
+      const response = await authService.updateClientProfile(userId, updatedData);
 
       if (response.success) {
         alert('Profile updated successfully!');
@@ -158,6 +159,8 @@ function ClientDashboard() {
         )
       case 'payments':
         return <PaymentEnhanced />
+      case 'cards':
+        return <CardManagement />
       case 'ratings':
         return <RatingsFeedback />
       case 'favorites':

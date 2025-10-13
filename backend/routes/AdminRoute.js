@@ -7,9 +7,13 @@ const {
     updateAdminProfile,
     changeAdminPassword
 } = require('../controllers/AdminController');
-
+const {
+    generateReport
+} = require('../controllers/BookingController');
 // Import driver functions for admin use (view only)
 const { getAllDrivers, getPendingDrivers } = require('../controllers/DriverController');
+const { getAllBookingsAdmin, getBookingStats, searchBookings } = require('../controllers/BookingController');
+router.get('/generate', generateReport);
 
 // Admin Authentication Routes
 router.post('/login', adminLogin);
@@ -84,5 +88,8 @@ router.get('/all-vehicles', (req, res) => {
         }
     })();
 });
+router.get('/admin/all', getAllBookingsAdmin);
+router.get('/admin/stats', getBookingStats);
+router.get('/admin/search', searchBookings);
 
 module.exports = router;

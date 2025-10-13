@@ -40,10 +40,11 @@ function ClientHeader() {
 
           {/* Profile Dropdown */}
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold">
-              {user?.firstName ? user.firstName[0] : ''}
-              {user?.lastName ? user.lastName[0] : ''}
-            </div>
+            <img
+              src="/api/placeholder/40/40"
+              alt="Client Profile"
+              className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+            />
             <div className="hidden md:block">
               <p className="text-sm font-medium text-gray-900">
                 {user?.firstName} {user?.lastName}
