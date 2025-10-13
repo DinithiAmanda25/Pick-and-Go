@@ -258,6 +258,26 @@ class FeedbackService {
       };
     }
   }
+
+  // Delete feedback attachment
+  async deleteFeedbackAttachment(feedbackId, publicId) {
+    try {
+      const response = await HTTP.delete(`/feedback/${feedbackId}/attachments`, {
+        data: { publicId }
+      });
+      return {
+        success: true,
+        data: response.data.data,
+        message: 'Attachment deleted successfully'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to delete attachment',
+        error: error.response?.data || error.message
+      };
+    }
+  }
 }
 
 export default new FeedbackService();
