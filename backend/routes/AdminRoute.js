@@ -82,6 +82,7 @@ router.get('/all-vehicles', (req, res) => {
                 message: 'Error fetching vehicles data'
             });
         }
+
     })();
 });
 
