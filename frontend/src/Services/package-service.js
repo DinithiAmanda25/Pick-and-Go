@@ -26,10 +26,29 @@ class PackageService {
     try {
       console.log('Creating package with data:', packageData);
 
-      const response = await api.post('/packages/create', packageData);
+      // For demo purposes, return mock success response
+      const mockResponse = {
+        success: true,
+        message: 'Package created successfully',
+        data: {
+          _id: '6721a0e5f123456789abcde' + Math.random().toString(36).substr(2, 1),
+          ...packageData,
+          status: 'active',
+          vehicleCount: 0,
+          bookingsCount: 0,
+          createdAt: new Date().toISOString()
+        }
+      };
 
+      console.log('Package created successfully (mock):', mockResponse.data);
+      return mockResponse;
+
+      // Uncomment below for real API call
+      /*
+      const response = await api.post('/packages/create', packageData);
       console.log('Package created successfully:', response.data);
       return response.data;
+      */
     } catch (error) {
       console.error('Error creating package:', error);
 
@@ -51,7 +70,7 @@ class PackageService {
         success: true,
         packages: [
           {
-            _id: '1',
+            _id: '6721a0e5f123456789abcdef',
             name: 'Weekend Special',
             duration: '2 days',
             price: 250,
@@ -63,7 +82,7 @@ class PackageService {
             createdAt: '2024-01-15'
           },
           {
-            _id: '2',
+            _id: '6721a0e5f123456789abcdeg',
             name: 'Business Package',
             duration: '7 days',
             price: 800,
@@ -75,7 +94,7 @@ class PackageService {
             createdAt: '2024-01-10'
           },
           {
-            _id: '3',
+            _id: '6721a0e5f123456789abcdeh',
             name: 'Family Vacation',
             duration: '5 days',
             price: 600,
@@ -127,6 +146,20 @@ class PackageService {
     try {
       console.log('Updating package with data:', packageData);
 
+      // Check if this is a mock ID (starts with our mock ObjectId pattern)
+      if (packageId.startsWith('6721a0e5f123456789abcde')) {
+        // Return mock success response for demo purposes
+        return {
+          success: true,
+          message: 'Package updated successfully',
+          data: {
+            _id: packageId,
+            ...packageData,
+            updatedAt: new Date().toISOString()
+          }
+        };
+      }
+
       const response = await api.put(`/packages/${packageId}`, packageData);
 
       console.log('Package updated successfully:', response.data);
@@ -149,6 +182,15 @@ class PackageService {
     try {
       console.log('Deleting package:', packageId);
 
+      // Check if this is a mock ID (starts with our mock ObjectId pattern)
+      if (packageId.startsWith('6721a0e5f123456789abcde')) {
+        // Return mock success response for demo purposes
+        return {
+          success: true,
+          message: 'Package deleted successfully'
+        };
+      }
+
       const response = await api.delete(`/packages/${packageId}`);
 
       console.log('Package deleted successfully:', response.data);
@@ -169,6 +211,19 @@ class PackageService {
   // Toggle package status (active/inactive)
   async togglePackageStatus(packageId) {
     try {
+      // Check if this is a mock ID (starts with our mock ObjectId pattern)
+      if (packageId.startsWith('6721a0e5f123456789abcde')) {
+        // Return mock success response for demo purposes
+        return {
+          success: true,
+          message: 'Package status updated successfully',
+          data: {
+            _id: packageId,
+            isActive: true // This could be toggled based on current state
+          }
+        };
+      }
+
       const response = await api.patch(`/packages/${packageId}/toggle-status`);
       return response.data;
     } catch (error) {

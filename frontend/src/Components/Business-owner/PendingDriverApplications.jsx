@@ -239,8 +239,8 @@ function PendingDriverApplications() {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center mb-1">
                                                 <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${!driver.documents ? 'bg-red-100 text-red-800' :
-                                                        Object.keys(driver.documents).length >= 3 ? 'bg-green-100 text-green-800' :
-                                                            'bg-yellow-100 text-yellow-800'
+                                                    Object.keys(driver.documents).length >= 3 ? 'bg-green-100 text-green-800' :
+                                                        'bg-yellow-100 text-yellow-800'
                                                     }`}>
                                                     {driver.documents && Object.keys(driver.documents).filter(key => driver.documents[key]).length > 0 ? (
                                                         <span className="flex items-center">

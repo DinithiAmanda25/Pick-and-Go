@@ -1,5 +1,9 @@
+const bcrypt = require('bcrypt');
 const { BusinessOwner } = require('../models/BusinessOwnerModel');
+const { Driver } = require('../models/DriverModel');
+const { Vehicle } = require('../models/VehicleModel');
 const { uploadToCloudinary } = require('../middleware/cloudinaryUpload');
+// const emailService = require('../services/emailService'); // TODO: Create email service
 
 // Register Business Owner
 const registerBusinessOwner = async (req, res) => {
@@ -475,11 +479,11 @@ const getPendingVehicles = async (req, res) => {
 // Approve Driver by Business Owner
 const approveDriver = async (req, res) => {
     try {
-        const { businessOwnerId, driverId } = req.params;
+        const { userId, driverId } = req.params;
         const { status, newPassword, approvalNotes } = req.body;
 
         // Validate business owner exists
-        const businessOwner = await BusinessOwner.findById(businessOwnerId);
+        const businessOwner = await BusinessOwner.findById(userId);
         if (!businessOwner) {
             return res.status(404).json({
                 success: false,
@@ -514,7 +518,7 @@ const approveDriver = async (req, res) => {
             status,
             updatedAt: new Date(),
             approvalDetails: {
-                approvedBy: businessOwnerId,
+                approvedBy: userId,
                 approvedAt: new Date(),
                 approvalNotes: approvalNotes || ''
             }
@@ -525,11 +529,21 @@ const approveDriver = async (req, res) => {
             updateData.approvalDetails.rejectionReason = req.body.rejectionReason || 'No reason provided';
         }
 
-        // If approving and a new password is provided, hash and update it
-        if (status === 'approved' && newPassword) {
+        // Handle password for approved drivers
+        let credentials = null;
+        if (status === 'approved') {
+            // Use provided password or generate a new one
+            const finalPassword = newPassword || `PnG${Math.random().toString(36).slice(-8).toUpperCase()}`;
+            
+            // Hash the password
             const saltRounds = 10;
-            const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+            const hashedPassword = await bcrypt.hash(finalPassword, saltRounds);
             updateData.password = hashedPassword;
+
+            credentials = {
+                email: existingDriver.email,
+                password: finalPassword
+            };
         }
 
         // Update the driver status
@@ -548,28 +562,12 @@ const approveDriver = async (req, res) => {
             approvalNotes: approvalNotes || ''
         };
 
-        let credentials = null;
-        if (status === 'approved') {
-            // Generate temporary password if not provided
-            const tempPassword = newPassword || `PnG${Math.random().toString(36).slice(-8)}`;
-
-            // Update password if we generated a new one
-            if (!newPassword) {
-                const saltRounds = 10;
-                const hashedPassword = await bcrypt.hash(tempPassword, saltRounds);
-                await Driver.findByIdAndUpdate(driverId, { password: hashedPassword });
-            }
-
-            credentials = {
-                email: driver.email,
-                password: newPassword || tempPassword
-            };
-        }
-
         // Send email notification
         try {
-            await emailService.sendDriverApprovalEmail(emailData, credentials);
-            console.log(`Driver ${status} email sent successfully to ${driver.email}`);
+            // TODO: Implement email service
+            // await emailService.sendDriverApprovalEmail(emailData, credentials);
+            console.log(`Driver ${status} - Email would be sent to ${existingDriver.email}`);
+            console.log('Email data:', emailData);
         } catch (emailError) {
             console.error('Failed to send email:', emailError.message);
             // Continue with the response even if email fails
@@ -598,11 +596,11 @@ const approveDriver = async (req, res) => {
 // Approve Vehicle by Business Owner
 const approveVehicle = async (req, res) => {
     try {
-        const { businessOwnerId, vehicleId } = req.params;
+        const { userId, vehicleId } = req.params;
         const { status, dailyRate, weeklyRate, monthlyRate, approvalNotes, rejectionReason } = req.body;
 
         // Validate business owner exists
-        const businessOwner = await BusinessOwner.findById(businessOwnerId);
+        const businessOwner = await BusinessOwner.findById(userId);
         if (!businessOwner) {
             return res.status(404).json({
                 success: false,
@@ -643,7 +641,7 @@ const approveVehicle = async (req, res) => {
             if (monthlyRate !== undefined) vehicle.rentalPrice.monthlyRate = monthlyRate;
 
             vehicle.approvalDetails = {
-                approvedBy: businessOwnerId,
+                approvedBy: userId,
                 approvedAt: new Date(),
                 approvalNotes: approvalNotes || ''
             };
@@ -651,7 +649,7 @@ const approveVehicle = async (req, res) => {
             // Reject vehicle
             vehicle.status = 'rejected';
             vehicle.approvalDetails = {
-                approvedBy: businessOwnerId,
+                approvedBy: userId,
                 approvedAt: new Date(),
                 rejectionReason: rejectionReason || 'No reason provided',
                 approvalNotes: approvalNotes || ''
@@ -672,9 +670,10 @@ const approveVehicle = async (req, res) => {
         };
 
         try {
-            // You'll need to create this email service function
-            await emailService.sendVehicleApprovalEmail(emailData);
-            console.log(`Vehicle ${status} email sent successfully to ${vehicle.ownerId.email}`);
+            // TODO: Create email service function
+            // await emailService.sendVehicleApprovalEmail(emailData);
+            console.log(`Vehicle ${status} - Email would be sent to ${vehicle.ownerId.email}`);
+            console.log('Email data:', emailData);
         } catch (emailError) {
             console.error('Failed to send vehicle approval email:', emailError.message);
             // Continue with the response even if email fails

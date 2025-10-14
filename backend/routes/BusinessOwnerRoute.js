@@ -74,4 +74,12 @@ router.get('/debug/:userId', async (req, res) => {
     }
 });
 
+// Pending Applications Management Routes
+router.get('/:userId/pending-drivers', getPendingDrivers);
+router.get('/:userId/pending-vehicles', getPendingVehicles);
+router.get('/:userId/pending-applications', getPendingApplications);
+router.get('/:userId/approval-statistics', getApprovalStatistics);
+router.put('/:userId/approve-driver/:driverId', approveDriver);
+router.put('/:userId/approve-vehicle/:vehicleId', approveVehicle);
+
 module.exports = router;

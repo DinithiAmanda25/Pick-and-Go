@@ -36,10 +36,29 @@ function BusinessOwnerPackages({ packages: initialPackages }) {
         setError(null)
         try {
             const packages = await PackageService.getBusinessOwnerPackages(user.id)
-            setPackageData(packages.data || packages)
+            console.log('Packages API Response:', packages)
+            
+            // Handle different response structures
+            let packageArray = []
+            if (packages?.packages && Array.isArray(packages.packages)) {
+                // Mock data structure: { success: true, packages: [...] }
+                packageArray = packages.packages
+            } else if (packages?.data && Array.isArray(packages.data)) {
+                // Backend API structure: { success: true, data: [...] }
+                packageArray = packages.data
+            } else if (Array.isArray(packages)) {
+                // Direct array response
+                packageArray = packages
+            } else {
+                console.error('API did not return expected structure:', packages)
+                setError('Invalid data format received from server')
+            }
+            
+            setPackageData(packageArray)
         } catch (err) {
             setError(err.message)
             console.error('Error loading packages:', err)
+            setPackageData([]) // Ensure we set empty array on error
         } finally {
             setLoading(false)
         }

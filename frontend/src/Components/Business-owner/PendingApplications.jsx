@@ -15,10 +15,21 @@ function PendingApplications() {
     const fetchStatistics = async () => {
         try {
             setLoading(true);
-            const response = await businessOwnerService.getApprovalStatistics();
-            if (response.success) {
-                setStatistics(response.statistics);
-            }
+            
+            // Mock data for statistics (since the API endpoints don't exist yet)
+            const mockStatistics = {
+                pending: {
+                    drivers: 2,
+                    vehicles: 3,
+                    total: 5
+                },
+                myApprovals: {
+                    total: 23,
+                    thisMonth: 12
+                }
+            };
+            
+            setStatistics(mockStatistics);
         } catch (error) {
             console.error('Error fetching statistics:', error);
         } finally {
@@ -44,8 +55,8 @@ function PendingApplications() {
         <button
             onClick={() => onClick(id)}
             className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${isActive
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
         >
             {label}
@@ -69,10 +80,69 @@ function PendingApplications() {
         const fetchAllApplications = async () => {
             try {
                 setLoadingAll(true);
-                const response = await businessOwnerService.getAllPendingApplications();
-                if (response.success) {
-                    setAllApplications(response.data);
-                }
+                
+                // Mock data for overview (real data is loaded in individual components)
+                const mockAllApplications = {
+                    totalPending: 5,
+                    drivers: {
+                        count: 2,
+                        applications: [
+                            {
+                                _id: '1',
+                                fullName: 'Michael Johnson',
+                                email: 'michael@example.com',
+                                phone: '+94771234567',
+                                vehicleInfo: { type: 'Car' },
+                                createdAt: '2024-01-18T10:30:00Z'
+                            },
+                            {
+                                _id: '2',
+                                fullName: 'Sarah Williams',
+                                email: 'sarah@example.com',
+                                phone: '+94771234568',
+                                vehicleInfo: { type: 'Van' },
+                                createdAt: '2024-01-17T15:45:00Z'
+                            }
+                        ]
+                    },
+                    vehicles: {
+                        count: 3,
+                        applications: [
+                            {
+                                _id: '1',
+                                make: 'Honda',
+                                model: 'Civic',
+                                licensePlate: 'CAR-456',
+                                ownerId: { firstName: 'John', lastName: 'Doe' },
+                                vehicleType: 'Sedan',
+                                year: 2022,
+                                createdAt: '2024-01-19T09:15:00Z'
+                            },
+                            {
+                                _id: '2',
+                                make: 'Nissan',
+                                model: 'Altima',
+                                licensePlate: 'CAR-789',
+                                ownerId: { firstName: 'Jane', lastName: 'Smith' },
+                                vehicleType: 'Sedan',
+                                year: 2023,
+                                createdAt: '2024-01-16T14:20:00Z'
+                            },
+                            {
+                                _id: '3',
+                                make: 'Toyota',
+                                model: 'Corolla',
+                                licensePlate: 'CAR-321',
+                                ownerId: { firstName: 'Bob', lastName: 'Brown' },
+                                vehicleType: 'Hatchback',
+                                year: 2021,
+                                createdAt: '2024-01-15T11:30:00Z'
+                            }
+                        ]
+                    }
+                };
+                
+                setAllApplications(mockAllApplications);
             } catch (error) {
                 console.error('Error fetching all applications:', error);
             } finally {
