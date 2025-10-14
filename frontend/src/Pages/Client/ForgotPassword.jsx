@@ -317,7 +317,7 @@ function ForgotPassword() {
               {currentStep === 3 && 'Reset Password'}
             </h1>
             <p className="text-gray-600">
-              {currentStep === 1 && 'Choose how to receive your OTP verification code'}
+              {currentStep === 1 && 'Enter your registered email or phone number to receive an OTP'}
               {currentStep === 2 && 'Enter the 6-digit code sent to your contact'}
               {currentStep === 3 && 'Create a new secure password'}
             </p>
@@ -370,30 +370,100 @@ function ForgotPassword() {
                 </div>
               )}
 
+              {/* Method Selection */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Choose verification method
+                </label>
+                <div className="flex rounded-lg border border-gray-300 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData({...formData, method: 'email'})
+                      setValidationError('')
+                    }}
+                    className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+                      formData.method === 'email'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center space-x-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      <span>Email</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData({...formData, method: 'sms'})
+                      setValidationError('')
+                    }}
+                    className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+                      formData.method === 'sms'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center space-x-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                      <span>SMS</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
               <div>
-                <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
+                <label htmlFor={formData.method} className="block text-sm font-medium text-gray-700 mb-2">
+                  {formData.method === 'email' ? 'Email Address' : 'Phone Number'}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
+                    {formData.method === 'email' ? (
+                      <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    ) : (
+                      <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                    )}
                   </div>
-                  <input
-                    id="identifier"
-                    name="identifier"
-                    type="email"
-                    required
-                    value={formData.identifier}
-                    onChange={handleInputChange}
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
-                      validationError 
-                        ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
-                        : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                    }`}
-                    placeholder="Enter your email address"
-                  />
+                  {formData.method === 'email' ? (
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className={`block w-full pl-10 pr-3 py-3 border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
+                        validationError 
+                          ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                          : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                      }`}
+                      placeholder="Enter your email address"
+                    />
+                  ) : (
+                    <input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      required
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className={`block w-full pl-10 pr-3 py-3 border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
+                        validationError 
+                          ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                          : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                      }`}
+                      placeholder="Enter your phone number (e.g., 0771234567)"
+                    />
+                  )}
                 </div>
                 {validationError && (
                   <p className="mt-1 text-sm text-red-600 flex items-center">
@@ -404,7 +474,10 @@ function ForgotPassword() {
                   </p>
                 )}
                 <p className="mt-2 text-sm text-gray-500">
-                  We'll send you an OTP to verify your identity via email
+                  We'll send you an OTP to verify your identity via {formData.method === 'email' ? 'email' : 'SMS'}
+                </p>
+                <p className="mt-1 text-xs text-gray-400">
+                  Note: We can only send OTP to {formData.method === 'email' ? 'email addresses' : 'phone numbers'} associated with existing accounts
                 </p>
               </div>
 
@@ -452,14 +525,22 @@ function ForgotPassword() {
 
               <div className="text-center mb-6">
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
+                  {formData.method === 'email' ? (
+                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                  )}
                 </div>
                 <p className="text-sm text-gray-600">
-                  We've sent a 6-digit OTP to your email address
+                  We've sent a 6-digit OTP to your {formData.method === 'email' ? 'email address' : 'phone number'}
                   <br />
-                  <span className="font-semibold text-blue-600">{formData.identifier}</span>
+                  <span className="font-semibold text-blue-600">
+                    {formData.method === 'email' ? formData.email : formData.phone}
+                  </span>
                 </p>
               </div>
 

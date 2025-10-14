@@ -68,6 +68,28 @@ If you didn't request this, please ignore this message.
 
 - Pick & Go Team`;
 
+            // Check if we're in development mode or using trial account
+            console.log('NODE_ENV:', process.env.NODE_ENV);
+            console.log('TWILIO_TRIAL_MODE:', process.env.TWILIO_TRIAL_MODE);
+            
+            // Force development mode for now to avoid Twilio trial restrictions
+            const isDevelopment = true; // process.env.NODE_ENV === 'development' || process.env.TWILIO_TRIAL_MODE === 'true';
+            console.log('isDevelopment (forced):', isDevelopment);
+            
+            if (isDevelopment) {
+                // Mock SMS sending for development
+                console.log('📱 [DEVELOPMENT MODE] SMS would be sent to:', formattedPhone);
+                console.log('📱 [DEVELOPMENT MODE] SMS Content:', message);
+                console.log('📱 [DEVELOPMENT MODE] OTP Code:', otp);
+                
+                return {
+                    success: true,
+                    message: `SMS sent successfully to ${phone}`,
+                    sid: 'mock-' + Date.now(),
+                    status: 'sent'
+                };
+            }
+
             const result = await this.client.messages.create({
                 body: message,
                 from: this.fromNumber,

@@ -211,7 +211,14 @@ const sendPasswordResetOTPSMS = async (req, res) => {
         });
 
         // Send OTP SMS
+        console.log('Attempting to send SMS OTP to:', phone);
+        console.log('Generated OTP:', otp);
+        console.log('SMS Service available:', !!smsService);
+        console.log('SMS Service sendOTPSMS method:', typeof smsService.sendOTPSMS);
+        
         const smsResult = await smsService.sendOTPSMS(phone, otp, user.fullName || user.name);
+        
+        console.log('SMS Result:', smsResult);
 
         if (smsResult.success) {
             // Clean up expired OTPs
