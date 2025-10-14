@@ -19,7 +19,7 @@ class SMSService {
     formatPhoneNumber(phone) {
         // Remove all non-digit characters
         const cleaned = phone.replace(/[^0-9]/g, '');
-        
+
         // Handle different formats
         if (cleaned.length === 10) {
             // Assume it's a local number, add Sri Lanka country code
@@ -31,7 +31,7 @@ class SMSService {
             // Missing leading 0, add country code
             return `+94${cleaned}`;
         }
-        
+
         // If it already has + or is in different format, return as is
         return phone.startsWith('+') ? phone : `+${phone}`;
     }
@@ -57,7 +57,7 @@ class SMSService {
             }
 
             const formattedPhone = this.formatPhoneNumber(phone);
-            
+
             const message = `Hi ${userName || 'User'},
 
 Your Pick & Go password reset OTP is: ${otp}
@@ -71,17 +71,17 @@ If you didn't request this, please ignore this message.
             // Check if we're in development mode or using trial account
             console.log('NODE_ENV:', process.env.NODE_ENV);
             console.log('TWILIO_TRIAL_MODE:', process.env.TWILIO_TRIAL_MODE);
-            
+
             // Force development mode for now to avoid Twilio trial restrictions
             const isDevelopment = true; // process.env.NODE_ENV === 'development' || process.env.TWILIO_TRIAL_MODE === 'true';
             console.log('isDevelopment (forced):', isDevelopment);
-            
+
             if (isDevelopment) {
                 // Mock SMS sending for development
                 console.log('📱 [DEVELOPMENT MODE] SMS would be sent to:', formattedPhone);
                 console.log('📱 [DEVELOPMENT MODE] SMS Content:', message);
                 console.log('📱 [DEVELOPMENT MODE] OTP Code:', otp);
-                
+
                 return {
                     success: true,
                     message: `SMS sent successfully to ${phone}`,
@@ -112,7 +112,7 @@ If you didn't request this, please ignore this message.
 
         } catch (error) {
             console.error('Error sending password reset OTP SMS:', error);
-            
+
             let errorMessage = 'Failed to send SMS. Please try again.';
             if (error.message.includes('Invalid phone number')) {
                 errorMessage = 'Invalid phone number format. Please check and try again.';
@@ -139,7 +139,7 @@ If you didn't request this, please ignore this message.
 
         try {
             const formattedPhone = this.formatPhoneNumber(phone);
-            
+
             const message = `Hi ${userName || 'User'},
 
 Your Pick & Go account password has been successfully reset.

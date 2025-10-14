@@ -45,7 +45,7 @@ const findUserByPhone = async (phone) => {
 
     // Normalize phone number for search
     const normalizedPhone = phone.replace(/[^0-9]/g, '');
-    
+
     for (const { model, role } of models) {
         try {
             // Search for phone in various formats
@@ -215,9 +215,9 @@ const sendPasswordResetOTPSMS = async (req, res) => {
         console.log('Generated OTP:', otp);
         console.log('SMS Service available:', !!smsService);
         console.log('SMS Service sendOTPSMS method:', typeof smsService.sendOTPSMS);
-        
+
         const smsResult = await smsService.sendOTPSMS(phone, otp, user.fullName || user.name);
-        
+
         console.log('SMS Result:', smsResult);
 
         if (smsResult.success) {
@@ -287,8 +287,8 @@ const verifyPasswordResetOTP = async (req, res) => {
         // Verify OTP and contact method
         const isValidOTP = otpRecord.otp === otp;
         const isValidContact = (otpRecord.method === 'email' && otpRecord.email === email) ||
-                              (otpRecord.method === 'sms' && otpRecord.phone === phone);
-        
+            (otpRecord.method === 'sms' && otpRecord.phone === phone);
+
         if (!isValidOTP || !isValidContact) {
             return res.status(400).json({
                 success: false,
@@ -365,10 +365,10 @@ const resetPassword = async (req, res) => {
         }
 
         // Find user and update password
-        const userResult = otpRecord.method === 'email' 
-            ? await findUserByEmail(email) 
+        const userResult = otpRecord.method === 'email'
+            ? await findUserByEmail(email)
             : await findUserByPhone(phone);
-            
+
         if (!userResult) {
             return res.status(404).json({
                 success: false,
@@ -562,14 +562,14 @@ const resendPasswordResetOTPSMS = async (req, res) => {
 const cleanupExpiredOTPs = () => {
     const now = new Date();
     let cleanedCount = 0;
-    
+
     for (const [key, value] of otpStore.entries()) {
         if (value.expiry < now) {
             otpStore.delete(key);
             cleanedCount++;
         }
     }
-    
+
     if (cleanedCount > 0) {
         console.log(`Cleaned up ${cleanedCount} expired OTP records`);
     }

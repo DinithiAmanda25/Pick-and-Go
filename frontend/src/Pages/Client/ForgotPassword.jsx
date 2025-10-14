@@ -75,10 +75,10 @@ function ForgotPassword() {
 
   const handleSendOTP = async (e) => {
     e.preventDefault()
-    
+
     const currentValue = formData.method === 'email' ? formData.email : formData.phone
     const fieldName = formData.method === 'email' ? 'email address' : 'phone number'
-    
+
     if (!currentValue) {
       setValidationError(`Please enter your ${fieldName}`)
       return
@@ -100,7 +100,7 @@ function ForgotPassword() {
       } else {
         result = await forgotPasswordService.sendOTPSMS(formData.phone)
       }
-      
+
       if (result.success) {
         setFormData(prev => ({ ...prev, otpKey: result.data.otpKey }))
         setCurrentStep(2)
@@ -118,7 +118,7 @@ function ForgotPassword() {
 
   const handleVerifyOTP = async (e) => {
     e.preventDefault()
-    
+
     if (!formData.otp) {
       setValidationError('Please enter the OTP')
       return
@@ -136,10 +136,10 @@ function ForgotPassword() {
       const result = await forgotPasswordService.verifyOTP(
         formData.method === 'email' ? formData.email : null,
         formData.method === 'sms' ? formData.phone : null,
-        formData.otp, 
+        formData.otp,
         formData.otpKey
       )
-      
+
       if (result.success) {
         setCurrentStep(3)
         setSuccessMessage('OTP verified successfully')
@@ -155,7 +155,7 @@ function ForgotPassword() {
 
   const handleResetPassword = async (e) => {
     e.preventDefault()
-    
+
     if (!formData.newPassword || !formData.confirmPassword) {
       setValidationError('Please fill in all password fields')
       return
@@ -183,7 +183,7 @@ function ForgotPassword() {
         formData.newPassword,
         formData.otpKey
       )
-      
+
       if (result.success) {
         setSuccessMessage(result.message)
         // Navigate to login after a delay
@@ -216,7 +216,7 @@ function ForgotPassword() {
       } else {
         result = await forgotPasswordService.resendOTPSMS(formData.phone, formData.otpKey)
       }
-      
+
       if (result.success) {
         setOtpTimer(600) // Reset timer to 10 minutes
         setSuccessMessage(result.message)
@@ -325,21 +325,18 @@ function ForgotPassword() {
 
           {/* Progress indicator */}
           <div className="flex items-center justify-center space-x-4 mb-8">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
-            }`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
+              }`}>
               1
             </div>
             <div className={`w-8 h-1 ${currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
-            }`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
+              }`}>
               2
             </div>
             <div className={`w-8 h-1 ${currentStep >= 3 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
-            }`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
+              }`}>
               3
             </div>
           </div>
@@ -379,14 +376,13 @@ function ForgotPassword() {
                   <button
                     type="button"
                     onClick={() => {
-                      setFormData({...formData, method: 'email'})
+                      setFormData({ ...formData, method: 'email' })
                       setValidationError('')
                     }}
-                    className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
-                      formData.method === 'email'
+                    className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${formData.method === 'email'
                         ? 'bg-blue-600 text-white'
                         : 'bg-white text-gray-700 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-center space-x-2">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -398,14 +394,13 @@ function ForgotPassword() {
                   <button
                     type="button"
                     onClick={() => {
-                      setFormData({...formData, method: 'sms'})
+                      setFormData({ ...formData, method: 'sms' })
                       setValidationError('')
                     }}
-                    className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
-                      formData.method === 'sms'
+                    className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${formData.method === 'sms'
                         ? 'bg-blue-600 text-white'
                         : 'bg-white text-gray-700 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-center space-x-2">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -441,11 +436,10 @@ function ForgotPassword() {
                       required
                       value={formData.email}
                       onChange={handleInputChange}
-                      className={`block w-full pl-10 pr-3 py-3 border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
-                        validationError 
-                          ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                      className={`block w-full pl-10 pr-3 py-3 border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${validationError
+                          ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                           : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                      }`}
+                        }`}
                       placeholder="Enter your email address"
                     />
                   ) : (
@@ -456,11 +450,10 @@ function ForgotPassword() {
                       required
                       value={formData.phone}
                       onChange={handleInputChange}
-                      className={`block w-full pl-10 pr-3 py-3 border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
-                        validationError 
-                          ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                      className={`block w-full pl-10 pr-3 py-3 border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${validationError
+                          ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                           : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                      }`}
+                        }`}
                       placeholder="Enter your phone number (e.g., 0771234567)"
                     />
                   )}
@@ -668,7 +661,7 @@ function ForgotPassword() {
                     )}
                   </button>
                 </div>
-                
+
                 {/* Password Strength Indicator */}
                 {formData.newPassword && (
                   <div className="mt-2">
@@ -679,14 +672,13 @@ function ForgotPassword() {
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full transition-all duration-300 ${
-                          passwordStrength.score < 2 ? 'bg-red-500' :
-                          passwordStrength.score < 3 ? 'bg-orange-500' :
-                          passwordStrength.score < 4 ? 'bg-yellow-500' :
-                          passwordStrength.score < 5 ? 'bg-green-400' :
-                          'bg-green-600'
-                        }`}
+                      <div
+                        className={`h-2 rounded-full transition-all duration-300 ${passwordStrength.score < 2 ? 'bg-red-500' :
+                            passwordStrength.score < 3 ? 'bg-orange-500' :
+                              passwordStrength.score < 4 ? 'bg-yellow-500' :
+                                passwordStrength.score < 5 ? 'bg-green-400' :
+                                  'bg-green-600'
+                          }`}
                         style={{ width: `${(passwordStrength.score / 5) * 100}%` }}
                       ></div>
                     </div>
@@ -706,11 +698,10 @@ function ForgotPassword() {
                     required
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className={`block w-full pr-10 px-3 py-3 border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
-                      formData.confirmPassword && formData.newPassword !== formData.confirmPassword
+                    className={`block w-full pr-10 px-3 py-3 border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${formData.confirmPassword && formData.newPassword !== formData.confirmPassword
                         ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                         : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                    }`}
+                      }`}
                     placeholder="Confirm new password"
                   />
                   <button
