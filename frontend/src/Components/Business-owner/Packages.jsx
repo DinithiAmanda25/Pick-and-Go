@@ -31,13 +31,13 @@ function BusinessOwnerPackages({ packages: initialPackages }) {
     // Load packages from API
     const loadPackages = async () => {
         if (!user?.id) return
-        
+
         setLoading(true)
         setError(null)
         try {
             const packages = await PackageService.getBusinessOwnerPackages(user.id)
             console.log('Packages API Response:', packages)
-            
+
             // Handle different response structures
             let packageArray = []
             if (packages?.packages && Array.isArray(packages.packages)) {
@@ -53,7 +53,7 @@ function BusinessOwnerPackages({ packages: initialPackages }) {
                 console.error('API did not return expected structure:', packages)
                 setError('Invalid data format received from server')
             }
-            
+
             setPackageData(packageArray)
         } catch (err) {
             setError(err.message)
@@ -76,13 +76,13 @@ function BusinessOwnerPackages({ packages: initialPackages }) {
 
     const handleCreatePackage = async () => {
         if (!user?.id) return
-        
+
         // Validate package data
         const validationErrors = PackageService.validatePackageData({
             ...newPackage,
             businessOwner: user.id
         })
-        
+
         if (validationErrors.length > 0) {
             setError(validationErrors.join(', '))
             return
@@ -90,7 +90,7 @@ function BusinessOwnerPackages({ packages: initialPackages }) {
 
         setLoading(true)
         setError(null)
-        
+
         try {
             const packageData = {
                 ...newPackage,
@@ -98,10 +98,10 @@ function BusinessOwnerPackages({ packages: initialPackages }) {
                 price: parseFloat(newPackage.price),
                 discount: parseFloat(newPackage.discount)
             }
-            
+
             const createdPackage = await PackageService.createPackage(packageData)
             setPackageData(prev => [createdPackage.data, ...prev])
-            
+
             // Reset form
             setNewPackage({
                 name: '',
@@ -123,13 +123,13 @@ function BusinessOwnerPackages({ packages: initialPackages }) {
 
     const handleUpdatePackage = async () => {
         if (!editingPackage) return
-        
+
         setLoading(true)
         setError(null)
-        
+
         try {
             const updatedPackage = await PackageService.updatePackage(editingPackage._id, editingPackage)
-            setPackageData(prev => prev.map(pkg => 
+            setPackageData(prev => prev.map(pkg =>
                 pkg._id === editingPackage._id ? updatedPackage.data : pkg
             ))
             setEditingPackage(null)
@@ -144,10 +144,10 @@ function BusinessOwnerPackages({ packages: initialPackages }) {
     const handleToggleStatus = async (packageId) => {
         setLoading(true)
         setError(null)
-        
+
         try {
             const updatedPackage = await PackageService.togglePackageStatus(packageId)
-            setPackageData(prev => prev.map(pkg => 
+            setPackageData(prev => prev.map(pkg =>
                 pkg._id === packageId ? updatedPackage.data : pkg
             ))
         } catch (err) {
@@ -161,7 +161,7 @@ function BusinessOwnerPackages({ packages: initialPackages }) {
     const handleDeletePackage = async (packageId) => {
         setLoading(true)
         setError(null)
-        
+
         try {
             await PackageService.deletePackage(packageId)
             setPackageData(prev => prev.filter(pkg => pkg._id !== packageId))
@@ -301,8 +301,8 @@ function BusinessOwnerPackages({ packages: initialPackages }) {
                                         onClick={() => handleToggleStatus(pkg._id || pkg.id)}
                                         disabled={loading}
                                         className={`p-2 rounded-lg transition-colors disabled:opacity-50 ${pkg.isActive
-                                                ? 'text-green-600 hover:bg-green-50'
-                                                : 'text-red-600 hover:bg-red-50'
+                                            ? 'text-green-600 hover:bg-green-50'
+                                            : 'text-red-600 hover:bg-red-50'
                                             }`}
                                     >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -343,8 +343,8 @@ function BusinessOwnerPackages({ packages: initialPackages }) {
                             {/* Status Badge */}
                             <div className="mb-4">
                                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${pkg.isActive
-                                        ? 'bg-green-100 text-green-800'
-                                        : 'bg-red-100 text-red-800'
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-red-100 text-red-800'
                                     }`}>
                                     {pkg.isActive ? 'Active' : 'Inactive'}
                                 </span>
@@ -471,7 +471,7 @@ function BusinessOwnerPackages({ packages: initialPackages }) {
                                                 <input
                                                     type="checkbox"
                                                     checked={(editingPackage ? editingPackage.vehicles : newPackage.vehicles).includes(vehicle._id)}
-                                                    onChange={() => editingPackage 
+                                                    onChange={() => editingPackage
                                                         ? toggleVehicleInEdit(vehicle._id)
                                                         : toggleVehicle(vehicle._id)
                                                     }
@@ -522,7 +522,7 @@ function BusinessOwnerPackages({ packages: initialPackages }) {
                                             <span>{feature}</span>
                                             <button
                                                 type="button"
-                                                onClick={() => editingPackage 
+                                                onClick={() => editingPackage
                                                     ? removeFeatureFromEdit(feature)
                                                     : removeFeature(feature)
                                                 }

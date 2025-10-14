@@ -15,7 +15,7 @@ function PendingApplications() {
     const fetchStatistics = async () => {
         try {
             setLoading(true);
-            
+
             // Mock data for statistics (since the API endpoints don't exist yet)
             const mockStatistics = {
                 pending: {
@@ -28,7 +28,7 @@ function PendingApplications() {
                     thisMonth: 12
                 }
             };
-            
+
             setStatistics(mockStatistics);
         } catch (error) {
             console.error('Error fetching statistics:', error);
@@ -80,7 +80,7 @@ function PendingApplications() {
         const fetchAllApplications = async () => {
             try {
                 setLoadingAll(true);
-                
+
                 // Mock data for overview (real data is loaded in individual components)
                 const mockAllApplications = {
                     totalPending: 5,
@@ -141,7 +141,7 @@ function PendingApplications() {
                         ]
                     }
                 };
-                
+
                 setAllApplications(mockAllApplications);
             } catch (error) {
                 console.error('Error fetching all applications:', error);

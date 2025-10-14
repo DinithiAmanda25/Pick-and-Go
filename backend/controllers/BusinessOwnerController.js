@@ -534,7 +534,7 @@ const approveDriver = async (req, res) => {
         if (status === 'approved') {
             // Use provided password or generate a new one
             const finalPassword = newPassword || `PnG${Math.random().toString(36).slice(-8).toUpperCase()}`;
-            
+
             // Hash the password
             const saltRounds = 10;
             const hashedPassword = await bcrypt.hash(finalPassword, saltRounds);
