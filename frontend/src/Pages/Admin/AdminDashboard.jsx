@@ -6,6 +6,7 @@ import AdminHeader from '../../Components/Admin/Header'
 import AdminOverview from './AdminOverview'
 import UserManagement from '../../Components/Admin/UserManagement'
 import VehicleManagement from '../../Components/Admin/VehicleManagement'
+import Feedback from '../../Components/Admin/Feedback'
 
 const AdminDashboard = () => {
   const location = useLocation()
@@ -70,6 +71,12 @@ const AdminDashboard = () => {
 
               {activeTab === 'vehicles' && (
                 <VehicleManagement />
+              )}
+
+              {activeTab === 'ratings' && (
+                <div>
+                  <Feedback/>
+                </div>
               )}
 
               {activeTab === 'bookings' && (

@@ -10,7 +10,7 @@ import ProfileSimplified from '../../Components/Clients/ProfileSimplified'
 import PaymentEnhanced from '../../Components/Clients/PaymentEnhanced'
 import FavoritesEnhanced from '../../Components/Clients/FavoritesEnhanced'
 import Support from '../../Components/Clients/Support'
-import RatingsFeedback from '../../Components/Clients/RatingsFeedback'
+import RatingsFeedback from '../../Components/Clients/Feedback.jsx'
 
 function ClientDashboard() {
   const location = useLocation()
